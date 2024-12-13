@@ -1,10 +1,36 @@
+"use client";
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { supabase } from "@/lib/auth/supabseClient"; 
+import { useEffect, useState } from 'react';
 
 export default function DashboardPage() {
+
+  const [email, setEmail] = useState<string | undefined>(undefined); 
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error('Error fetching user:', error.message);
+        return;
+      }
+      if (user) {
+        if (user.email != undefined)
+          setEmail(user.email);
+      }
+    };
+
+    fetchUser();
+  }, []);
+  
+
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">MatchUp Dashboard</h1>
+
+      <h2 className="text-3xl font-bold mb-6">{email}</h2>
       
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
