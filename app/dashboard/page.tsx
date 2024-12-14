@@ -1,37 +1,31 @@
-"use client";
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { supabase } from "@/lib/auth/supabseClient"; 
-import { useEffect, useState } from 'react';
+import { createClient } from "@/utils/supabase/server";
+import { redirect } from 'next/navigation'
+import { logout } from "../logout/action";
+import TmpClientComponent from "../TmpClientComponent/TmpClientComponent";
 
-export default function DashboardPage() {
+export default async  function DashboardPage() {
+  const supabase = await createClient();
 
-  const [email, setEmail] = useState<string | undefined>(undefined); 
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error) {
-        console.error('Error fetching user:', error.message);
-        return;
-      }
-      if (user) {
-        if (user.email != undefined)
-          setEmail(user.email);
-      }
-    };
-
-    fetchUser();
-  }, []);
-  
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data?.user) {
+    redirect('/login')
+  }
 
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">MatchUp Dashboard</h1>
 
-      <h2 className="text-3xl font-bold mb-6">{email}</h2>
-      
+      <div className="flex justify-between items-center mb-6">
+        <TmpClientComponent />
+        <h2 className="text-3xl font-bold">Hallo {data.user.email}</h2>
+        <form action={logout}>
+          <Button type="submit">
+            Logout
+          </Button>
+        </form>
+      </div>
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <Button className="h-20">Create Event</Button>
