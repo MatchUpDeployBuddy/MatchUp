@@ -1,5 +1,5 @@
 "use client";
-import { login, signup } from './actions';
+import { login, signup, signInWithGoogle } from './actions';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -121,6 +121,16 @@ export default function LoginPage() {
 
             <Button type="submit" className="w-full">
               {mode === 'login' ? 'Anmelden' : 'Registrieren'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                signInWithGoogle("google");
+              }}
+            >
+              Login with Google
             </Button>
           </form>
         </Form>

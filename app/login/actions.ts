@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import * as z from 'zod';
 
 import { createClient } from '@/utils/supabase/server'
+import { Provider } from '@supabase/supabase-js';
 
 const loginSchema = z.object({
     email: z.string().email(),
@@ -72,4 +73,25 @@ export async function signup(formData: FormData) {
 
     revalidatePath('/', 'layout')
     redirect('/')
+}
+
+export async function signInWithGoogle(provider:Provider) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: provider,
+    options: {
+      redirectTo: "localhost:3000",
+      queryParams: {
+        access_type: "offline",
+        prompt: "consent",
+      },
+    },
+  });
+
+  if (error) {
+    console.log(error);
+    redirect("/error");
+  }
+
+  redirect(data.url);
 }
