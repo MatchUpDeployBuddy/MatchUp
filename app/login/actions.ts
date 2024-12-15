@@ -75,12 +75,12 @@ export async function signup(formData: FormData) {
     redirect('/')
 }
 
-export async function signInWithGoogle(provider:Provider) {
+export async function signInWithOAuth(provider:Provider) {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: provider,
     options: {
-      redirectTo: "localhost:3000",
+      redirectTo: "http://localhost:3000/auth/callback",
       queryParams: {
         access_type: "offline",
         prompt: "consent",
