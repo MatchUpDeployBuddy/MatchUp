@@ -1,3 +1,24 @@
+## 1. Deployment & Clean up
+Execute the create_schema.sql file (e.g. in the sql editor from supabase) to create the whole database environment.
+
+Run clean up script (clean_up.sql) to remove all ressources regarding the database from supabase. Important if you remove users table you also have to remove the users from the auth table. This is not covered by the script.  
+
+## 1. Instructions for Database Setup and Cleanup
+
+### 1. Setting up the Database
+To set up the entire database environment:
+1. Open the SQL editor in Supabase (or any preferred SQL interface).
+2. Execute the `create_schema.sql` file to create all the required tables, triggers, policies, and extensions for the application.
+
+### 2. Cleaning up the Database
+To clean up and remove all database resources:
+1. Execute the `clean_up.sql` file in the SQL editor.
+   - This script will delete all tables, triggers, and extensions created by the schema.
+2. **Important Note**: The script does not handle the removal of users from the `auth` table. If you delete entries from the `users` table, you must manually remove the corresponding users from the `auth` table to avoid inconsistencies.
+
+Make sure to double-check the `auth` table after cleanup to ensure no orphaned user data remains.
+
+
 ## 2. Tables and Their Functions
 
 ### **2.1. Table: `users`**
