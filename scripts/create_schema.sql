@@ -3,7 +3,7 @@ create extension if not exists postgis;
 
 create table users (
     id uuid not null references auth.users on delete cascade,
-    name varchar(100),
+    name varchar(100) not null unique,
     updated_at timestamp default now(),
     primary key (id)
 );
