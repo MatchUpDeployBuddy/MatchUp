@@ -1,20 +1,16 @@
--- Cleanup-Skript
+-- remove all triggers and functions
+DROP TRIGGER IF EXISTS after_request_accepted ON event_requests;
+DROP FUNCTION IF EXISTS handle_request_accepted;
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP FUNCTION IF EXISTS public.handle_new_user;
 
--- Drop Row Level Security Policies
-alter table event_participants disable row level security;
-alter table events disable row level security;
-alter table users disable row level security;
+-- remove tables 
+DROP TABLE IF EXISTS event_requests CASCADE;
+DROP TYPE IF EXISTS request_status;
+DROP TABLE IF EXISTS event_participants CASCADE;
+DROP INDEX IF EXISTS idx_events_location;
+DROP TABLE IF EXISTS events CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
 
--- Drop Tables
-drop table if exists event_participants cascade;
-drop table if exists events cascade;
-drop table if exists users cascade;
-
--- Drop Trigger
-drop trigger if exists on_auth_user_created on auth.users;
-
--- Drop Function
-drop function if exists public.handle_new_user cascade;
-
--- Remove PostGIS extension
-drop extension if exists postgis cascade;
+-- remove extensions
+DROP EXTENSION IF EXISTS postgis CASCADE;
