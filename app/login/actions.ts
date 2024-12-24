@@ -31,8 +31,8 @@ export async function login(data: z.infer<typeof loginSchema>) {
   const { error } = await supabase.auth.signInWithPassword(parsedData.data);
 
   if (error) {
-    console.log("Login error:", error);
-    return { error: error.message };
+    // If login fails, redirect back to login page with error message
+    redirect("/login?message=Could not authenticate User");
   }
 
   const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -67,8 +67,7 @@ export async function signup(data: z.infer<typeof signupSchema>) {
   });
 
   if (error) {
-    console.log("Signup error:", error);
-    return { error: error.message };
+    redirect("/login?message=Error signing up");
   }
 
   const { data: userData, error: userError } = await supabase.auth.getUser();

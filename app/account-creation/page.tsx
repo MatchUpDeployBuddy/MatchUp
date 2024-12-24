@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { uploadProfilePicture } from "@/utils/supabase/storage";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { updateAccount } from "./actions";
 import {
   Form,
   FormField,
@@ -45,11 +46,6 @@ import { GrSwim } from "react-icons/gr";
 import { IoMdBicycle } from "react-icons/io";
 import { FaTableTennis } from "react-icons/fa";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 const accountSchema = z.object({
   name: z
     .string()
@@ -65,10 +61,7 @@ const accountSchema = z.object({
     .array(z.string())
     .min(1, { message: "Please select at least one sport" }),
   city: z.string().min(1, { message: "Please select a city" }),
-  profilePicture: z
-    .string()
-    .url({ message: "Please upload a profile picture" })
-    .optional(),
+  profilePicture: z.string().optional(),
 });
 
 const sports = [
@@ -114,6 +107,38 @@ export default function AccountCreationPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [profilePictureFile, setProfilePictureFile] = useState<File | null>(null);
+  const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null);
+
+  const handleProfilePictureChange = async (e: React.ChangeEvent<HTMLInputElement>, field: any) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validierung wird auch nochmal im Backend gemacht
+      const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+      const allowedTypes = ['image/jpeg', 'image/png'];
+  
+      if (file.size > MAX_SIZE) {
+        setErrorMessage('Das Profilbild darf maximal 2MB groß sein.');
+        return;
+      }
+  
+      if (!allowedTypes.includes(file.type)) {
+        setErrorMessage('Nur JPEG, PNG und GIF Bilder sind erlaubt.');
+        return;
+      }
+  
+      setProfilePictureFile(file);
+      setErrorMessage(null);
+  
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePicturePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };  
 
   const form = useForm<z.infer<typeof accountSchema>>({
     resolver: zodResolver(accountSchema),
@@ -129,31 +154,22 @@ export default function AccountCreationPage() {
 
   const onSubmit = async (data: z.infer<typeof accountSchema>) => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser(); // Wir holen uns den User aus dem Authentifizierungs-Context
-      if (!user) {
-        throw new Error("User not authenticated"); // TODO: in Zukungt in der middleware.ts einstellen das man nur mit account diese seite aufrufen kann
+      if (profilePictureFile) {
+        setUploading(true);
+        const uploadedUrl = await uploadProfilePicture(profilePictureFile);
+        if (uploadedUrl) {
+          data.profilePicture = uploadedUrl;
+        } else {
+          throw new Error('Fehler beim Hochladen des Profilbildes');
+        }
+        setUploading(false);
       }
-
-      const userId = user.id;
-      // TODO: Hier den POST request an die API machen wenn es die Tabelle in Supabase gibt
-      // const response = await fetch("/api/account-creation", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify({ ...data, userId }),
-      // });
-
-      // if (!response.ok) {
-      //   const errorData = await response.json();
-      //   throw new Error(errorData.error || "Failed to create account");
-      // }
+      await updateAccount(data);
 
       router.push("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating account:", error);
+      setErrorMessage(error.message || 'Failed to create account');
     }
   };
 
@@ -161,10 +177,13 @@ export default function AccountCreationPage() {
   const prevStep = () => setStep(step - 1);
 
   const toggleSport = (sport: string) => {
-    setSelectedSports((prev) =>
-      prev.includes(sport) ? prev.filter((s) => s !== sport) : [...prev, sport]
-    );
-    form.setValue("sportInterests", selectedSports);
+    const newSelectedSports = selectedSports.includes(sport)
+    ? selectedSports.filter((s) => s !== sport)
+    : [...selectedSports, sport];
+
+    setSelectedSports(newSelectedSports);
+
+    form.setValue("sportInterests", newSelectedSports);
   };
 
   return (
@@ -199,7 +218,7 @@ export default function AccountCreationPage() {
                         <FormItem>
                           <FormLabel className="text-text-primary flex items-center text-lg">
                             <FaUser className="mr-2" />
-                            Name
+                            Username
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -353,7 +372,7 @@ export default function AccountCreationPage() {
                             <div className="flex items-center space-x-4">
                               <Avatar className="w-24 h-24 border-2 border-primary">
                                 <AvatarImage
-                                  src={field.value}
+                                  src={profilePicturePreview || field.value}
                                   alt="Profile picture"
                                   className="object-cover w-full h-full"
                                 />
@@ -364,20 +383,12 @@ export default function AccountCreationPage() {
                               <Input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    const reader = new FileReader();
-                                    reader.onloadend = () => {
-                                      field.onChange(reader.result as string);
-                                    };
-                                    reader.readAsDataURL(file);
-                                  }
-                                }}
+                                onChange={(e) => handleProfilePictureChange(e, field)}
                                 className="border-secondary text-lg rounded-full cursor-pointer"
                               />
                             </div>
                           </FormControl>
+                          {uploading && <Progress value={100} className="mt-2" />}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -386,7 +397,7 @@ export default function AccountCreationPage() {
                 )}
               </motion.div>
             </AnimatePresence>
-
+            {errorMessage && <p className="error">{errorMessage}</p>}
             <div className="flex justify-between mt-8">
               {step > 1 && (
                 <Button
@@ -410,6 +421,7 @@ export default function AccountCreationPage() {
                 <Button
                   type="submit"
                   className="ml-auto bg-primary text-primary-foreground hover:bg-primary/90 text-lg px-6 py-3 rounded-full"
+                  disabled={uploading}
                 >
                   Create Profile
                 </Button>

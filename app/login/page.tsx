@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useSearchParams } from 'next/navigation';
 import {
   Form,
   FormField,
@@ -39,6 +40,8 @@ const formSchemaSignup = z
 
 export default function LoginPage() {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const searchParams = useSearchParams();
+  const message = searchParams.get('message');
 
   const form = useForm<
     z.infer<typeof formSchemaLogin> | z.infer<typeof formSchemaSignup>
@@ -74,6 +77,11 @@ export default function LoginPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {message && (
+            <div className="mb-4 text-sm text-center text-red-600 bg-red-100 border border-red-400 rounded p-2">
+              {message}
+            </div>
+          )}
           <Tabs value={mode} onValueChange={(value) => setMode(value as 'login' | 'signup')}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Login</TabsTrigger>
