@@ -1,86 +1,92 @@
-'use server'
+"use server";
 
-import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-import * as z from 'zod';
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import * as z from "zod";
 
-import { createClient } from '@/utils/supabase/server'
-import { Provider } from '@supabase/supabase-js';
+import { createClient } from "@/utils/supabase/server";
+import { Provider } from "@supabase/supabase-js";
 
 const loginSchema = z.object({
-    email: z.string().email(),
-    password: z.string().min(6),
+  email: z.string().email(),
+  password: z.string().min(8),
 });
-  
+
 const signupSchema = z.object({
-    name: z.string().min(1),
-    email: z.string().email(),
-    password: z.string().min(6),
+  name: z.string().min(1).max(50),
+  email: z.string().email(),
+  password: z.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/),
 });
 
-export async function login(formData: FormData) {
-    const supabase = await createClient()
+export async function login(data: z.infer<typeof loginSchema>) {
+  const supabase = await createClient();
 
-    const data = {
-        email: formData.get('email') as string,
-        password: formData.get('password') as string,
-    }
-    console.log(data)
-    const parsedData = loginSchema.safeParse(data)
+  const parsedData = loginSchema.safeParse(data);
 
-    if (!parsedData.success) {
-        redirect('/error');
-    }
+  if (!parsedData.success) {
+    console.log("Login validation failed:", parsedData.error);
+    return { error: parsedData.error.flatten() };
+  }
 
-    const { error } = await supabase.auth.signInWithPassword(data)
+  const { error } = await supabase.auth.signInWithPassword(parsedData.data);
 
-    if (error) {
-        redirect('/error')
-    }
+  if (error) {
+    // If login fails, redirect back to login page with error message
+    redirect("/login?message=Could not authenticate User");
+  }
 
-    revalidatePath('/', 'layout')
-    redirect('/')
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData?.user) {
+    console.log("User fetch error or no user:", userError);
+    return { error: "Failed to fetch user data" };
+  }
+
+  console.log("User data:", userData);
+  revalidatePath("/", "layout");
+  redirect("/dashboard");
 }
 
-export async function signup(formData: FormData) {
-    const supabase = await createClient()
+export async function signup(data: z.infer<typeof signupSchema>) {
+  const supabase = await createClient();
 
-    const data = {
-        name: formData.get('name') as string,
-        email: formData.get('email') as string,
-        password: formData.get('password') as string,
-    }
+  const parsedData = signupSchema.safeParse(data);
 
-    const parsedData = signupSchema.safeParse(data)
+  if (!parsedData.success) {
+    console.log("Signup validation failed:", parsedData.error);
+    return { error: parsedData.error.flatten() };
+  }
 
-    if (!parsedData.success) {
-        redirect('/error');
-    }
+  const { error } = await supabase.auth.signUp({
+    email: parsedData.data.email,
+    password: parsedData.data.password,
+    options: {
+      data: {
+        name: parsedData.data.name,
+      },
+    },
+  });
 
-    const { error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-            data: {
-                name: data.name
-            }
-        }
-    })
+  if (error) {
+    redirect("/login?message=Error signing up");
+  }
 
-    if (error) {
-        redirect('/error')
-    }
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData?.user) {
+    console.log("User fetch error or no user:", userError);
+    return { error: "Failed to fetch user data" };
+  }
 
-    revalidatePath('/', 'layout')
-    redirect('/')
+  console.log("User data:", userData);
+  revalidatePath("/", "layout");
+  redirect("/account-creation");
 }
 
-export async function signInWithOAuth(provider:Provider) {
+export async function signInWithOAuth(provider: Provider) {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: provider,
     options: {
-      redirectTo: "http://localhost:3000/auth/callback",
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
       queryParams: {
         access_type: "offline",
         prompt: "consent",
@@ -89,9 +95,10 @@ export async function signInWithOAuth(provider:Provider) {
   });
 
   if (error) {
-    console.log(error);
-    redirect("/error");
+    console.log("OAuth error:", error);
+    return { error: error.message };
   }
 
   redirect(data.url);
 }
+

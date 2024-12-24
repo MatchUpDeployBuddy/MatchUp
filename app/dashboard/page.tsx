@@ -30,7 +30,7 @@ export default async  function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <Button className="h-20">Create Event</Button>
         <Button variant="outline" className="h-20">Find Teammates</Button>
-        <Button variant="outline" className="h-20">Beginner's Guide</Button>
+        <Button variant="outline" className="h-20">Beginner&apos;s Guide</Button>
       </div>
 
       {/* Upcoming Events */}
