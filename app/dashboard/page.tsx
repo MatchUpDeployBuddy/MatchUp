@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from 'next/navigation'
 import { logout } from "../logout/action";
 import TmpClientComponent from "../TmpClientComponent/TmpClientComponent";
+import Link from "next/link";
 
 export default async  function DashboardPage() {
   const supabase = await createClient();
@@ -28,7 +29,9 @@ export default async  function DashboardPage() {
       </div>
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <Button className="h-20">Create Event</Button>
+        <Link href="/match-creation">
+          <Button className="h-20 w-full">Create Event</Button>
+        </Link>
         <Button variant="outline" className="h-20">Find Teammates</Button>
         <Button variant="outline" className="h-20">Beginner&apos;s Guide</Button>
       </div>
