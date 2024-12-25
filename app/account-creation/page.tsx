@@ -45,6 +45,11 @@ import {
 import { GrSwim } from "react-icons/gr";
 import { IoMdBicycle } from "react-icons/io";
 import { FaTableTennis } from "react-icons/fa";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  CheckCircledIcon,
+  ExclamationTriangleIcon,
+} from "@radix-ui/react-icons";
 
 const accountSchema = z.object({
   name: z
@@ -109,36 +114,43 @@ export default function AccountCreationPage() {
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [profilePictureFile, setProfilePictureFile] = useState<File | null>(null);
-  const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null);
+  const [profilePictureFile, setProfilePictureFile] = useState<File | null>(
+    null
+  );
+  const [profilePicturePreview, setProfilePicturePreview] = useState<
+    string | null
+  >(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const handleProfilePictureChange = async (e: React.ChangeEvent<HTMLInputElement>, field: any) => {
+  const handleProfilePictureChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validierung wird auch nochmal im Backend gemacht
+      // Validation will also be done in the backend
       const MAX_SIZE = 2 * 1024 * 1024; // 2MB
-      const allowedTypes = ['image/jpeg', 'image/png'];
-  
+      const allowedTypes = ["image/jpeg", "image/png"];
+
       if (file.size > MAX_SIZE) {
-        setErrorMessage('Das Profilbild darf maximal 2MB groß sein.');
+        setErrorMessage("The profile picture must be a maximum of 2MB.");
         return;
       }
-  
+
       if (!allowedTypes.includes(file.type)) {
-        setErrorMessage('Nur JPEG, PNG und GIF Bilder sind erlaubt.');
+        setErrorMessage("Only JPEG and PNG images are allowed.");
         return;
       }
-  
+
       setProfilePictureFile(file);
       setErrorMessage(null);
-  
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfilePicturePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
-  };  
+  };
 
   const form = useForm<z.infer<typeof accountSchema>>({
     resolver: zodResolver(accountSchema),
@@ -150,6 +162,7 @@ export default function AccountCreationPage() {
       city: "",
       profilePicture: "",
     },
+    mode: "onChange",
   });
 
   const onSubmit = async (data: z.infer<typeof accountSchema>) => {
@@ -160,16 +173,18 @@ export default function AccountCreationPage() {
         if (uploadedUrl) {
           data.profilePicture = uploadedUrl;
         } else {
-          throw new Error('Fehler beim Hochladen des Profilbildes');
+          throw new Error("Error uploading profile picture");
         }
         setUploading(false);
       }
       await updateAccount(data);
-
-      router.push("/dashboard");
-    } catch (error: any) {
+      setSuccessMessage("Account created successfully!");
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 2000);
+    } catch (error: any) {  // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error("Error creating account:", error);
-      setErrorMessage(error.message || 'Failed to create account');
+      setErrorMessage(error.message || "Failed to create account");
     }
   };
 
@@ -178,8 +193,8 @@ export default function AccountCreationPage() {
 
   const toggleSport = (sport: string) => {
     const newSelectedSports = selectedSports.includes(sport)
-    ? selectedSports.filter((s) => s !== sport)
-    : [...selectedSports, sport];
+      ? selectedSports.filter((s) => s !== sport)
+      : [...selectedSports, sport];
 
     setSelectedSports(newSelectedSports);
 
@@ -189,6 +204,20 @@ export default function AccountCreationPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 animate-gradient-x p-8">
       <div className="max-w-4xl mx-auto">
+        {successMessage && (
+          <Alert variant="default" className="mb-4">
+            <CheckCircledIcon className="h-4 w-4" />
+            <AlertTitle>Success</AlertTitle>
+            <AlertDescription>{successMessage}</AlertDescription>
+          </Alert>
+        )}
+        {errorMessage && (
+          <Alert variant="destructive" className="mb-4">
+            <ExclamationTriangleIcon className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        )}
         <h1 className="text-4xl font-bold text-center text-text-primary mb-8">
           {step === 1
             ? "Tell us about yourself"
@@ -383,12 +412,14 @@ export default function AccountCreationPage() {
                               <Input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => handleProfilePictureChange(e, field)}
+                                onChange={(e) => handleProfilePictureChange(e)}
                                 className="border-secondary text-lg rounded-full cursor-pointer"
                               />
                             </div>
                           </FormControl>
-                          {uploading && <Progress value={100} className="mt-2" />}
+                          {uploading && (
+                            <Progress value={100} className="mt-2" />
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -397,7 +428,7 @@ export default function AccountCreationPage() {
                 )}
               </motion.div>
             </AnimatePresence>
-            {errorMessage && <p className="error">{errorMessage}</p>}
+
             <div className="flex justify-between mt-8">
               {step > 1 && (
                 <Button
@@ -421,7 +452,7 @@ export default function AccountCreationPage() {
                 <Button
                   type="submit"
                   className="ml-auto bg-primary text-primary-foreground hover:bg-primary/90 text-lg px-6 py-3 rounded-full"
-                  disabled={uploading}
+                  disabled={!form.formState.isValid}
                 >
                   Create Profile
                 </Button>
