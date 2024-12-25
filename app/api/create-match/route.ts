@@ -18,8 +18,8 @@ export async function POST(req: Request) {
       skill_level,
       event_date, // 'event_date' is the date from the form
       event_time, // 'event_time' is the start time from the form
-      description
-      //userId, // The creator's userId (auth user)
+      description,
+      userId, // The creator's userId (auth user)
     } = body;
 
     // Validate required fields
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
 
     // Insert event into the database
     const { error } = await supabase.from("events").insert({
-      //creator_id: userId, // Link the event to the creator's user ID
+      creator_id: userId, // Link the event to the creator's user ID
       sport,
       //location,
       participants_needed,

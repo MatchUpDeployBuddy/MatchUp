@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/utils/supabase/client";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -12,15 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaFootballBall } from "react-icons/fa";
 
 // Initialisierung von Supabase
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const supabase = await createClient();
 
 // Zod-Schema zur Validierung des Formulars
 const matchSchema = z.object({
   sport: z.string().min(1, { message: "Please select a sport" }),
   //location: z.string().min(1, { message: "Please enter a location" }),
+  skillLevel: z.string().min(1, { message: "Please select a skill level" }),
   date: z.string().min(1, { message: "Please select a date" }),
   startTime: z.string().min(1, { message: "Please select a start time" }),
   buddies: z.number().min(1, { message: "Please select at least one buddy" }),
@@ -41,6 +39,15 @@ const sports = [
   "Hiking",
 ];
 
+// Skill (Dropdown)
+const skill = [
+  "Beginner",
+  "Amateur",
+  "Medium",
+  "Expert",
+  "Irrelevant"
+];
+
 export default function MatchCreationPage() {
   const router = useRouter();
 
@@ -50,6 +57,7 @@ export default function MatchCreationPage() {
     defaultValues: {
       sport: "",
       //location: "",
+      skillLevel: "",
       date: "",
       startTime: "",
       buddies: 1,
@@ -62,7 +70,7 @@ export default function MatchCreationPage() {
       // Kombinieren von Datum und Startzeit in ein Ereigniszeitstempel
       const event_time = new Date(`${data.date}T${data.startTime}`).toISOString();
 
-      /* // Abrufen des Benutzers aus dem Authentifizierungs-Context
+      
       const {
         data: { user },
         error: userError,
@@ -77,7 +85,7 @@ export default function MatchCreationPage() {
       }
 
       const creator_id = user.id;
-      console.log("hallo user:", creator_id) */
+      console.log("hallo user:", creator_id)
 
       // Daten, die an die Backend-API gesendet werden
       const eventData = {
@@ -87,7 +95,7 @@ export default function MatchCreationPage() {
         skill_level: "Beginner", // Beispielwert, später anpassbar
         event_time,
         description: data.description,
-        //creator_id,
+        creator_id,
       };
 
       console.log("Event Daten:", eventData)
@@ -148,7 +156,39 @@ export default function MatchCreationPage() {
                   </FormItem>
                 )}
               />
-
+              {/* Skill level */}
+              <FormField
+                control={form.control}
+                name="skillLevel"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-text-primary flex items-center text-lg">
+                      <FaFootballBall className="mr-2" />
+                      Skill Level
+                    </FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="border-secondary text-lg rounded-full">
+                            <SelectValue placeholder="Select your skill level" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {skill.map((skill) => (
+                            <SelectItem key={skill} value={skill}>
+                              {skill}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               {/* Location */}
               {/* <FormField
                 control={form.control}
