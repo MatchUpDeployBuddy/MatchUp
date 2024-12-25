@@ -45,6 +45,7 @@ export async function updateAccount(data: z.infer<typeof accountSchema>) {
       sport_interests: parsedData.data.sportInterests,
       city: parsedData.data.city,
       profile_picture_url: parsedData.data.profilePicture || null,
+      is_profile_complete: true
     }).eq('id', userId);
   
     if (error) {
