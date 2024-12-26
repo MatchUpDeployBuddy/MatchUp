@@ -90,11 +90,10 @@ export default function LoginPage() {
         await signup(data as z.infer<typeof formSchemaSignup>);
         setSuccessMessage("Account created successfully!");
       }
-    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      console.error("Error:", error);
+    } catch (error: any) {
       setErrorMessage(error.message || "An error occurred.");
     } finally {
-      setIsLoading(false); // Ladezustand deaktivieren
+      setIsLoading(false);
     }
   };
 
@@ -189,12 +188,12 @@ export default function LoginPage() {
                     />
                     <Button
                       type="submit"
-                      disabled={isLoading} // Button deaktivieren, wenn geladen wird
+                      disabled={isLoading} 
                       className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-lg px-6 py-3 rounded-full flex items-center justify-center"
                     >
                       {isLoading ? (
                         <>
-                          <Spinner /> {/* Ladeindikator */}
+                          <Spinner />
                           {mode === "login" ? "Logging in..." : "Signing up..."}
                         </>
                       ) : (
@@ -294,12 +293,12 @@ export default function LoginPage() {
                     />
                     <Button
                       type="submit"
-                      disabled={isLoading} // Button deaktivieren, wenn geladen wird
+                      disabled={isLoading}
                       className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-lg px-6 py-3 rounded-full flex items-center justify-center"
                     >
                       {isLoading ? (
                         <>
-                          <Spinner /> {/* Ladeindikator */}
+                          <Spinner />
                           {mode === "signup" ? "Signing up..." : "Login..."}
                         </>
                       ) : (
@@ -316,11 +315,11 @@ export default function LoginPage() {
               variant="outline"
               className="w-full border-primary text-primary hover:bg-primary/10 text-lg px-6 py-3 rounded-full flex items-center justify-center"
               onClick={() => signInWithOAuth("google")}
-              disabled={isLoading} // Optional: OAuth-Button auch deaktivieren während des Ladens
+              disabled={isLoading} 
             >
               {isLoading ? (
                 <>
-                  <Spinner /> {/* Ladeindikator */}
+                  <Spinner />
                   Processing...
                 </>
               ) : (
