@@ -22,6 +22,7 @@ import {
   CheckCircledIcon,
   ExclamationTriangleIcon,
 } from "@radix-ui/react-icons";
+import { Spinner } from "@/components/ui/spinner"; // Importiere den Spinner
 
 // Zod Schema Definition
 const formSchemaLogin = z.object({
@@ -59,6 +60,7 @@ export default function LoginPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false); // Neuer State für das Laden
 
   const form = useForm<
     z.infer<typeof formSchemaLogin> | z.infer<typeof formSchemaSignup>
@@ -77,6 +79,9 @@ export default function LoginPage() {
   const onSubmit = async (
     data: z.infer<typeof formSchemaLogin> | z.infer<typeof formSchemaSignup>
   ) => {
+    setIsLoading(true); // Ladezustand aktivieren
+    setSuccessMessage(null);
+    setErrorMessage(null);
     try {
       if (mode === "login") {
         await login(data as z.infer<typeof formSchemaLogin>);
@@ -88,6 +93,8 @@ export default function LoginPage() {
     } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error("Error:", error);
       setErrorMessage(error.message || "An error occurred.");
+    } finally {
+      setIsLoading(false); // Ladezustand deaktivieren
     }
   };
 
@@ -182,9 +189,17 @@ export default function LoginPage() {
                     />
                     <Button
                       type="submit"
-                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-lg px-6 py-3 rounded-full"
+                      disabled={isLoading} // Button deaktivieren, wenn geladen wird
+                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-lg px-6 py-3 rounded-full flex items-center justify-center"
                     >
-                      Login
+                      {isLoading ? (
+                        <>
+                          <Spinner /> {/* Ladeindikator */}
+                          {mode === "login" ? "Logging in..." : "Signing up..."}
+                        </>
+                      ) : (
+                        (mode === "login" ? "Login" : "Sign Up")
+                      )}
                     </Button>
                   </form>
                 </Form>
@@ -279,9 +294,17 @@ export default function LoginPage() {
                     />
                     <Button
                       type="submit"
-                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-lg px-6 py-3 rounded-full"
+                      disabled={isLoading} // Button deaktivieren, wenn geladen wird
+                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-lg px-6 py-3 rounded-full flex items-center justify-center"
                     >
-                      Sign Up
+                      {isLoading ? (
+                        <>
+                          <Spinner /> {/* Ladeindikator */}
+                          {mode === "signup" ? "Signing up..." : "Login..."}
+                        </>
+                      ) : (
+                        (mode === "signup" ? "Sign Up" : "Login")
+                      )}
                     </Button>
                   </form>
                 </Form>
@@ -293,9 +316,19 @@ export default function LoginPage() {
               variant="outline"
               className="w-full border-primary text-primary hover:bg-primary/10 text-lg px-6 py-3 rounded-full flex items-center justify-center"
               onClick={() => signInWithOAuth("google")}
+              disabled={isLoading} // Optional: OAuth-Button auch deaktivieren während des Ladens
             >
-              <FaGoogle className="mr-2" />
-              Login with Google
+              {isLoading ? (
+                <>
+                  <Spinner /> {/* Ladeindikator */}
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <FaGoogle className="mr-2" />
+                  Login with Google
+                </>
+              )}
             </Button>
           </div>
         </Tabs>
