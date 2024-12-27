@@ -17,7 +17,6 @@ type TimeDropdownProps = {
 };
 
 export const TimeDropdown: React.FC<TimeDropdownProps> = ({
-  value,
   onChange,
   minTime,
   selectedDate,

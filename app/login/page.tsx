@@ -90,7 +90,7 @@ export default function LoginPage() {
         await signup(data as z.infer<typeof formSchemaSignup>);
         setSuccessMessage("Account created successfully!");
       }
-    } catch (error: any) {
+    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       setErrorMessage(error.message || "An error occurred.");
     } finally {
       setIsLoading(false);

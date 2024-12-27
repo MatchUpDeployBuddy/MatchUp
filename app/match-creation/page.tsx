@@ -10,7 +10,7 @@ import { TimeDropdown } from "@/components/ui/time-dropwdown";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaFootballBall, FaRegClock } from "react-icons/fa";
+import { FaCalendarAlt, FaUsers, FaFootballBall, FaRegClock } from "react-icons/fa";
 import { FiBarChart } from "react-icons/fi";
 import { IoMdInformationCircleOutline } from "react-icons/io";
 
@@ -55,10 +55,6 @@ export default function MatchCreationPage() {
   const router = useRouter();
 
   const [selectedDate, setSelectedDate] = useState("");
-
-  const handleTimeChange = (selectedTime: string) => {
-    console.log("Selected Time:", selectedTime);
-  };
 
   // Formular-Hook
   const form = useForm<z.infer<typeof matchSchema>>({
@@ -107,7 +103,7 @@ export default function MatchCreationPage() {
 
       console.log("Event-Daten:", eventData)
       // Event-Daten in die Datenbank einfügen
-      const { data: event, error } = await supabase.from("events").insert([eventData]);
+      const { error } = await supabase.from("events").insert([eventData]);
 
       if (error) {
         throw new Error(error.message);
