@@ -24,24 +24,21 @@ export async function login(data: z.infer<typeof loginSchema>) {
   const parsedData = loginSchema.safeParse(data);
 
   if (!parsedData.success) {
-    console.log("Login validation failed:", parsedData.error);
-    return { error: parsedData.error.flatten() };
+    throw new Error(JSON.stringify(parsedData.error.flatten()));
   }
 
   const { error } = await supabase.auth.signInWithPassword(parsedData.data);
 
   if (error) {
-    console.log("Login error:", error);
-    return { error: error.message };
+    throw new Error("Email or password is incorrect");
   }
 
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData?.user) {
     console.log("User fetch error or no user:", userError);
-    return { error: "Failed to fetch user data" };
+    throw new Error("Failed to fetch user data");
   }
 
-  console.log("User data:", userData);
   revalidatePath("/", "layout");
   redirect("/dashboard");
 }
@@ -53,7 +50,7 @@ export async function signup(data: z.infer<typeof signupSchema>) {
 
   if (!parsedData.success) {
     console.log("Signup validation failed:", parsedData.error);
-    return { error: parsedData.error.flatten() };
+    throw new Error(JSON.stringify(parsedData.error.flatten()));
   }
 
   const { error } = await supabase.auth.signUp({
@@ -67,14 +64,13 @@ export async function signup(data: z.infer<typeof signupSchema>) {
   });
 
   if (error) {
-    console.log("Signup error:", error);
-    return { error: error.message };
+    throw new Error(error.message);
   }
 
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData?.user) {
     console.log("User fetch error or no user:", userError);
-    return { error: "Failed to fetch user data" };
+    throw new Error("Failed to fetch user data");
   }
 
   console.log("User data:", userData);
@@ -96,8 +92,7 @@ export async function signInWithOAuth(provider: Provider) {
   });
 
   if (error) {
-    console.log("OAuth error:", error);
-    return { error: error.message };
+    throw new Error(error.message);
   }
 
   redirect(data.url);
