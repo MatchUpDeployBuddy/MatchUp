@@ -12,10 +12,39 @@ export default function AddressSearch() {
     place_name: string;
     center: [number, number];
   }[]>([]);
+
+  // set start coordinates
   const [mapCenter, setMapCenter] = useState<[number, number]>([9.993682, 53.551086]);
+
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
+
+  // try to fetch user location
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      console.log("Geolocation is not supported by this browser.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const userCenter: [number, number] = [
+          position.coords.longitude,
+          position.coords.latitude,
+        ];
+        setMapCenter(userCenter);
+
+        if (mapRef.current) {
+          mapRef.current.flyTo({ center: userCenter, zoom: 14 });
+        }
+      },
+      (error) => {
+        console.log("Geolocation verweigert oder fehlgeschlagen:", error);
+      }
+    );
+  }, []);
+
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -27,7 +56,6 @@ export default function AddressSearch() {
       center: mapCenter,
       zoom: 9,
     });
-
     mapRef.current = map;
 
     const marker = new mapboxgl.Marker({
@@ -38,21 +66,19 @@ export default function AddressSearch() {
 
     markerRef.current = marker;
 
-    // marker follows the map centrum
     const handleMove = () => {
       if (!mapRef.current) return;
       const center = mapRef.current.getCenter();
       const newCenter: [number, number] = [center.lng, center.lat];
       setMapCenter(newCenter);
+
       markerRef.current?.setLngLat(newCenter);
     };
 
-    // reverse geocoding at move end
     const handleMoveEnd = async () => {
       if (!mapRef.current) return;
       const center = mapRef.current.getCenter();
       try {
-        // Reverse-Geocode: lng,lat
         const response = await fetch(
           `https://api.mapbox.com/geocoding/v5/mapbox.places/${center.lng},${center.lat}.json?access_token=${mapboxgl.accessToken}&limit=1`
         );
@@ -62,10 +88,9 @@ export default function AddressSearch() {
 
         const data = await response.json();
         const placeName = data.features?.[0]?.place_name || "Keine Adresse gefunden";
-
         setSearchQuery(placeName);
       } catch (error) {
-        console.error("Error in reverse geocoding: ", error);
+        console.error("Error in reverse geocoding:", error);
       }
     };
 
@@ -77,6 +102,7 @@ export default function AddressSearch() {
       map.off("moveend", handleMoveEnd);
     };
   }, []);
+
 
   const handleSelectSuggestion = (suggestion: {
     place_name: string;
@@ -104,7 +130,9 @@ export default function AddressSearch() {
 
     try {
       const res = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+          query
+        )}.json?access_token=${
           process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
         }&autocomplete=true&limit=5`
       );
