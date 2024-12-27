@@ -6,10 +6,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { TimeDropdown } from "@/components/ui/time-dropwdown";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaFootballBall } from "react-icons/fa";
+import { FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaFootballBall, FaRegClock } from "react-icons/fa";
+import { FiBarChart } from "react-icons/fi";
+import { IoMdInformationCircleOutline } from "react-icons/io";
 
 // Initialisierung von Supabase
 const supabase = await createClient();
@@ -51,6 +54,12 @@ const skill = [
 export default function MatchCreationPage() {
   const router = useRouter();
 
+  const [selectedDate, setSelectedDate] = useState("");
+
+  const handleTimeChange = (selectedTime: string) => {
+    console.log("Selected Time:", selectedTime);
+  };
+
   // Formular-Hook
   const form = useForm<z.infer<typeof matchSchema>>({
     resolver: zodResolver(matchSchema),
@@ -70,7 +79,6 @@ export default function MatchCreationPage() {
       // Kombinieren von Datum und Startzeit in ein Ereigniszeitstempel
       const event_time = new Date(`${data.date}T${data.startTime}`).toISOString();
 
-      
       const {
         data: { user },
         error: userError,
@@ -85,20 +93,17 @@ export default function MatchCreationPage() {
       }
 
       const creator_id = user.id;
-      console.log("hallo user:", creator_id)
 
       // Daten, die an die Backend-API gesendet werden
       const eventData = {
         sport: data.sport,
         //location: data.location,
-        participants_needed: data.buddies, // Teilnehmeranzahl
-        skill_level: "Beginner", // Beispielwert, später anpassbar
+        participants_needed: data.buddies, 
+        skill_level: data.skillLevel, 
         event_time,
         description: data.description,
         creator_id,
       };
-
-      console.log("Event Daten:", eventData)
 
       // Event-Daten in die Datenbank einfügen
       const { data: event, error } = await supabase.from("events").insert([eventData]);
@@ -118,7 +123,7 @@ export default function MatchCreationPage() {
     <div className="min-h-screen bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 animate-gradient-x p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold text-center text-text-primary mb-8">
-          Create a New Sport Match
+        Create your own MATCH
         </h1>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -139,8 +144,8 @@ export default function MatchCreationPage() {
                         value={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger className="border-secondary text-lg rounded-full">
-                            <SelectValue placeholder="Select a sport" />
+                          <SelectTrigger className="border-secondary text-md  rounded-full">
+                            <SelectValue placeholder="Select your sport" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -163,7 +168,7 @@ export default function MatchCreationPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-text-primary flex items-center text-lg">
-                      <FaFootballBall className="mr-2" />
+                      <FiBarChart className="mr-2" />
                       Skill Level
                     </FormLabel>
                     <FormControl>
@@ -172,8 +177,8 @@ export default function MatchCreationPage() {
                         value={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger className="border-secondary text-lg rounded-full">
-                            <SelectValue placeholder="Select your skill level" />
+                          <SelectTrigger className="border-secondary text-md  rounded-full">
+                            <SelectValue placeholder="Choose the required skill level for your match" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -210,23 +215,30 @@ export default function MatchCreationPage() {
                   </FormItem>
                 )}
               /> */}
-              
+              <div className="flex space-x-4">
               {/* Date */}
               <FormField
                     control={form.control}
                     name="date"
                     render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="flex-1 relative">
                         <FormLabel className="text-text-primary flex items-center text-lg">
                             <FaCalendarAlt className="mr-2" />
                             Date
                         </FormLabel>
                         <FormControl>
-                            <Input
-                            type="date"
-                            {...field}
-                            className="border-secondary text-md rounded-full"
-                            />
+                        <Input
+                          type="date"
+                          id="date"
+                          value={selectedDate}
+                          onChange={(e) => {
+                            const selected = e.target.value;
+                            setSelectedDate(selected);
+                            field.onChange(selected);
+                          }}
+                          min={new Date().toISOString().split("T")[0]} // Nur heutige oder zukünftige Daten
+                          className="border-secondary text-md rounded-full"
+                        />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -237,23 +249,26 @@ export default function MatchCreationPage() {
                 control={form.control}
                 name="startTime"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex-1">
                     <FormLabel className="text-text-primary flex items-center text-lg">
-                      <FaCalendarAlt className="mr-2" />
-                      Start Time
+                      <FaRegClock className="mr-2" />
+                      Time
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        type="time"
-                        {...field}
-                        className="border-secondary text-md rounded-full"
-                      />
+                    <TimeDropdown
+                      minTime={new Date().toLocaleTimeString("de-DE", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                      selectedDate={selectedDate} // Datum an Dropdown übergeben
+                          onChange={(time: string) => field.onChange(time)} // Zeit speichern
+                    />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
+            </div>
               {/* Number of Buddies */}
               <FormField
                 control={form.control}
@@ -262,13 +277,14 @@ export default function MatchCreationPage() {
                   <FormItem>
                     <FormLabel className="text-text-primary flex items-center text-lg">
                       <FaUsers className="mr-2" />
-                      Number of Buddies
+                      Buddies
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         min={1}
-                        {...field}
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
                         className="border-secondary text-md rounded-full"
                       />
                     </FormControl>
@@ -284,12 +300,15 @@ export default function MatchCreationPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-text-primary flex items-center text-lg">
+                    <IoMdInformationCircleOutline className="mr-2"/>
                       Match Description
                     </FormLabel>
                     <FormControl>
                       <Input
+                        type="text"
+                        maxLength={100}
                         {...field}
-                        placeholder="Enter a description (max 200 characters)"
+                        placeholder="Write a descriptive text about your match in up to 100 characters"
                         className="border-secondary text-md rounded-full"
                       />
                     </FormControl>
