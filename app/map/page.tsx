@@ -11,8 +11,8 @@ type EventData = {
     skill_level: string;
     event_time: string;
     description: string;
-    longitude: number; // Add longitude property
-    latitude: number;  // Add latitude property
+    longitude: number;
+    latitude: number;  
 }
 
 export default function MapPage() {
