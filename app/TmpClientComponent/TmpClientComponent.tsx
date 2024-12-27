@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 
 export default function TmpClientComponent() {
     const [user, setUser] = useState({})
-
+// TODO: abchecken ob wir das noch brauchen oder ob wir das löschen können
     useEffect(() => {
         async function getUser() {
             const supabase = createClient();
