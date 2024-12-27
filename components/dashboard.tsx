@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TmpClientComponent from "../app/TmpClientComponent/TmpClientComponent";
 import { logout } from "../app/logout/action";
+import Link from "next/link";
 
 interface DashboardProps {
   userId: string;
@@ -60,7 +61,9 @@ export default function DashboardComponent({ userId }: DashboardProps) {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <Button className="h-20">Create Event</Button>
+      <Link href="/match-creation">
+          <Button className="h-20 w-full">Create Event</Button>
+        </Link>
         <Button variant="outline" className="h-20">
           Find Teammates
         </Button>

@@ -105,6 +105,7 @@ export default function MatchCreationPage() {
         creator_id,
       };
 
+      console.log("Event-Daten:", eventData)
       // Event-Daten in die Datenbank einfügen
       const { data: event, error } = await supabase.from("events").insert([eventData]);
 
