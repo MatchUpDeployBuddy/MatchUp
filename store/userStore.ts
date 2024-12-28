@@ -6,12 +6,14 @@ import { Buddy } from "@/types";
 interface UserState {
   user: Buddy | null;
   fetchUser: () => Promise<void>;
+  clearUser: () => void;
 }
 
 export const useUserStore = create(
   persist<UserState>(
     (set) => ({
       user: null,
+
       fetchUser: async () => {
         const supabase = createClient();
         const {
@@ -19,23 +21,26 @@ export const useUserStore = create(
           error,
         } = await supabase.auth.getUser();
 
+        // If no user or error, set store to null
         if (error || !user) {
           set({ user: null });
           return;
         }
 
-        // Fetch additional user data (account-creation)
+        // Then fetch the user's profile from DB
         const { data: userData, error: userError } = await supabase
           .from("users")
           .select("*")
           .eq("id", user.id)
           .single();
+
         if (userError) {
           console.error("Error fetching user data:", userError);
           set({ user: null });
           return;
         }
 
+        // Store the combined user data
         set({
           user: {
             ...userData,
@@ -43,6 +48,10 @@ export const useUserStore = create(
             email: user.email,
           },
         });
+      },
+
+      clearUser: () => {
+        set({ user: null });
       },
     }),
     {

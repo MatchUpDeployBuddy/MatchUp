@@ -6,11 +6,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TmpClientComponent from "../TmpClientComponent/TmpClientComponent";
 import { logout } from "../logout/action";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function DashboardComponent() {
+  const router = useRouter();
   const user = useUserStore((state) => state.user);
-  console.log("dashboard user", user?.username);
+  const clearUser = useUserStore((state) => state.clearUser);
 
+  const handleLogout = async () => {
+    const result = await logout();
+    if (result?.success) {
+      clearUser();
+      router.push("/");
+    }
+  };
 
   return (
     <div className="container mx-auto p-6">
@@ -20,9 +29,7 @@ export default function DashboardComponent() {
         <TmpClientComponent />
         <h2 className="text-3xl font-bold">Hello {user?.username}</h2>
 
-        <form action={logout}>
-          <Button type="submit">Logout</Button>
-        </form>
+        <Button onClick={handleLogout}>Logout</Button>
       </div>
 
       {/* Quick Actions */}
