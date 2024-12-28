@@ -1,8 +1,8 @@
+import SettingsClient from "./settings-client";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import DashboardComponent from "./dasboard-client";
 
-export default async function DashboardPage() {
+export default async function SettingsPage() {
   const supabase = await createClient();
 
   // Check if user is logged in
@@ -10,6 +10,5 @@ export default async function DashboardPage() {
   if (error || !data?.user) {
     redirect("/login");
   }
-
-  return <DashboardComponent />;
+  return <SettingsClient />;
 }
