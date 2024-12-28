@@ -254,7 +254,7 @@ function AccountSettings({
       if (!response.ok) {
         if (result.errors) {
           const serverErrors: { [key: string]: string } = {};
-          result.errors.forEach((err: any) => {
+          result.errors.forEach((err: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
             serverErrors[err.field] = err.message;
           });
         }
@@ -266,7 +266,7 @@ function AccountSettings({
         title: "Success",
         description: "User data updated successfully",
       })
-    } catch (error: any) {
+    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('Update failed:', error);
       toast({
         title: "Error",
