@@ -7,6 +7,7 @@ interface UserState {
   user: Buddy | null;
   fetchUser: () => Promise<void>;
   clearUser: () => void;
+  updateUser: (user: Partial<Buddy>) => void;
 }
 
 export const useUserStore = create(
@@ -53,6 +54,10 @@ export const useUserStore = create(
       clearUser: () => {
         set({ user: null });
       },
+      updateUser: (partialUser: Partial<Buddy>) => 
+        set((state) => ({
+          user: state.user ? { ...state.user, ...partialUser } : null,
+        })),
     }),
     {
       name: "user-storage",

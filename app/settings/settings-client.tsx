@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { FaUser, FaBell, FaQuestionCircle, FaUserPlus } from "react-icons/fa";
 import { useUserStore } from "@/store/userStore";
 import { Buddy } from "@/types";
+
 import {
   Select,
   SelectContent,
@@ -18,6 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { z } from "zod";
+import { useToast } from "@/hooks/use-toast"
 
 const settingsSections = [
   { id: "account", title: "Account", icon: FaUser },
@@ -25,6 +28,25 @@ const settingsSections = [
   { id: "help", title: "Help Center", icon: FaQuestionCircle },
   { id: "invite", title: "Invite Friends", icon: FaUserPlus },
 ];
+
+const userSchema = z.object({
+  userId: z.string(),
+  username: z
+    .string()
+    .min(1, { message: "Name is required" })
+    .max(50, { message: "Name must be 50 characters or less" }),
+  birthday: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
+    message: "Please enter a valid date in YYYY-MM-DD format",
+  }),
+  sportInterests: z
+    .array(z.string())
+    .min(1, { message: "Please select at least one sport" }),
+  city: z.string().min(1, { message: "Please select a city" }),
+  profilePicture: z
+    .string()
+    .url({ message: "Please upload a profile picture" })
+    .optional(),
+});
 
 const sports = [
   "Soccer",
@@ -55,7 +77,7 @@ const germanCities = [
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState("account");
   const [isEditing, setIsEditing] = useState(false);
-  const user = useUserStore((state) => state.user);
+  const {user, updateUser} = useUserStore((state) => state);
 
   const renderSectionContent = () => {
     switch (activeSection) {
@@ -64,6 +86,7 @@ export default function SettingsPage() {
           user && (
             <AccountSettings
               user={user}
+              updateUser={updateUser}
               isEditing={isEditing}
               setIsEditing={setIsEditing}
             />
@@ -157,14 +180,17 @@ export default function SettingsPage() {
 
 function AccountSettings({
   user,
+  updateUser,
   isEditing,
   setIsEditing,
 }: {
   user: Buddy;
+  updateUser: (user: Partial<Buddy>) => void;
   isEditing: boolean;
   setIsEditing: (value: boolean) => void;
 }) {
   const [formData, setFormData] = useState(user);
+  const { toast } = useToast()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -181,10 +207,72 @@ function AccountSettings({
     setFormData({ ...formData, sport_interests: updatedSports });
   };
 
+  const validate = () => {
+    const result = userSchema.safeParse({
+      userId: formData.id,
+      username: formData.username,
+      birthday: formData.birthday,
+      gender: formData.gender_enum,
+      sportInterests: formData.sport_interests,
+      city: formData.city,
+      profilePicture: formData.profile_picture_url,
+    });
+    if (!result.success) {
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async () => {
-    // Implement the API call to update user data
-    console.log("Updating user data:", formData);
-    setIsEditing(false);
+    if(!validate()) {
+      toast({
+        title: "Error",
+        description: "An error occurred while updating the user data",
+        
+      })
+      return;
+    }
+    try {
+      const response = await fetch('/api/update-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: formData.id,
+          username: formData.username,
+          birthday: formData.birthday,
+          gender: formData.gender_enum,
+          sportInterests: formData.sport_interests,
+          city: formData.city,
+          profilePicture: formData.profile_picture_url,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        if (result.errors) {
+          const serverErrors: { [key: string]: string } = {};
+          result.errors.forEach((err: any) => {
+            serverErrors[err.field] = err.message;
+          });
+        }
+        throw new Error(result.error || 'Error updating user');
+      }
+      updateUser(result.data[0]);
+      setIsEditing(false);
+      toast({
+        title: "Success",
+        description: "User data updated successfully",
+      })
+    } catch (error: any) {
+      console.error('Update failed:', error);
+      toast({
+        title: "Error",
+        description: 'An unexpected error occurred',
+      })
+    }
   };
 
   return (
