@@ -7,14 +7,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TmpClientComponent from "../app/TmpClientComponent/TmpClientComponent";
 import { logout } from "../app/logout/action";
 import Link from "next/link";
+import { useUserStore } from "@/providers/user-store-provider";
 
 interface DashboardProps {
   userId: string;
 }
 
 export default function DashboardComponent({ userId }: DashboardProps) {
-  const [user, setUser] = useState<Buddy | null>(null);
   const [loading, setLoading] = useState(true);
+  const { user, setUser } = useUserStore((state) => state);
 
   // Fetch user data in the browser (client side) using the userId
   useEffect(() => {
@@ -26,6 +27,7 @@ export default function DashboardComponent({ userId }: DashboardProps) {
         });
         const data: Buddy = await res.json();
         setUser(data);
+
       } catch (err) {
         console.error("Failed to fetch user:", err);
       } finally {
