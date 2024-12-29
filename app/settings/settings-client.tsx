@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { FaUser, FaBell, FaQuestionCircle, FaUserPlus } from "react-icons/fa";
 import { useUserStore } from "@/store/userStore";
 import { Buddy } from "@/types";
+import { uploadProfilePicture } from "@/utils/supabase/storage";
 
 import {
   Select,
@@ -78,7 +79,7 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState("account");
   const [isEditing, setIsEditing] = useState(false);
   const {user, updateUser} = useUserStore((state) => state);
-
+  
   const renderSectionContent = () => {
     switch (activeSection) {
       case "account":
@@ -123,7 +124,7 @@ export default function SettingsPage() {
               <div className="flex items-center space-x-4">
                 <Avatar className="w-16 h-16 border-2 border-primary">
                   <AvatarImage
-                    src={user.profile_picture_url || "/placeholder-avatar.jpg"}
+                    src={user.profile_picture_url}
                     alt="Profile picture"
                   />
                   <AvatarFallback>{user.username.charAt(0)}</AvatarFallback>
@@ -133,13 +134,15 @@ export default function SettingsPage() {
                   <p className="text-muted-foreground">{user.email}</p>
                 </div>
               </div>
-              <Button
-                variant="outline"
-                className="rounded-full"
-                onClick={() => setIsEditing(!isEditing)}
-              >
-                {isEditing ? "Save Changes" : "Edit Profile"}
-              </Button>
+              {!isEditing && (
+                    <Button
+                      variant="outline"
+                      className="rounded-full"
+                      onClick={() => setIsEditing(!isEditing)}
+                    >
+                      Edit
+                    </Button>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
@@ -190,6 +193,13 @@ function AccountSettings({
   setIsEditing: (value: boolean) => void;
 }) {
   const [formData, setFormData] = useState(user);
+  const [profilePictureFile, setProfilePictureFile] = useState<File | null>(
+    null
+  );
+  const [profilePicturePreview, setProfilePicturePreview] = useState<
+    string | null
+  >(null);
+  const [cacheBust, setCacheBust] = useState(0);
   const { toast } = useToast()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -205,6 +215,41 @@ function AccountSettings({
       ? formData.sport_interests.filter((s) => s !== sport)
       : [...formData.sport_interests, sport];
     setFormData({ ...formData, sport_interests: updatedSports });
+  };
+
+  const handleProfilePictureChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validation will also be done in the backend
+      const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+      const allowedTypes = ["image/jpeg", "image/png"];
+
+      if (file.size > MAX_SIZE) {
+        toast({
+          title: "Error",
+          description: "File size exceeds 2MB",
+        })
+        return;
+      }
+
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: "Error",
+          description: "Invalid file type. Please upload a JPEG or PNG image",
+        })
+        return;
+      }
+
+      setProfilePictureFile(file);
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePicturePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const validate = () => {
@@ -223,13 +268,54 @@ function AccountSettings({
     return true;
   };
 
+  const isDifferent = (formData: Buddy): boolean => {
+    const isEqual = (obj1: Buddy, obj2: Buddy): boolean => {
+      return Object.keys(obj1).every((key) => {
+        const value1 = obj1[key as keyof Buddy];
+        const value2 = obj2[key as keyof Buddy];
+  
+        if (Array.isArray(value1) && Array.isArray(value2)) {
+          return (
+            value1.length === value2.length &&
+            value1.every((val, index) => val === value2[index])
+          );
+        }
+        return value1 === value2;
+      });
+    };
+  
+    const hasChanged = !isEqual(formData, user);
+  
+    return hasChanged;
+  };
+
   const handleSubmit = async () => {
+
+    if (profilePictureFile) {
+      const uploadedUrl = await uploadProfilePicture(profilePictureFile);
+      if (uploadedUrl) {
+        formData.profile_picture_url = uploadedUrl;
+        setCacheBust(prev => prev + 1);
+      } else {
+        toast({
+          title: "Error",
+          description: 'Could not upload profile picture',
+        })
+      }
+    }
+
     if(!validate()) {
       toast({
         title: "Error",
         description: "An error occurred while updating the user data",
-        
       })
+      setProfilePicturePreview(null);
+      setProfilePictureFile(null);
+      return;
+    } else if (!isDifferent(formData)) {
+      setProfilePicturePreview(null);
+      setProfilePictureFile(null);
+      setIsEditing(false);
       return;
     }
     try {
@@ -252,21 +338,17 @@ function AccountSettings({
       const result = await response.json();
 
       if (!response.ok) {
-        if (result.errors) {
-          const serverErrors: { [key: string]: string } = {};
-          result.errors.forEach((err: any) => {
-            serverErrors[err.field] = err.message;
-          });
-        }
         throw new Error(result.error || 'Error updating user');
       }
+      setProfilePicturePreview(null);
+      setProfilePictureFile(null);
       updateUser(result.data[0]);
       setIsEditing(false);
       toast({
         title: "Success",
         description: "User data updated successfully",
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Update failed:', error);
       toast({
         title: "Error",
@@ -278,6 +360,27 @@ function AccountSettings({
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold mb-4">Account Settings</h3>
+      <Label htmlFor="profilePicture">Profile Picture</Label>
+      <div className="flex items-center space-x-4">
+        <Avatar className="w-16 h-16 border-2 border-primary">
+          <AvatarImage
+            key={`${formData.profile_picture_url}-${cacheBust}`}
+            src={profilePicturePreview || user.profile_picture_url}
+            alt="Profile picture"
+          />
+          <AvatarFallback>{user.username.charAt(0)}</AvatarFallback>
+        </Avatar>
+        {isEditing && (
+          <div>
+            <Input
+              type="file"
+              accept="image/*"
+              className="border-secondary text-lg rounded-full cursor-pointer"
+              onChange={(e) => handleProfilePictureChange(e)}
+            />
+          </div>
+        )}
+      </div>
       <div className="space-y-2">
         <Label htmlFor="username">Username</Label>
         <Input
