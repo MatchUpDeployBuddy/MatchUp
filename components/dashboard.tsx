@@ -7,16 +7,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TmpClientComponent from "../app/TmpClientComponent/TmpClientComponent";
 import { logout } from "../app/logout/action";
 import Link from "next/link";
+import { EventCard } from "./ui/event-card";
 
 interface DashboardProps {
   userId: string;
 }
 
+interface Event {
+  id: string;
+  sport: string;
+  event_time: string;
+}
+
 export default function DashboardComponent({ userId }: DashboardProps) {
   const [user, setUser] = useState<Buddy | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingEvents, setLoadingEvents] = useState(true);
 
-  // Fetch user data in the browser (client side) using the userId
+  // Fetch user data
   useEffect(() => {
     async function fetchUser() {
       setLoading(true);
@@ -36,12 +45,35 @@ export default function DashboardComponent({ userId }: DashboardProps) {
     fetchUser();
   }, [userId]);
 
-  // Show a loading state while fetching
+  // Fetch user events
+  useEffect(() => {
+    async function fetchUserEvents() {
+      setLoadingEvents(true);
+      try {
+        const res = await fetch(`/api/get-user-events?creatorId=${userId}`, {
+          cache: "no-store",
+        });
+        const data: Event[] = await res.json();
+
+        // Filter nur zukünftige Events
+        const now = new Date();
+        const futureEvents = data.filter((event) => new Date(event.event_time) > now);
+
+        setEvents(futureEvents);
+      } catch (err) {
+        console.error("Failed to fetch events:", err);
+      } finally {
+        setLoadingEvents(false);
+      }
+    }
+
+    fetchUserEvents();
+  }, [userId]);
+
   if (loading) {
     return <p className="m-4">Loading user data...</p>;
   }
 
-  // If there's no user data returned
   if (!user) {
     return <p className="m-4">No user found.</p>;
   }
@@ -61,7 +93,7 @@ export default function DashboardComponent({ userId }: DashboardProps) {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-      <Link href="/match-creation">
+        <Link href="/match-creation">
           <Button className="h-20 w-full">Create Event</Button>
         </Link>
         <Button variant="outline" className="h-20">
@@ -72,13 +104,23 @@ export default function DashboardComponent({ userId }: DashboardProps) {
         </Button>
       </div>
 
-      {/* Upcoming Events */}
+      {/* Active MATCHES*/}
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle>Upcoming Events</CardTitle>
+          <CardTitle>Active MATCHES</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>Your upcoming events will be displayed here.</p>
+          {loadingEvents ? (
+            <p>Loading events...</p>
+          ) : events.length > 0 ? (
+            <ul>
+              {events.map((event) => (
+                <EventCard key={event.id} {...event} />
+              ))}
+            </ul>
+          ) : (
+            <p>No upcoming events found.</p>
+          )}
         </CardContent>
       </Card>
 
