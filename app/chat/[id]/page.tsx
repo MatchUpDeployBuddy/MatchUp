@@ -9,8 +9,8 @@ export default function ChatPage() {
     return (
         <div className="max-w-3x1 mx-auto md:py-10 h-screen">
 
-            <div className="h-full border rounded-md flex flex-col">
-                <ChatHeader />
+            <div className="h-full border rounded-md flex flex-col relative">
+                <ChatHeader id={event_id} />
                 <ChatMessages id={event_id} />
                 <ChatInput id={event_id} />
             </div>
