@@ -1,12 +1,22 @@
 -- install extension for postgis
 create extension if not exists postgis;
+CREATE TYPE gender_enum AS ENUM ('male', 'female', 'other', 'prefer-not-to-say');
 
 create table users (
     id uuid not null references auth.users on delete cascade,
     name varchar(100) not null unique,
     updated_at timestamp default now(),
+    username VARCHAR(50),
+    birthday DATE,
+    gender gender_enum,
+    sport_interests TEXT[] NOT NULL DEFAULT '{}',
+    city VARCHAR(100),
+    profile_picture_url TEXT,
+    is_profile_complete boolean,
     primary key (id)
 );
+
+
 
 alter table users enable row level security;
 
@@ -14,11 +24,11 @@ create policy "Public users are viewable by everyone." on users
 for select 
 using (true);
 
-create policy "Users can update own profile." on users 
-for update 
-to authenticated
-using ( (select auth.uid()) = id)
-with check ( (select auth.uid()) = id);
+CREATE POLICY "Users can update own profile."
+  ON users 
+  FOR UPDATE 
+  using ( (select auth.uid()) = id)
+  with check ( (select auth.uid()) = id);
 
 REVOKE UPDATE ON TABLE users FROM public;
 GRANT UPDATE (name) ON TABLE users TO public;
@@ -46,7 +56,7 @@ execute function public.handle_new_user();
 
 create table events (
     id uuid primary key default gen_random_uuid(),
-    creator_id uuid references users(id) on delete cascade,
+    creator_id uuid references users(id) on delete cascade not null,
     sport varchar(50) not null,
     participants_needed int not null check (participants_needed > 0),
     skill_level varchar(50) not null,
@@ -148,3 +158,36 @@ after update on event_requests
 for each row
 when (new.status = 'accepted')
 execute function handle_request_accepted();
+
+
+create table messages (
+    id uuid primary key default gen_random_uuid(),
+    event_id uuid references events(id) on delete cascade,
+    sender_id uuid references users(id) on delete cascade,
+    content text not null,
+    created_at timestamp default now()
+);
+
+alter table messages enable row level security;
+
+create policy "Only participants can read messages in their events" 
+on messages
+for select
+using (
+  (select auth.uid()) in (
+    select joined_user_id 
+    from event_participants 
+    where event_id = messages.event_id
+  )
+);
+
+create policy "Only participants can insert messages in their events"
+on messages
+for insert
+with check (
+  (select auth.uid()) in (
+    select joined_user_id 
+    from event_participants 
+    where event_id = messages.event_id
+  )
+);
