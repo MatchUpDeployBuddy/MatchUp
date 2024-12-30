@@ -46,7 +46,7 @@ export const useUserStore = create(
           user: {
             ...userData,
             id: user.id,
-            email: user.email,
+            email: user.email 
           },
         });
       },

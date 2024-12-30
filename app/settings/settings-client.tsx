@@ -124,10 +124,10 @@ export default function SettingsPage() {
               <div className="flex items-center space-x-4">
                 <Avatar className="w-16 h-16 border-2 border-primary">
                   <AvatarImage
-                    src={user.profile_picture_url}
+                    src={user.profile_picture_url!}
                     alt="Profile picture"
                   />
-                  <AvatarFallback>{user.username.charAt(0)}</AvatarFallback>
+                  <AvatarFallback>{user.username!.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div>
                   <h2 className="text-2xl font-semibold">{user.username}</h2>
@@ -211,9 +211,9 @@ function AccountSettings({
   };
 
   const handleSportToggle = (sport: string) => {
-    const updatedSports = formData.sport_interests.includes(sport)
-      ? formData.sport_interests.filter((s) => s !== sport)
-      : [...formData.sport_interests, sport];
+    const updatedSports = (formData.sport_interests ?? []).includes(sport)
+      ? (formData.sport_interests ?? []).filter((s) => s !== sport)
+      : [...(formData.sport_interests ?? []), sport];
     setFormData({ ...formData, sport_interests: updatedSports });
   };
 
@@ -365,10 +365,10 @@ function AccountSettings({
         <Avatar className="w-16 h-16 border-2 border-primary">
           <AvatarImage
             key={`${formData.profile_picture_url}-${cacheBust}`}
-            src={profilePicturePreview || user.profile_picture_url}
+            src={profilePicturePreview || user.profile_picture_url!}
             alt="Profile picture"
           />
-          <AvatarFallback>{user.username.charAt(0)}</AvatarFallback>
+          <AvatarFallback>{user.username!.charAt(0)}</AvatarFallback>
         </Avatar>
         {isEditing && (
           <div>
@@ -386,7 +386,7 @@ function AccountSettings({
         <Input
           id="username"
           name="username"
-          value={formData.username}
+          value={formData.username!}
           onChange={handleInputChange}
           readOnly={!isEditing}
         />
@@ -397,7 +397,7 @@ function AccountSettings({
           id="birthday"
           name="birthday"
           type="date"
-          value={formData.birthday}
+          value={formData.birthday!}
           onChange={handleInputChange}
           readOnly={!isEditing}
         />
@@ -405,7 +405,7 @@ function AccountSettings({
       <div className="space-y-2">
         <Label>City</Label>
         <Select
-          value={formData.city}
+          value={formData.city!}
           onValueChange={(value) => handleSelectChange("city", value)}
           disabled={!isEditing}
         >
@@ -428,7 +428,7 @@ function AccountSettings({
             <Button
               key={sport}
               variant={
-                formData.sport_interests.includes(sport) ? "default" : "outline"
+                formData.sport_interests!.includes(sport) ? "default" : "outline"
               }
               onClick={() => handleSportToggle(sport)}
               disabled={!isEditing}
