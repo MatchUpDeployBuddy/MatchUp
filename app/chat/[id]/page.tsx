@@ -2,28 +2,14 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Buddy } from "@/types";
-import { createClient } from "@/utils/supabase/client";
 import React, { useEffect, useState } from "react";
+import { useUserStore } from "@/store/userStore";
+import ChatInput from "./ChatInput";
+import { useRouter } from 'next/router'
 
-export default function ChatPage() {
-    const [user, setUser] = useState<Buddy | null>(null)
-
-    useEffect(() => {
-        async function getUser() {
-            const supabase = createClient();
-            const {data: userData, error} = await supabase.auth.getUser();
-           
-            
-            if (error || !userData?.user) {
-                console.log('No user')
-            } else {
-                const {data, error} = await supabase.from('users').select('*').eq('id', userData.user.id).single();
-                setUser(data)
-            }
-        }
-        getUser()
-    }, [])
-
+export default function ChatPage({ params }: { params: { id: string } }) {
+    const user = useUserStore((state) => state.user);
+    
     return (
         <div className="max-w-3x1 mx-auto md:py-10 h-screen">
 
@@ -65,9 +51,7 @@ export default function ChatPage() {
                         })}
                     </div>
                 </div>
-                <div className="p-5">
-                    <Input placeholder="Send message" />
-                </div>
+                <ChatInput />
             </div>
 
         </div>
