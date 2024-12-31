@@ -15,7 +15,12 @@ const loginSchema = z.object({
 const signupSchema = z.object({
   name: z.string().min(1).max(50),
   email: z.string().email(),
-  password: z.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/),
+  password: z
+    .string()
+    .min(8)
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+    ),
 });
 
 export async function login(data: z.infer<typeof loginSchema>) {
@@ -40,7 +45,7 @@ export async function login(data: z.infer<typeof loginSchema>) {
   }
 
   revalidatePath("/", "layout");
-  redirect("/dashboard");
+  return { loginSuccess: true };
 }
 
 export async function signup(data: z.infer<typeof signupSchema>) {
@@ -73,9 +78,8 @@ export async function signup(data: z.infer<typeof signupSchema>) {
     throw new Error("Failed to fetch user data");
   }
 
-  console.log("User data:", userData);
   revalidatePath("/", "layout");
-  redirect("/account-creation");
+  return { signupSuccess: true };
 }
 
 export async function signInWithOAuth(provider: Provider) {
@@ -97,4 +101,3 @@ export async function signInWithOAuth(provider: Provider) {
 
   redirect(data.url);
 }
-

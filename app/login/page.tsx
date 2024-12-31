@@ -1,4 +1,5 @@
 "use client";
+
 import { login, signup, signInWithOAuth } from "./actions";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -23,6 +24,8 @@ import {
   ExclamationTriangleIcon,
 } from "@radix-ui/react-icons";
 import { Spinner } from "@/components/ui/spinner"; // Importiere den Spinner
+import { useRouter } from "next/navigation";
+import { useUserStore } from "@/store/userStore";
 
 // Zod Schema Definition
 const formSchemaLogin = z.object({
@@ -61,6 +64,8 @@ export default function LoginPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false); // Neuer State für das Laden
+  const router = useRouter();
+  const fetchUser = useUserStore((state) => state.fetchUser);
 
   const form = useForm<
     z.infer<typeof formSchemaLogin> | z.infer<typeof formSchemaSignup>
@@ -84,13 +89,19 @@ export default function LoginPage() {
     setErrorMessage(null);
     try {
       if (mode === "login") {
-        await login(data as z.infer<typeof formSchemaLogin>);
-        setSuccessMessage("Logged in successfully!");
+        const response = await login(data as z.infer<typeof formSchemaLogin>);
+        if (response?.loginSuccess) {
+          await fetchUser();
+          router.push("/dashboard");
+        }
       } else {
-        await signup(data as z.infer<typeof formSchemaSignup>);
+        const response = await signup(data as z.infer<typeof formSchemaSignup>);
+        if (response?.signupSuccess) {
+          router.push("/account-creation");
+        }
         setSuccessMessage("Account created successfully!");
       }
-    } catch (error: any) {
+    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       setErrorMessage(error.message || "An error occurred.");
     } finally {
       setIsLoading(false);
@@ -188,7 +199,7 @@ export default function LoginPage() {
                     />
                     <Button
                       type="submit"
-                      disabled={isLoading} 
+                      disabled={isLoading}
                       className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-lg px-6 py-3 rounded-full flex items-center justify-center"
                     >
                       {isLoading ? (
@@ -196,8 +207,10 @@ export default function LoginPage() {
                           <Spinner />
                           {mode === "login" ? "Logging in..." : "Signing up..."}
                         </>
+                      ) : mode === "login" ? (
+                        "Login"
                       ) : (
-                        (mode === "login" ? "Login" : "Sign Up")
+                        "Sign Up"
                       )}
                     </Button>
                   </form>
@@ -301,8 +314,10 @@ export default function LoginPage() {
                           <Spinner />
                           {mode === "signup" ? "Signing up..." : "Login..."}
                         </>
+                      ) : mode === "signup" ? (
+                        "Sign Up"
                       ) : (
-                        (mode === "signup" ? "Sign Up" : "Login")
+                        "Login"
                       )}
                     </Button>
                   </form>
@@ -315,7 +330,7 @@ export default function LoginPage() {
               variant="outline"
               className="w-full border-primary text-primary hover:bg-primary/10 text-lg px-6 py-3 rounded-full flex items-center justify-center"
               onClick={() => signInWithOAuth("google")}
-              disabled={isLoading} 
+              disabled={isLoading}
             >
               {isLoading ? (
                 <>

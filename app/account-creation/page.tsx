@@ -182,7 +182,7 @@ export default function AccountCreationPage() {
       setTimeout(() => {
         router.push("/dashboard");
       }, 2000);
-    } catch (error: any) {  // eslint-disable-line @typescript-eslint/no-explicit-any
+    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error("Error creating account:", error);
       setErrorMessage(error.message || "Failed to create account");
     }
@@ -202,8 +202,9 @@ export default function AccountCreationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 animate-gradient-x p-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="relative min-h-screen">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 animate-gradient-x -z-10"></div>
+      <div className="relative max-w-4xl min-h-screen mx-auto p-8 bg-white shadow-lg">
         {successMessage && (
           <Alert variant="default" className="mb-4">
             <CheckCircledIcon className="h-4 w-4" />
