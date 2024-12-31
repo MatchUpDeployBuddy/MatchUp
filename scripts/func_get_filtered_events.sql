@@ -6,8 +6,7 @@ CREATE OR REPLACE FUNCTION get_filtered_events(
     _skill_levels        text[],
     _required_slots      int,                   -- Mindestanzahl verfügbarer Plätze
     _start_date          timestamp,
-    _end_date            timestamp,
-    _auth_id             uuid
+    _end_date            timestamp
 )
 RETURNS TABLE (
     id uuid,
@@ -30,7 +29,6 @@ BEGIN
         e.creator_id,
         e.sport,
         e.participants_needed,
-        -- Casting des Ergebnisses zu integer
         (e.participants_needed - COALESCE(ep.count, 0))::integer AS available_slots,
         e.skill_level,
         e.event_time,
@@ -46,17 +44,14 @@ BEGIN
     WHERE 
         e.sport = ANY(_sports)
         AND e.skill_level = ANY(_skill_levels)
-        -- Berechne verfügbare Plätze: participants_needed - aktuelle Teilnehmer >= _required_slots
         AND (e.participants_needed - COALESCE(ep.count, 0)) >= _required_slots
         AND e.event_time BETWEEN _start_date AND _end_date
         AND e.location IS NOT NULL
-        -- Nur Events im Radius _radius (in Metern) vom angegebenen Punkt
         AND ST_DWithin(
             e.location,
             ST_SetSRID(ST_MakePoint(_longitude, _latitude), 4326)::geography,
             _radius
         )
-        -- creator_id darf nicht mit dem auth_id übereinstimmen
-        AND e.creator_id != _auth_id;
+        AND e.creator_id != auth.uid(); 
 END;
 $$;
