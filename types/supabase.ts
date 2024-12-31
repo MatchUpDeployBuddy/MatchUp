@@ -1122,7 +1122,6 @@ export type Database = {
           _required_slots: number
           _start_date: string
           _end_date: string
-          _auth_id: string
         }
         Returns: {
           id: string
