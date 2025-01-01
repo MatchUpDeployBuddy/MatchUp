@@ -5,8 +5,8 @@ const DEFAULTS = {
   longitude: 13.4050,
   latitude: 52.5200,
   radius: 1000,
-  sports: ['Soccer'],
-  skill_levels: ['Intermediate'],
+  sports: ['soccer'],
+  skill_levels: ['intermediate'],
   required_slots: 1,
 };
 
@@ -25,14 +25,13 @@ export async function GET(request: Request): Promise<NextResponse> {
       _start_date: searchParams.get('start_date') || new Date().toISOString(),
       _end_date: searchParams.get('end_date') || new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
     };
-
+    
     const { data, error } = await supabase.rpc('get_filtered_events', params);
 
     if (error) {
       console.error('Error executing Supabase RPC:', { error, params });
       return NextResponse.json({ error: "Failed to fetch events from the database" }, { status: 500 });
     }
-
     return NextResponse.json({ events: data }, { status: 200 });
   } catch (err) {
     console.error('Server error:', err);
