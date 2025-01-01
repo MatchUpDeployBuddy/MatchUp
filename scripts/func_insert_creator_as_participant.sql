@@ -1,6 +1,7 @@
 CREATE OR REPLACE FUNCTION public.insert_creator_as_participant()
 RETURNS TRIGGER
 LANGUAGE plpgsql
+SECURITY DEFINER
 AS $$
 BEGIN
     -- Insert the creator as a participant in the event_participants table
