@@ -24,5 +24,10 @@ export async function uploadProfilePicture(file: File): Promise<string | null> {
     .from('profile_pictures')
     .getPublicUrl(fileName);
 
-  return data.publicUrl;
+    if (!data || !data.publicUrl) return null;
+
+    const timestamp = new Date().getTime();
+    const publicUrlWithTimestamp = `${data.publicUrl}?t=${timestamp}`;
+  
+    return publicUrlWithTimestamp;
 }
