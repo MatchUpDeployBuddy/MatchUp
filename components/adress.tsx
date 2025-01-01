@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { reverseGeocodeCoordinates } from "@/utils/geocoding";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "";
 
@@ -78,20 +79,14 @@ export default function AddressSearch({ value, onChange }: AddressSearchProps) {
       if (!mapRef.current) return;
       const center = mapRef.current.getCenter();
 
-      try {
-        const response = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${center.lng},${center.lat}.json?access_token=${mapboxgl.accessToken}&limit=1`
-        );
-        if (!response.ok) {
-          throw new Error("Reverse geocoding failed");
-        }
-
-        const data = await response.json();
-        const placeName = data.features?.[0]?.place_name || "No address found";
+      // Verwendung der ausgelagerten Reverse Geocoding-Funktion
+      const placeName = await reverseGeocodeCoordinates(center.lat, center.lng);
+      if (placeName) {
         setInternalQuery(placeName);
         onChange(placeName);
-      } catch (error) {
-        console.error("Error in handleMoveEnd:", error);
+      } else {
+        setInternalQuery("No address found");
+        onChange("No address found");
       }
     };
 

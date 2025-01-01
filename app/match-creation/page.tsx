@@ -33,6 +33,8 @@ import { FiBarChart } from "react-icons/fi";
 import { IoMdInformationCircleOutline } from "react-icons/io";
 
 import AddressSearch from "@/components/adress";
+import { geocodeAddress, Coordinates } from "@/utils/geocoding";
+
 
 // Initialisierung von Supabase
 const supabase = await createClient();
@@ -92,6 +94,21 @@ export default function MatchCreationPage() {
     try {
       // Kombinieren von Datum und Startzeit in ein Ereigniszeitstempel
       const event_time = new Date(`${data.date}T${data.startTime}`).toISOString();
+  
+      // Geocoding der Adresse
+      const coordinates: Coordinates | null = await geocodeAddress(data.location);
+      
+      if (!coordinates) {
+        // Hier den Fehler direkt auf das location-Feld setzen
+        form.setError("location", {
+          type: "custom",
+          message: "Ungültige Adresse",
+        });
+        return; // Wichtig: an dieser Stelle abbrechen, damit nicht weitergemacht wird
+      }
+      console.log(coordinates)
+      const { latitude, longitude } = coordinates;
+      const locationPoint = `SRID=4326;POINT(${longitude} ${latitude})`;
 
       // Aktuellen User holen
       const {
@@ -114,8 +131,7 @@ export default function MatchCreationPage() {
         event_time,
         description: data.description,
         creator_id,
-        // Falls du die Adresse auch in die DB speichern willst (stand jetzt nur Feld "location")
-        // location_address: data.location,   // z. B. als extra Spalte
+        location: locationPoint, // POINT als WKT
       };
 
       console.log("Event-Daten:", eventData);
@@ -130,8 +146,10 @@ export default function MatchCreationPage() {
       router.push("/dashboard");
     } catch (error) {
       console.error("Error creating match:", error);
+      // Hier kannst du auch eine Benachrichtigung oder Fehleranzeige für den Benutzer hinzufügen
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 animate-gradient-x p-8">
