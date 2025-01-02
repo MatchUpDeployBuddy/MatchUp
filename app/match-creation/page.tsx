@@ -100,7 +100,7 @@ export default function MatchCreationPage() {
       if (!coordinates) {
         form.setError("location", {
           type: "custom",
-          message: "Ungültige Adresse",
+          message: "Invalid address",
         });
         return;
       }
