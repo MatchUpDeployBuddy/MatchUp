@@ -21,12 +21,32 @@ export default {
           foreground: "hsl(var(--popover-foreground))",
         },
         primary: {
-          DEFAULT: "#BBF246", // Primary fill color
-          foreground: "#192126", // Primary text color
+          DEFAULT: "hsl(81, 89%, 61%)", // #BBF246
+          foreground: "hsl(200, 20%, 12%)", // #192126
+          "50": "hsl(81, 89%, 95%)",
+          "100": "hsl(81, 89%, 90%)",
+          "200": "hsl(81, 89%, 80%)",
+          "300": "hsl(81, 89%, 70%)",
+          "400": "hsl(81, 89%, 61%)", // #BBF246
+          "500": "hsl(81, 89%, 55%)",
+          "600": "hsl(81, 89%, 49%)",
+          "700": "hsl(81, 89%, 43%)",
+          "800": "hsl(81, 89%, 37%)",
+          "900": "hsl(81, 89%, 31%)",
         },
         secondary: {
-          DEFAULT: "#89C66D", // Secondary fill color
-          foreground: "#000000", // Secondary text color
+          DEFAULT: "hsl(104, 35%, 60%)", // #89C66D
+          foreground: "hsl(0, 0%, 0%)", // #000000
+          "50": "hsl(104, 35%, 95%)",
+          "100": "hsl(104, 35%, 90%)",
+          "200": "hsl(104, 35%, 80%)",
+          "300": "hsl(104, 35%, 70%)",
+          "400": "hsl(104, 35%, 60%)", // #89C66D
+          "500": "hsl(104, 35%, 50%)",
+          "600": "hsl(104, 35%, 40%)",
+          "700": "hsl(104, 35%, 30%)",
+          "800": "hsl(104, 35%, 20%)",
+          "900": "hsl(104, 35%, 10%)",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -51,13 +71,8 @@ export default {
           "5": "hsl(var(--chart-5))",
         },
         text: {
-          primary: "#192126", // Primary text color
+          primary: "hsl(200, 20%, 12%)", // #192126
         },
-      },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
       },
     },
   },

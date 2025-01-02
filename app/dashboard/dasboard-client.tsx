@@ -1,17 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Buddy } from "@/types";
+import { useUserStore } from "@/store/userStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import TmpClientComponent from "../app/TmpClientComponent/TmpClientComponent";
-import { logout } from "../app/logout/action";
+import TmpClientComponent from "../TmpClientComponent/TmpClientComponent";
+import { logout } from "../logout/action";
 import Link from "next/link";
-import { EventCard } from "./ui/event-card";
+import { EventCard } from "@/components/ui/event-card";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 
-interface DashboardProps {
-  userId: string;
-}
 
 interface Event {
   id: string;
@@ -19,31 +17,17 @@ interface Event {
   event_time: string;
 }
 
+interface DashboardProps {
+  userId: string;
+}
+
 export default function DashboardComponent({ userId }: DashboardProps) {
-  const [user, setUser] = useState<Buddy | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
   const [loadingEvents, setLoadingEvents] = useState(true);
-
-  // Fetch user data
-  useEffect(() => {
-    async function fetchUser() {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/get-user?id=${userId}`, {
-          cache: "no-store",
-        });
-        const data: Buddy = await res.json();
-        setUser(data);
-      } catch (err) {
-        console.error("Failed to fetch user:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchUser();
-  }, [userId]);
+  const router = useRouter();
+  const user = useUserStore((state) => state.user);
+  const clearUser = useUserStore((state) => state.clearUser);
+  console.log("user dashboard", user);
 
   // Fetch user events
   useEffect(() => {
@@ -70,13 +54,17 @@ export default function DashboardComponent({ userId }: DashboardProps) {
     fetchUserEvents();
   }, [userId]);
 
-  if (loading) {
-    return <p className="m-4">Loading user data...</p>;
-  }
 
   if (!user) {
     return <p className="m-4">No user found.</p>;
   }
+  const handleLogout = async () => {
+    const result = await logout();
+    if (result?.success) {
+      clearUser();
+      router.push("/");
+    }
+  };
 
   return (
     <div className="container mx-auto p-6">
@@ -84,11 +72,9 @@ export default function DashboardComponent({ userId }: DashboardProps) {
 
       <div className="flex justify-between items-center mb-6">
         <TmpClientComponent />
-        <h2 className="text-3xl font-bold">Hello {user.username}</h2>
+        <h2 className="text-3xl font-bold">Hello {user?.username}</h2>
 
-        <form action={logout}>
-          <Button type="submit">Logout</Button>
-        </form>
+        <Button onClick={handleLogout}>Logout</Button>
       </div>
 
       {/* Quick Actions */}
