@@ -5,6 +5,13 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { reverseGeocodeCoordinates } from "@/utils/geocoding";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "";
 
@@ -136,26 +143,29 @@ export default function AddressSearch({ value, onChange }: AddressSearchProps) {
 
   return (
     <div>
-      <Input
-        value={internalQuery}
-        onChange={handleInputChange}
-        placeholder="Enter an address"
-        className="border-secondary text-md rounded-full"
-      />
-
-      {suggestions.length > 0 && (
-        <ul className="border mt-2 rounded shadow">
+      <Select>
+        <SelectTrigger className="border-secondary text-md rounded-full">
+          <SelectValue placeholder="Enter an address" />
+        </SelectTrigger>
+        <SelectContent>
+          <Input
+            value={internalQuery}
+            onChange={handleInputChange}
+            placeholder="Enter an address"
+            className="border-secondary text-md rounded-full"
+          />
           {suggestions.map((sug, idx) => (
-            <li
+            <SelectItem
               key={idx}
+              value={sug.place_name}
               onClick={() => handleSelectSuggestion(sug)}
-              className="p-2 cursor-pointer hover:bg-gray-200"
+              className="p-2 cursor-pointer"
             >
               {sug.place_name}
-            </li>
+            </SelectItem>
           ))}
-        </ul>
-      )}
+        </SelectContent>
+      </Select>
 
       <div
         style={{ position: "relative", width: "100%", height: "400px", marginTop: "1rem" }}
