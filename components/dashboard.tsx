@@ -50,7 +50,7 @@ export default function DashboardComponent({ userId }: DashboardProps) {
     async function fetchUserEvents() {
       setLoadingEvents(true);
       try {
-        const res = await fetch(`/api/get-user-events?creatorId=${userId}`, {
+        const res = await fetch(`/api/get-user-matches?creatorId=${userId}`, {
           cache: "no-store",
         });
         const data: Event[] = await res.json();

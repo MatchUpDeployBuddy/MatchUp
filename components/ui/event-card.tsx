@@ -1,6 +1,8 @@
-import { FaCalendarAlt, FaRegClock } from "react-icons/fa";
+import { FaCalendarAlt, FaRegClock, FaAngleRight } from "react-icons/fa"
 import { Card } from "@/components/ui/card"
-import Image from "next/image"
+//import Image from "next/image"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 interface EventCardProps {
   id: string
@@ -13,6 +15,7 @@ interface EventCardProps {
 }
 
 export function EventCard({
+  id, 
   sport,
   event_time,
   // location,
@@ -56,7 +59,7 @@ export function EventCard({
             </div> */}
           </div>
           
-          <div className="space-y-1 text-gray-500">
+          <div className="space-y-1">
             {/* <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />
               <span className="text-sm">{location}</span>
@@ -72,12 +75,12 @@ export function EventCard({
           </div>
         </div>
 
-        {/* <div className="flex items-center gap-2 ml-4">
-          <div className="h-6 w-6 rounded-full bg-[rgb(137,198,109)] text-white flex items-center justify-center text-sm">
-            {participants}
-          </div>
-          <ChevronRight className="h-6 w-6 text-gray-400" />
-        </div> */}
+        <Link href={`/match/${id}`}>
+          <Button variant="ghost" size="sm" className="ml-4">
+            View Details
+            <FaAngleRight className="h-4 w-4 ml-2" />
+          </Button>
+        </Link>
       </div>
     </Card>
   )

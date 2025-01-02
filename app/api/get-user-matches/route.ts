@@ -21,7 +21,6 @@ export async function GET(request: Request) {
       .select("*")
       .eq("creator_id", creatorId);
 
-    console.log("Events:", events);
     // Überprüfe auf Fehler bei der Abfrage
     if (error) {
       throw new Error(error.message);
