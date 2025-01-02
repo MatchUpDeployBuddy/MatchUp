@@ -3,18 +3,30 @@
 import React, { useState, useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "";
 
 export default function AddressSearch() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<{
-    place_name: string;
-    center: [number, number];
-  }[]>([]);
+  const [suggestions, setSuggestions] = useState<
+    {
+      place_name: string;
+      center: [number, number];
+    }[]
+  >([]);
 
   // set start coordinates
-  const [mapCenter, setMapCenter] = useState<[number, number]>([9.993682, 53.551086]);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([
+    9.993682, 53.551086,
+  ]);
 
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -44,7 +56,6 @@ export default function AddressSearch() {
       }
     );
   }, []);
-
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -87,7 +98,8 @@ export default function AddressSearch() {
         }
 
         const data = await response.json();
-        const placeName = data.features?.[0]?.place_name || "Keine Adresse gefunden";
+        const placeName =
+          data.features?.[0]?.place_name || "Keine Adresse gefunden";
         setSearchQuery(placeName);
       } catch (error) {
         console.error("Error in reverse geocoding:", error);
@@ -102,7 +114,6 @@ export default function AddressSearch() {
       map.off("moveend", handleMoveEnd);
     };
   }, []);
-
 
   const handleSelectSuggestion = (suggestion: {
     place_name: string;
@@ -151,24 +162,29 @@ export default function AddressSearch() {
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Address Search</h1>
 
-      <input
+      <Input
         type="text"
         value={searchQuery}
         onChange={handleInputChange}
         placeholder="Enter an address"
         className="border p-2 w-full rounded"
       />
-      <ul className="border mt-2 rounded shadow">
-        {suggestions.map((suggestion, index) => (
-          <li
-            key={index}
-            onClick={() => handleSelectSuggestion(suggestion)}
-            className="p-2 cursor-pointer hover:bg-gray-200"
-          >
-            {suggestion.place_name}
-          </li>
-        ))}
-      </ul>
+     <Select>
+        <SelectTrigger className="border-secondary text-md rounded-full">
+          <SelectValue placeholder="Suggestions" />
+        </SelectTrigger>
+        <SelectContent>
+          {suggestions.map((suggestion, index) => (
+            <SelectItem
+              key={index}
+              value={suggestion.place_name}
+              onClick={() => handleSelectSuggestion(suggestion)}
+            >
+              {suggestion.place_name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       <div className="mt-4">
         <p>
