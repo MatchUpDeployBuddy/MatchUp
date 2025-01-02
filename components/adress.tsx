@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { reverseGeocodeCoordinates } from "@/utils/geocoding";
+import { Input } from "@/components/ui/input";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "";
 
@@ -135,12 +136,11 @@ export default function AddressSearch({ value, onChange }: AddressSearchProps) {
 
   return (
     <div>
-      <input
-        type="text"
+      <Input
         value={internalQuery}
         onChange={handleInputChange}
         placeholder="Enter an address"
-        className="border p-2 w-full rounded"
+        className="border-secondary text-md rounded-full"
       />
 
       {suggestions.length > 0 && (
