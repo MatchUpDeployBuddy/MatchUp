@@ -253,7 +253,7 @@ export default function MatchCreationPage() {
                     </FormLabel>
                     <FormControl>
                     <TimeDropdown
-                      minTime={new Date().toLocaleTimeString("de-DE", {
+                      minTime={new Date().toLocaleTimeString("en-EN", {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
