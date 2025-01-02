@@ -34,6 +34,7 @@ import { IoMdInformationCircleOutline } from "react-icons/io";
 
 import AddressSearch from "@/components/adress";
 import { geocodeAddress, Coordinates } from "@/utils/geocoding";
+import { useUserStore } from "@/store/userStore";
 
 const supabase = await createClient();
 
@@ -72,7 +73,7 @@ export default function MatchCreationPage() {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null); 
-
+  const user = useUserStore((state) => state.user)
   // Formular-Hook
   const form = useForm<z.infer<typeof matchSchema>>({
     resolver: zodResolver(matchSchema),
@@ -106,17 +107,6 @@ export default function MatchCreationPage() {
       const { latitude, longitude } = coordinates;
       const locationPoint = `SRID=4326;POINT(${longitude} ${latitude})`;
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError) {
-        throw new Error("Failed to get user: " + userError.message);
-      }
-      if (!user) {
-        throw new Error("User not authenticated");
-      }
-      const creator_id = user.id;
 
       // data for insert
       const eventData = {
@@ -125,7 +115,7 @@ export default function MatchCreationPage() {
         skill_level: data.skillLevel,
         event_time,
         description: data.description,
-        creator_id,
+        creator_id: user?.id,
         location: locationPoint, 
       };
 
