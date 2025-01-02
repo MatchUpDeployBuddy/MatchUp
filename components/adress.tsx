@@ -79,7 +79,6 @@ export default function AddressSearch({ value, onChange }: AddressSearchProps) {
       if (!mapRef.current) return;
       const center = mapRef.current.getCenter();
 
-      // Verwendung der ausgelagerten Reverse Geocoding-Funktion
       const placeName = await reverseGeocodeCoordinates(center.lat, center.lng);
       if (placeName) {
         setInternalQuery(placeName);

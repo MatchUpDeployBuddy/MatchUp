@@ -35,11 +35,8 @@ import { IoMdInformationCircleOutline } from "react-icons/io";
 import AddressSearch from "@/components/adress";
 import { geocodeAddress, Coordinates } from "@/utils/geocoding";
 
-
-// Initialisierung von Supabase
 const supabase = await createClient();
 
-// Zod-Schema zur Validierung des Formulars
 const matchSchema = z.object({
   sport: z.string().min(1, { message: "Please select a sport" }),
   skillLevel: z.string().min(1, { message: "Please select a skill level" }),
@@ -51,7 +48,6 @@ const matchSchema = z.object({
   description: z.string().min(1).max(200, {
     message: "Description cannot be empty",
   }),
-  // Neu: Location-Feld im Zod-Schema
   location: z.string().min(1, { message: "Please select a location" }),
 });
 
@@ -75,6 +71,7 @@ const skill = ["Beginner", "Amateur", "Medium", "Expert", "Irrelevant"];
 export default function MatchCreationPage() {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); 
 
   // Formular-Hook
   const form = useForm<z.infer<typeof matchSchema>>({
@@ -86,31 +83,29 @@ export default function MatchCreationPage() {
       startTime: "",
       buddies: 1,
       description: "",
-      location: "", // Default für Location
+      location: "", 
     },
   });
 
   const onSubmit = async (data: z.infer<typeof matchSchema>) => {
     try {
-      // Kombinieren von Datum und Startzeit in ein Ereigniszeitstempel
+
+      // Combine date and start time into an event timestamp
       const event_time = new Date(`${data.date}T${data.startTime}`).toISOString();
   
-      // Geocoding der Adresse
+      // Geocoding of the address
       const coordinates: Coordinates | null = await geocodeAddress(data.location);
       
       if (!coordinates) {
-        // Hier den Fehler direkt auf das location-Feld setzen
         form.setError("location", {
           type: "custom",
           message: "Ungültige Adresse",
         });
-        return; // Wichtig: an dieser Stelle abbrechen, damit nicht weitergemacht wird
+        return;
       }
-      console.log(coordinates)
       const { latitude, longitude } = coordinates;
       const locationPoint = `SRID=4326;POINT(${longitude} ${latitude})`;
 
-      // Aktuellen User holen
       const {
         data: { user },
         error: userError,
@@ -123,7 +118,7 @@ export default function MatchCreationPage() {
       }
       const creator_id = user.id;
 
-      // Daten für INSERT
+      // data for insert
       const eventData = {
         sport: data.sport,
         participants_needed: data.buddies,
@@ -131,22 +126,18 @@ export default function MatchCreationPage() {
         event_time,
         description: data.description,
         creator_id,
-        location: locationPoint, // POINT als WKT
+        location: locationPoint, 
       };
 
-      console.log("Event-Daten:", eventData);
-
-      // Event-Daten in die Datenbank einfügen
       const { error } = await supabase.from("events").insert([eventData]);
       if (error) {
         throw new Error(error.message);
       }
 
-      // Weiterleitung
       router.push("/dashboard");
     } catch (error) {
       console.error("Error creating match:", error);
-      // Hier kannst du auch eine Benachrichtigung oder Fehleranzeige für den Benutzer hinzufügen
+      setErrorMessage(error instanceof Error ? error.message : "An unexpected error occurred.");
     }
   };
 
@@ -157,6 +148,14 @@ export default function MatchCreationPage() {
         <h1 className="text-4xl font-bold text-center text-text-primary mb-8">
           Create your own MATCH
         </h1>
+
+        {/* Fehleranzeige */}
+        {errorMessage && (
+          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
+            <p>An error has occurred. Please try again later.s</p>
+          </div>
+        )}
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="space-y-8">
