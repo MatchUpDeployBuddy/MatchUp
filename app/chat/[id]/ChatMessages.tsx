@@ -8,7 +8,7 @@ export default async function ChatMessages({ id }: { id: string }) {
 
     const supabase = await createClient();
 
-    const { data, error } = await supabase.from("messages")
+    const { data } = await supabase.from("messages")
                             .select("*, users(id, name, username, profile_picture_url)")
                             .eq("event_id", id)
                             .range(0, MESSAGE_LIMIT)

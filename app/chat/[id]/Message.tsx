@@ -8,8 +8,8 @@ export default function Message({message}: {message: Imessage}) {
         <div className="flex gap-2">
             <Avatar className="w-16 h-16 border-2 border-primary">
                 <AvatarImage 
-                    src={message.users?.profile_picture_url!}
-                    alt={message.users?.name!}
+                    src={message.users?.profile_picture_url || 'U'}
+                    alt={message.users?.name}
                 />
                 <AvatarFallback>
                     {message.users?.username?.charAt(0) || 'U'}

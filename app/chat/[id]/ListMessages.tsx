@@ -25,7 +25,7 @@ export default function ListMessages({ eventId, currentMessages }: { eventId: st
           setPage(eventId, 1);
           setHasMore(eventId, currentMessages.length >= MESSAGE_LIMIT);
         }
-      }, [eventId, currentMessages, messages, setMessages]);
+      }, [eventId, currentMessages, messages, setMessages, setHasMore, setPage]);
 
     useEffect(() => {
 
@@ -71,14 +71,14 @@ export default function ListMessages({ eventId, currentMessages }: { eventId: st
             channel.unsubscribe();
         }
 
-    }, [eventId, messages])
+    }, [eventId, messages, addMessage, toast, supabase])
 
     useEffect(() => {
         const scrollContainer = scrollRef.current;
         if (scrollContainer && !userScroll) {
             scrollContainer.scrollTop = scrollContainer.scrollHeight;
         }
-    }, [messages])
+    }, [messages, userScroll])
     
     const handleOnScroll = () => {
         const scrollContainer = scrollRef.current;
@@ -100,7 +100,7 @@ export default function ListMessages({ eventId, currentMessages }: { eventId: st
 
     const getFromAndTo = (page: number, itemPerPage: number) => {
         let from = page * itemPerPage;
-        let to = from + itemPerPage;
+        const to = from + itemPerPage;
 
         if (page > 0) {
             from += 1;
