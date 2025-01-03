@@ -15,7 +15,7 @@ import { FiBarChart } from "react-icons/fi";
 import { IoMdInformationCircleOutline } from "react-icons/io";
 
 // Initialisierung von Supabase
-const supabase = await createClient();
+const supabase = createClient();
 
 // Zod-Schema zur Validierung des Formulars
 const matchSchema = z.object({
