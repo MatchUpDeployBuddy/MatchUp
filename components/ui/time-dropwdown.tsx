@@ -68,7 +68,7 @@ export const TimeDropdown: React.FC<TimeDropdownProps> = ({
       <div className="flex w-full gap-2">
         <Select onValueChange={(value) => setHours(value)}>
           <SelectTrigger className="border-secondary text-md rounded-full">
-            <SelectValue placeholder="Stunde" />
+            <SelectValue placeholder="Hour" />
           </SelectTrigger>
           <SelectContent>
             {validHours.map((hour) => (
