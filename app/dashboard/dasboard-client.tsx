@@ -9,8 +9,7 @@ import Link from "next/link";
 import { EventCard } from "@/components/ui/event-card";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Navbar } from "@/components/ui/navbar";
-import { getRandomImage} from "@/utils/supabase/match-images"; 
+import { getRandomImage, getSportImage} from "@/utils/supabase/match-images"; 
 import { CreateMatchCard } from "@/components/ui/create-match-card"; 
 
 interface Event {
@@ -26,7 +25,8 @@ interface DashboardProps {
 export default function DashboardComponent({ userId }: DashboardProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
-  const [randomImageUrl, setRandomImageUrl] = useState<string | null>(null); // Zustand für das zufällige Bild
+  const [randomImageUrl, setRandomImageUrl] = useState<string | null>(null); 
+  const [sportImages, setSportImages] = useState<Record<string, string>>({});
   const router = useRouter();
   const user = useUserStore((state) => state.user);
   const clearUser = useUserStore((state) => state.clearUser);
@@ -57,7 +57,7 @@ export default function DashboardComponent({ userId }: DashboardProps) {
     fetchUserEvents();
   }, [userId]);
 
-  // Hole das zufällige Match-Bild
+  // Get random match picture
   useEffect(() => {
     const fetchRandomImage = async () => {
       const imageUrl = await getRandomImage();
@@ -67,6 +67,24 @@ export default function DashboardComponent({ userId }: DashboardProps) {
     fetchRandomImage();
   }, []);
 
+  // Get specific match picture
+  useEffect(() => {
+    async function fetchSportImages() {
+      const images: Record<string, string> = {};
+  
+      for (const event of events) {
+        images[event.sport] = await getSportImage(event.sport);
+      }
+  
+      setSportImages(images);
+    }
+  
+    if (events.length > 0) {
+      fetchSportImages();
+    }
+  }, [events]);
+
+  
   const getGreeting = () => {
     const currentHour = new Date().getHours();
 
@@ -103,26 +121,26 @@ export default function DashboardComponent({ userId }: DashboardProps) {
       </div>
 
       <h2 className="text-2xl font-bold mb-4">Create your own MATCH</h2>
-      <CreateMatchCard imageUrl={randomImageUrl || '/placeholder.svg'} />
+      <CreateMatchCard imageUrl={randomImageUrl || '/placeholder.png'} />
 
       {/* Active Matches */}
       <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Active MATCHES</h2>
-        <div className="space-y-4">
-          {events.length > 0 ? (
-            events.map((event) => (
-              <EventCard
-                key={event.id}
-                {...event}
-              />
-            ))
-          ) : (
-            <p>No upcoming events found.</p>
-          )}
-        </div>
+      <h2 className="text-2xl font-bold mb-4">Active MATCHES</h2>
+      <div className="space-y-4">
+        {events.length > 0 ? (
+          events.map((event) => (
+            <EventCard
+              key={event.id}
+              {...event}
+              imageUrl={sportImages[event.sport] || "/placeholder.png"} 
+            />
+          ))
+        ) : (
+          <p>No upcoming events found.</p>
+        )}
       </div>
     </div>
-    <Navbar />
+    </div>
   </div>
   );
 }
