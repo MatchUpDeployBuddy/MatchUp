@@ -235,38 +235,36 @@ export default function MatchCreationPage() {
                           min={new Date().toISOString().split("T")[0]} // heutige oder zukünftige
                           className="border-secondary text-md rounded-full"
                         />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Start Time */}
-                <FormField
-                  control={form.control}
-                  name="startTime"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel className="text-text-primary flex items-center text-lg">
-                        <FaRegClock className="mr-2" />
-                        Time
-                      </FormLabel>
-                      <FormControl>
-                        <TimeDropdown
-                          minTime={new Date().toLocaleTimeString("de-DE", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                          selectedDate={selectedDate}
-                          onChange={(time: string) => field.onChange(time)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+              {/* Start Time */}
+              <FormField
+                control={form.control}
+                name="startTime"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel className="text-text-primary flex items-center text-lg">
+                      <FaRegClock className="mr-2" />
+                      Time
+                    </FormLabel>
+                    <FormControl>
+                    <TimeDropdown
+                      minTime={new Date().toLocaleTimeString("en-EN", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                      selectedDate={selectedDate} // Datum an Dropdown übergeben
+                          onChange={(time: string) => field.onChange(time)} // Zeit speichern
+                    />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
               {/* Number of Buddies */}
               <FormField
                 control={form.control}

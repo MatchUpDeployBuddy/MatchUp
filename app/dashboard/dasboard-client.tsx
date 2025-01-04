@@ -6,13 +6,58 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TmpClientComponent from "../TmpClientComponent/TmpClientComponent";
 import { logout } from "../logout/action";
 import Link from "next/link";
+import { EventCard } from "@/components/ui/event-card";
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 
-export default function DashboardComponent() {
+
+interface Event {
+  id: string;
+  sport: string;
+  event_time: string;
+}
+
+interface DashboardProps {
+  userId: string;
+}
+
+export default function DashboardComponent({ userId }: DashboardProps) {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loadingEvents, setLoadingEvents] = useState(true);
   const router = useRouter();
   const user = useUserStore((state) => state.user);
   const clearUser = useUserStore((state) => state.clearUser);
+  console.log("user dashboard", user);
 
+  // Fetch user events
+  useEffect(() => {
+    async function fetchUserEvents() {
+      setLoadingEvents(true);
+      try {
+        const res = await fetch(`/api/get-user-matches?creatorId=${userId}`, {
+          cache: "no-store",
+        });
+        const data: Event[] = await res.json();
+
+        // Filter nur zukünftige Events
+        const now = new Date();
+        const futureEvents = data.filter((event) => new Date(event.event_time) > now);
+
+        setEvents(futureEvents);
+      } catch (err) {
+        console.error("Failed to fetch events:", err);
+      } finally {
+        setLoadingEvents(false);
+      }
+    }
+
+    fetchUserEvents();
+  }, [userId]);
+
+
+  if (!user) {
+    return <p className="m-4">No user found.</p>;
+  }
   const handleLogout = async () => {
     const result = await logout();
     if (result?.success) {
@@ -45,13 +90,23 @@ export default function DashboardComponent() {
         </Button>
       </div>
 
-      {/* Upcoming Events */}
+      {/* Active MATCHES*/}
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle>Upcoming Events</CardTitle>
+          <CardTitle>Active MATCHES</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>Your upcoming events will be displayed here.</p>
+          {loadingEvents ? (
+            <p>Loading events...</p>
+          ) : events.length > 0 ? (
+            <ul>
+              {events.map((event) => (
+                <EventCard key={event.id} {...event} />
+              ))}
+            </ul>
+          ) : (
+            <p>No upcoming events found.</p>
+          )}
         </CardContent>
       </Card>
 
