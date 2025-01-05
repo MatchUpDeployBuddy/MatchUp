@@ -2,10 +2,7 @@
 
 import { useUserStore } from "@/store/userStore";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import TmpClientComponent from "../TmpClientComponent/TmpClientComponent";
 import { logout } from "../logout/action";
-import Link from "next/link";
 import { EventCard } from "@/components/ui/event-card";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -24,8 +21,7 @@ interface DashboardProps {
 
 export default function DashboardComponent({ userId }: DashboardProps) {
   const [events, setEvents] = useState<Event[]>([]);
-  const [loadingEvents, setLoadingEvents] = useState(true);
-  const [randomImageUrl, setRandomImageUrl] = useState<string>(""); // Set as empty string instead of null
+  const [randomImageUrl, setRandomImageUrl] = useState<string>(""); 
   const [sportImages, setSportImages] = useState<Record<string, string>>({});
   const router = useRouter();
   const user = useUserStore((state) => state.user);
@@ -34,27 +30,25 @@ export default function DashboardComponent({ userId }: DashboardProps) {
   // Fetch user events
   useEffect(() => {
     async function fetchUserEvents() {
-      setLoadingEvents(true);
       try {
         const res = await fetch(`/api/get-user-matches?creatorId=${userId}`, {
           cache: "no-store",
         });
         const data: Event[] = await res.json();
-
+  
         // Filter nur zukünftige Events
         const now = new Date();
         const futureEvents = data.filter((event) => new Date(event.event_time) > now);
-
+  
         setEvents(futureEvents);
       } catch (err) {
         console.error("Failed to fetch events:", err);
-      } finally {
-        setLoadingEvents(false);
       }
     }
-
+  
     fetchUserEvents();
   }, [userId]);
+  
 
   // Get random match picture
   useEffect(() => {
