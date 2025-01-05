@@ -6,12 +6,11 @@ export async function PUT(request: Request) {
     const { id, description } = await request.json();
     const supabase = await createClient();
 
-    // Eventbeschreibung in der Datenbank aktualisieren
     const { error } = await supabase
       .from("events")
       .update({ description })
       .eq("id", id)
-      .single(); // Nur ein Event zurückgeben
+      .single(); 
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
