@@ -9,7 +9,7 @@ import Link from "next/link";
 import { EventCard } from "@/components/ui/event-card";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { getRandomImage, getSportImage} from "@/utils/supabase/match-images"; 
+import { getRandomImage, getSportImage } from "@/utils/supabase/match-images"; 
 import { CreateMatchCard } from "@/components/ui/create-match-card"; 
 
 interface Event {
@@ -25,12 +25,11 @@ interface DashboardProps {
 export default function DashboardComponent({ userId }: DashboardProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
-  const [randomImageUrl, setRandomImageUrl] = useState<string | null>(null); 
+  const [randomImageUrl, setRandomImageUrl] = useState<string>(""); // Set as empty string instead of null
   const [sportImages, setSportImages] = useState<Record<string, string>>({});
   const router = useRouter();
   const user = useUserStore((state) => state.user);
   const clearUser = useUserStore((state) => state.clearUser);
-  console.log("user:", user)
 
   // Fetch user events
   useEffect(() => {
@@ -60,8 +59,13 @@ export default function DashboardComponent({ userId }: DashboardProps) {
   // Get random match picture
   useEffect(() => {
     const fetchRandomImage = async () => {
-      const imageUrl = await getRandomImage();
-      setRandomImageUrl(imageUrl);
+      try {
+        const imageUrl = await getRandomImage();
+        setRandomImageUrl(imageUrl); // Update with valid URL or error
+      } catch (error) {
+        console.error("Error fetching random image:", error);
+        setRandomImageUrl(""); // Or you can set an error state here
+      }
     };
 
     fetchRandomImage();
@@ -73,7 +77,12 @@ export default function DashboardComponent({ userId }: DashboardProps) {
       const images: Record<string, string> = {};
   
       for (const event of events) {
-        images[event.sport] = await getSportImage(event.sport);
+        try {
+          images[event.sport] = await getSportImage(event.sport);
+        } catch (error) {
+          console.error(`Error fetching sport image for ${event.sport}:`, error);
+          images[event.sport] = ""; // Handle error (empty or fallback image)
+        }
       }
   
       setSportImages(images);
@@ -121,7 +130,11 @@ export default function DashboardComponent({ userId }: DashboardProps) {
       </div>
 
       <h2 className="text-2xl font-bold mb-4">Create your own MATCH</h2>
-      <CreateMatchCard imageUrl={randomImageUrl || '/placeholder.png'} />
+      {randomImageUrl ? (
+        <CreateMatchCard imageUrl={randomImageUrl} />
+      ) : (
+        <p>No random image found. Try again later.</p>
+      )}
 
       {/* Active Matches */}
       <div className="mb-8">
@@ -132,7 +145,7 @@ export default function DashboardComponent({ userId }: DashboardProps) {
             <EventCard
               key={event.id}
               {...event}
-              imageUrl={sportImages[event.sport] || "/placeholder.png"} 
+              imageUrl={sportImages[event.sport]} 
             />
           ))
         ) : (
@@ -144,5 +157,3 @@ export default function DashboardComponent({ userId }: DashboardProps) {
   </div>
   );
 }
-
-

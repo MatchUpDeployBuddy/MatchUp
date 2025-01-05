@@ -44,7 +44,7 @@ EventCardProps) {
           <div
             className="relative h-24 w-24 rounded-lg overflow-hidden flex-shrink-0 mr-4" 
             style={{
-              backgroundImage: `url(${imageUrl || "/placeholder.png"})`,
+              backgroundImage: `url(${imageUrl})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}
