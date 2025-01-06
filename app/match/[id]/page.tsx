@@ -104,10 +104,9 @@ export default function EventDetailsPage() {
   
       if (res.ok) {
         const data = await res.json();
-        console.log(data.message); // Erfolgsnachricht
+        console.log(data.message); 
         alert("Event deleted successfully!");
   
-        // Navigation zum Dashboard
         router.push("/dashboard");
       } else {
         const error = await res.json();
