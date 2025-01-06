@@ -109,9 +109,7 @@ export default function ListMessages({ eventId, currentMessages }: { eventId: st
     }
 
     const fetchMoreMessages = async () => {
-        console.log(page[eventId])
         const { from, to } = getFromAndTo(page[eventId], MESSAGE_LIMIT);
-        console.log(from, to)
         const { data, error } = await supabase.from("messages")
                             .select("*, users(id, name, username, profile_picture_url)")
                             .eq("event_id", eventId)
