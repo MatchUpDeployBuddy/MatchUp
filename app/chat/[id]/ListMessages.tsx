@@ -25,7 +25,7 @@ export default function ListMessages({ eventId, currentMessages }: { eventId: st
           setPage(eventId, 1);
           setHasMore(eventId, currentMessages.length >= MESSAGE_LIMIT);
         }
-      }, [eventId, currentMessages, messages, setMessages, setHasMore, setPage]);
+      }, [eventId, currentMessages, messages[eventId], setMessages, setHasMore, setPage]);
 
     useEffect(() => {
 
@@ -134,19 +134,19 @@ export default function ListMessages({ eventId, currentMessages }: { eventId: st
              >
             <div className="flex-1">
                 {hasMore[eventId] && (
-                    <Button variant="outline" className="w-full" onClick={fetchMoreMessages}>
+                    <Button variant="outline" className="w-full mb-4" onClick={fetchMoreMessages}>
                         Load More
                     </Button>
                 )}
                 
             </div>
-            <div className="space-y-7">
+            <div className="space-y-4">
             {messages[eventId] && messages[eventId].length > 0 ? (
                 messages[eventId].map((value) => (
                     <Message key={value.id} message={value} />
                 ))
                 ) : (
-                <p>No messages available.</p>
+                <p className="text-center text-gray-500">No messages available.</p>
             )}
             </div>
             {userScroll && (

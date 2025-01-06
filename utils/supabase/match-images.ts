@@ -36,11 +36,17 @@ export async function getRandomImage(): Promise<string> {
   
     // Versuche, das Bild für jedes Format zu laden
     for (const format of supportedFormats) {
-      const imageName = `${sport.toLowerCase()}.${format}`;
+      let imageName = ""
+      if (sport === "Soccer") {
+        imageName = `${sport.toLowerCase()}.jpeg`;
+      }
+      else {
+        imageName = `${sport.toLowerCase()}.${format}`;
+      }
       const { data: publicUrlData } = supabase.storage
         .from("match_images")
         .getPublicUrl(imageName);
-  
+
       if (publicUrlData?.publicUrl) {
         imageUrl = publicUrlData.publicUrl; 
         break; 

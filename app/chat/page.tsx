@@ -5,18 +5,46 @@ import { Tables } from "@/types/supabase";
 import { Avatar,  } from "@/components/ui/avatar";
 import { AvatarImage } from "@radix-ui/react-avatar";
 import { useRouter } from 'next/navigation'
+import { getSportImage } from "@/utils/supabase/match-images"; 
+
 type EventWrapper = {
     events: Tables<"events">;
+};
+type SportImage = {
+  [sport: string]: string;
 };
 
 export default function Chat() {
     const user = useUserStore((state) => state.user)
     const [events, setEvents] = useState<Tables<"events">[]>([]);
     const [loading, setLoading] = useState(false);
+    const [sportImages, setSportImages] = useState<SportImage>({});
     const router = useRouter();
 
+    const fetchPictures = async (events: Tables<"events">[]) => {
+      const fetchImage = async (sport: string) => {
+        try {
+          const imageUrl = await getSportImage(sport);
+          setSportImages((prev) => ({
+            ...prev,
+            [sport]: imageUrl,
+          }));
+        } catch (error) {
+          console.error(`Error fetching image for sport "${sport}":`, error);
+          return null;
+        }
+      };
+      for (const event of events) {
+        const sport = event.sport;
+        console.log(sport)
+        if (!sportImages[sport]) {
+          await fetchImage(sport);
+        }
+      }
+    }
+
     useEffect(() => {
-        if (!user?.id) return; 
+        if (!user?.id || events.length > 0) return; 
 
         const fetchEvents = async (): Promise<void> => {
             setLoading(true);
@@ -28,6 +56,7 @@ export default function Chat() {
                 const data: EventWrapper[] = await res.json();
                 const eventList = data.map(wrapper => wrapper.events);
                 setEvents(eventList);
+                await fetchPictures(eventList);
             } catch (error) {
                 console.error("Error fetching events:", error);
             } finally {
@@ -53,7 +82,7 @@ export default function Chat() {
               >
                 <Avatar className="w-12 h-12 rounded-full object-cover mr-4">
                   <AvatarImage
-                    src={"U"}
+                    src={sportImages[event.sport]}
                     alt="Profile picture"
                     className="object-cover w-full h-full"
                   />
