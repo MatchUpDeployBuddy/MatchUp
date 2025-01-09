@@ -1108,6 +1108,7 @@ export type Database = {
           event_uuid: string;
         };
         Returns: {
+          joined_user_id: string;
           name: string;
         }[];
       };
