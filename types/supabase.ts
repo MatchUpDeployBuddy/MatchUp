@@ -468,6 +468,13 @@ export type Database = {
         };
         Returns: boolean;
       };
+      accept_event_request: {
+        Args: {
+          p_requester_id: string;
+          p_event_id: string;
+        };
+        Returns: undefined;
+      };
       addauth: {
         Args: {
           "": string;
@@ -1144,6 +1151,15 @@ export type Database = {
           latitude: number;
         }[];
       };
+      get_pending_requester_ids: {
+        Args: {
+          event_uuid: string;
+        };
+        Returns: {
+          requester_id: string;
+          user_name: string;
+        }[];
+      };
       get_proj4_from_srid: {
         Args: {
           "": number;
@@ -1439,6 +1455,13 @@ export type Database = {
       postgis_wagyu_version: {
         Args: Record<PropertyKey, never>;
         Returns: string;
+      };
+      reject_event_request: {
+        Args: {
+          p_requester_id: string;
+          p_event_id: string;
+        };
+        Returns: undefined;
       };
       spheroid_in: {
         Args: {

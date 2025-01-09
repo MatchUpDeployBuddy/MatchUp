@@ -139,25 +139,57 @@ REVOKE INSERT (id, status, created_at) ON TABLE event_requests FROM public;
 REVOKE UPDATE ON TABLE event_requests FROM public;
 GRANT UPDATE (status) ON TABLE event_requests TO public;
 
-create or replace function handle_request_accepted()
-returns trigger
-language plpgsql
-security definer
-as $$
-begin
-  if new.status = 'accepted' then
-    insert into event_participants (event_id, joined_user_id)
-    values (new.event_id, new.requester_id);
-  end if;
-  return new;
-end;
+CREATE OR REPLACE FUNCTION handle_request_accepted()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  IF NEW.status = 'accepted' THEN
+    IF NOT EXISTS (
+      SELECT 1
+      FROM event_participants
+      WHERE event_id = NEW.event_id AND joined_user_id = NEW.requester_id
+    ) THEN
+      INSERT INTO event_participants (event_id, joined_user_id)
+      VALUES (NEW.event_id, NEW.requester_id);
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
 $$;
+
 
 create trigger after_request_accepted
 after update on event_requests
 for each row
 when (new.status = 'accepted')
 execute function handle_request_accepted();
+
+
+
+CREATE OR REPLACE FUNCTION delete_participant_on_reject()
+RETURNS TRIGGER 
+security definer
+AS $$
+BEGIN
+  -- Check if the status is updated to 'rejected'
+  IF NEW.status = 'rejected' THEN
+    -- Delete the participant entry if it exists
+    DELETE FROM public.event_participants
+    WHERE event_id = NEW.event_id AND joined_user_id = NEW.requester_id;
+  END IF;
+
+  RETURN NEW; -- Return the new record
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER reject_status_trigger
+AFTER UPDATE OF status ON public.event_requests
+FOR EACH ROW
+when (new.status = 'rejected')
+EXECUTE FUNCTION delete_participant_on_reject();
+
 
 
 create table messages (
