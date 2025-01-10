@@ -183,7 +183,7 @@ export default function EventDetailsPage() {
     if (!event) return;
 
     try {
-      const data = await doRequest("/api/delete-event-participants", "DELETE", {
+      const data = await doRequest("/api/event-participants", "DELETE", {
         participantId,
         eventId: event.id,
       });
