@@ -473,7 +473,10 @@ export type Database = {
           p_requester_id: string;
           p_event_id: string;
         };
-        Returns: undefined;
+        Returns: {
+          requester_id: string;
+          user_name: string;
+        }[];
       };
       addauth: {
         Args: {
@@ -612,6 +615,13 @@ export type Database = {
             };
             Returns: string;
           };
+      delete_event_participant: {
+        Args: {
+          p_participant_id: string;
+          p_event_id: string;
+        };
+        Returns: undefined;
+      };
       disablelongtransactions: {
         Args: Record<PropertyKey, never>;
         Returns: string;

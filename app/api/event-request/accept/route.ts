@@ -18,7 +18,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
       );
     }
 
-    const { error } = await supabase.rpc("accept_event_request", {
+    const { data, error } = await supabase.rpc("accept_event_request", {
       p_requester_id: requesterId,
       p_event_id: eventId,
     });
@@ -35,10 +35,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
       );
     }
 
-    return NextResponse.json(
-      { message: "Event request successfully accepted" },
-      { status: 200 }
-    );
+    return NextResponse.json({ participant: data }, { status: 200 });
   } catch (err) {
     console.error("Server error:", err);
     return NextResponse.json(

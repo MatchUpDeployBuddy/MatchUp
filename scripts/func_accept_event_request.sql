@@ -1,20 +1,30 @@
-CREATE OR REPLACE FUNCTION public.accept_event_request(p_requester_id UUID, p_event_id UUID)
-RETURNS VOID AS $$
+CREATE OR REPLACE FUNCTION public.accept_event_request(
+    p_requester_id UUID, 
+    p_event_id UUID
+)
+RETURNS TABLE(requester_id UUID, user_name TEXT) AS $$
 DECLARE
   available_slots INTEGER;
 BEGIN
   -- Get the number of available slots for the event
-  SELECT participants_needed - COALESCE(COUNT(ep.joined_user_id), 0) INTO available_slots
+  SELECT e.participants_needed - COALESCE(COUNT(ep.joined_user_id), 0) INTO available_slots
   FROM public.events e
   LEFT JOIN public.event_participants ep ON e.id = ep.event_id
   WHERE e.id = p_event_id
   GROUP BY e.participants_needed;
 
-  -- Check if there are available slots (creator is also safed in event_participants but not included in the participants_needed column, that is why we say >= 0 and not >= 1)
-  IF available_slots >= 0 THEN
+  -- Check if there are available slots
+  IF available_slots > 0 THEN
+    -- Update the status to 'accepted'
     UPDATE public.event_requests
     SET status = 'accepted'
-    WHERE requester_id = p_requester_id AND event_id = p_event_id;
+    WHERE event_requests.requester_id = p_requester_id AND event_requests.event_id = p_event_id;
+
+    -- Return the requester_id and corresponding username
+    RETURN QUERY
+    SELECT p_requester_id AS requester_id, u.name::TEXT AS user_name
+    FROM public.users u
+    WHERE u.id = p_requester_id;
   ELSE
     RAISE EXCEPTION 'Cannot accept request: No available slots for event %', p_event_id;
   END IF;
