@@ -17,7 +17,7 @@ interface EventDetails {
 }
 
 interface Buddy {
-  id: string;
+  joined_user_id: string;
   name: string;
 }
 
@@ -35,12 +35,7 @@ export default function EventDetailsPage() {
   const [editedDescription, setEditedDescription] = useState<string>("");
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [showCancelDialog, setShowCancelDialog] = useState<boolean>(false); // State für das Dialogfeld
-
-  // Dummy data for Buddys and Requests
-  const dummyBuddys: Buddy[] = [
-    { id: "b1", name: "Jannik Schneider" },
-    { id: "b2", name: "Yassine Charm" },
-  ];
+  const [participants, setParticipants] = useState<Buddy[]>([]);
 
   const dummyRequests: Request[] = [
     { id: "r1", name: "Kathalena Remz", message: "Hi, I would love to join!" },
@@ -48,23 +43,36 @@ export default function EventDetailsPage() {
   ];
 
   useEffect(() => {
-    async function fetchEventDetails() {
-      if (!id) return; 
+    async function fetchEventDetailsAndParticipants() {
+      if (!id) return;
       setLoading(true);
+  
       try {
+        // Fetch event details
         const res = await fetch(`/api/get-match-details?id=${id}`);
         const data: EventDetails = await res.json();
         setEvent(data);
         setEditedDescription(data.description || "");
+  
+        // Fetch participants
+        const participantsRes = await fetch(`/api/event-participants?eventId=${id}`);
+        const participantsData = await participantsRes.json();
+  
+        if (participantsData.participants) {
+          setParticipants(participantsData.participants);
+          console.log(participantsData)
+        }
       } catch (err) {
-        console.error("Failed to fetch event details:", err);
+        console.error("Failed to fetch data:", err);
       } finally {
         setLoading(false);
       }
     }
-
-    fetchEventDetails();
+  
+    fetchEventDetailsAndParticipants();
   }, [id]);
+  
+
 
   const handleSaveDescription = async () => {
     if (!event || editedDescription === event.description) return; 
@@ -207,10 +215,10 @@ export default function EventDetailsPage() {
 
            {/* Buddys Section */}
            <div className="space-y-2">
-            <h3 className="text-lg font-medium">Buddys ({dummyBuddys.length}/{event.participants_needed})</h3>
+            <h3 className="text-lg font-medium">Buddys ({participants.length}/{event.participants_needed})</h3>
             <div className="space-y-2">
-              {dummyBuddys.map((buddy) => (
-                <div key={buddy.id} className="flex items-center justify-between p-2 bg-gray-100 rounded-md">
+              {participants.map((buddy) => (
+                <div key={buddy.joined_user_id} className="flex items-center justify-between p-2 bg-gray-100 rounded-md">
                   <span>{buddy.name}</span>
                   <Button size="icon" variant="ghost"> 
                       <FaTimes className="h-5 w-5" /> 
