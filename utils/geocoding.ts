@@ -79,3 +79,11 @@ export async function reverseGeocodeCoordinates( // TODO: nutze das hier gleich 
     return null;
   }
 }
+
+export const formatAddress = (address: string) => {
+  const addressParts = address
+    .split(",")
+    .slice(-2)
+    .map((part) => part.replace(/\d+/g, "").trim());
+  return addressParts.join(", ");
+};

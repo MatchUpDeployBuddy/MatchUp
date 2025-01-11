@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
-// Large date range defaults, so you really see "everything"
+// um erstmal alles zu sehen ob es funktioniert
 const DEFAULT_START_DATE = new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString();
 const DEFAULT_END_DATE = new Date(2100, 0, 1).toISOString();
 
 const DEFAULTS = {
   longitude: 13.405,
   latitude: 52.52,
-  radius: 100_000_000,
+  radius: 100_000_000, // um erstmal alles zu sehen ob es funktioniert
   sports: [
     "Soccer",
     "Basketball",
@@ -50,18 +50,6 @@ export async function GET(request: Request): Promise<NextResponse> {
       searchParams.get("start_date") || DEFAULT_START_DATE;
     const end_date =
       searchParams.get("end_date") || DEFAULT_END_DATE;
-
-    // **Add your console log here** to see exactly what's being used
-    console.log("[/api/events/available] Using RPC params:", {
-      _longitude: longitude,
-      _latitude: latitude,
-      _radius: radius,
-      _sports: sports,
-      _skill_levels: skill_levels,
-      _required_slots: required_slots,
-      _start_date: start_date,
-      _end_date: end_date,
-    });
 
     const { data, error } = await supabase.rpc("get_filtered_events", {
       _longitude: longitude,

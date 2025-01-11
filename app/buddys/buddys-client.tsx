@@ -15,7 +15,7 @@ import {
 import { FaFilter } from "react-icons/fa";
 import { FilterContent } from "./filter-content";
 import { getSportImage } from "@/utils/supabase/match-images";
-import { reverseGeocodeCoordinates } from "@/utils/geocoding";
+import { reverseGeocodeCoordinates, formatAddress } from "@/utils/geocoding";
 
 interface Event {
   id: string;
@@ -32,10 +32,8 @@ export default function BuddysClient() {
   const user = useUserStore((state) => state.user);
   const [events, setEvents] = useState<Event[]>([]);
   const [sportImages, setSportImages] = useState<Record<string, string>>({});
-  const [userLocation, setUserLocation] = useState<string>("");
-  const [userCoordinates, setUserCoordinates] = useState<
-    [number, number] | null
-  >(null);
+  const [userLocation, setUserLocation] = useState<string>("Germany");
+  const [userCoordinates, setUserCoordinates] = useState<[number, number]>([10.4515, 51.1657]);
   const router = useRouter();
 
   useEffect(() => {
@@ -43,30 +41,22 @@ export default function BuddysClient() {
   }, []);
 
   useEffect(() => {
-    if (userCoordinates) {
-      fetchEvents(userCoordinates);
-    }
+    fetchEvents(userCoordinates);
   }, [userCoordinates]);
 
   useEffect(() => {
     async function fetchSportImages() {
       const images: Record<string, string> = {};
-
       for (const event of events) {
         try {
           images[event.sport] = await getSportImage(event.sport);
         } catch (error) {
-          console.error(
-            `Error fetching sport image for ${event.sport}:`,
-            error
-          );
-          images[event.sport] = ""; // Handle error (empty or fallback image)
+          console.error(`Error fetching sport image for ${event.sport}:`, error);
+          images[event.sport] = "";
         }
       }
-
       setSportImages(images);
     }
-
     if (events.length > 0) {
       fetchSportImages();
     }
@@ -80,18 +70,13 @@ export default function BuddysClient() {
           setUserCoordinates([longitude, latitude]);
           const address = await reverseGeocodeCoordinates(latitude, longitude);
           if (address) {
-            setUserLocation(address);
+            setUserLocation(formatAddress(address));
           }
         },
         (error) => {
           console.error("Error getting user location:", error);
-          // Fallback to default coordinates (Berlin)
-          setUserCoordinates([13.405, 52.52]);
         }
       );
-    } else {
-      // Fallback to default coordinates (Berlin)
-      setUserCoordinates([13.405, 52.52]);
     }
   };
 
@@ -100,6 +85,7 @@ export default function BuddysClient() {
     const params = new URLSearchParams({
       longitude: String(longitude),
       latitude: String(latitude),
+      radius: "100000000",
     });
 
     try {
@@ -116,11 +102,9 @@ export default function BuddysClient() {
     const params = new URLSearchParams({
       longitude: String(filters.mapCenter[0]),
       latitude: String(filters.mapCenter[1]),
-      radius: (filters.radius * 1000).toString(), // Convert km to meters
+      radius: (filters.radius * 1000).toString(),
       ...(filters.sports.length > 0 && { sports: filters.sports.join(",") }),
-      ...(filters.skillLevels.length > 0 && {
-        skill_levels: filters.skillLevels.join(","),
-      }),
+      ...(filters.skillLevels.length > 0 && { skill_levels: filters.skillLevels.join(",") }),
       required_slots: filters.requiredSlots.toString(),
       start_date: filters.startDate.toISOString(),
       end_date: filters.endDate.toISOString(),
@@ -139,8 +123,8 @@ export default function BuddysClient() {
   const getGreeting = () => {
     const currentHour = new Date().getHours();
     if (currentHour >= 5 && currentHour < 12) return "Good Morning 🔥";
-    if (currentHour >= 12 && currentHour < 18) return "Good Afternoon";
-    return "Good Evening";
+    if (currentHour >= 12 && currentHour < 18) return "Good Afternoon 🔥";
+    return "Good Evening 🔥";
   };
 
   if (!user) {
@@ -194,3 +178,4 @@ export default function BuddysClient() {
     </div>
   );
 }
+
