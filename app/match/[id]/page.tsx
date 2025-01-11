@@ -335,6 +335,16 @@ export default function EventDetailsPage() {
                     <p className="text-sm text-gray-500">{request.message}</p>
                   </div>
                   <div className="flex gap-2">
+                    {/* Annehmen */}
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => handleAcceptRequest(request.requester_id)}
+                      disabled={participants.length >= event.participants_needed}
+                    >
+                      <FaCheck className="h-5 w-5" />
+                    </Button>
+
                     {/* Ablehnen */}
                     <Button
                       size="icon"
@@ -342,14 +352,6 @@ export default function EventDetailsPage() {
                       onClick={() => handleRejectRequest(request.requester_id)}
                     >
                       <FaTimes className="h-5 w-5" />
-                    </Button>
-                    {/* Annehmen */}
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => handleAcceptRequest(request.requester_id)}
-                    >
-                      <FaCheck className="h-5 w-5" />
                     </Button>
                   </div>
                 </div>
