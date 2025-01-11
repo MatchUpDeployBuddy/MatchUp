@@ -75,21 +75,29 @@ export const useMessagesStore = create(
           };
         }),
       
-      addMessages: (eventId, newMessages) =>
-        set((state) => ({
-            messages: {
-              ...state.messages,
-              [eventId]: [...newMessages, ...state.messages[eventId]],
-            },
-            page: {
-              ...state.page,
-              [eventId]: state.page[eventId] + 1
-            },
-            hasMore: {
-              ...state.hasMore,
-              [eventId]: newMessages.length >= MESSAGE_LIMIT
-            }
-        })),
+        addMessages: (eventId, newMessages) =>
+          set((state) => {
+            const combined = [...newMessages, ...(state.messages[eventId] ?? [])];
+            const newFilteredMessages = combined.filter(
+              (msg, index, self) => 
+                index === self.findIndex((m) => m.id === msg.id)
+            );
+        
+            return {
+              messages: {
+                ...state.messages,
+                [eventId]: newFilteredMessages,
+              },
+              page: {
+                ...state.page,
+                [eventId]: state.page[eventId] + 1,
+              },
+              hasMore: {
+                ...state.hasMore,
+                [eventId]: newMessages.length >= MESSAGE_LIMIT,
+              },
+            };
+          }),
 
       clearMessages: (eventId) =>
         set((state) => ({
