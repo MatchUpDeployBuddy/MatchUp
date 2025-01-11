@@ -13,22 +13,25 @@ export async function GET(request: Request) {
     }
 
     const { data: event, error } = await supabase
-      .from("events")
-      .select("*")
-      .eq("id", eventId)
-      .single(); 
-    
-      console.log("specific user event:", event)
+      .rpc("get_event_with_location", {
+        p_id: eventId,
+      })
+      .single();
+
+    console.log("specific user event:", event);
 
     if (error || !event) {
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
     }
 
-    return NextResponse.json(event);
+    return NextResponse.json({ event }, { status: 200 });
   } catch (error) {
     console.error("Error fetching event details:", error);
     return NextResponse.json(
-      { error: "Failed to fetch event details", details: (error as Error).message },
+      {
+        error: "Failed to fetch event details",
+        details: (error as Error).message,
+      },
       { status: 500 }
     );
   }

@@ -31,7 +31,7 @@ export default function DashboardComponent({ userId }: DashboardProps) {
   useEffect(() => {
     async function fetchUserEvents() {
       try {
-        const res = await fetch(`/api/get-user-matches?creatorId=${userId}`, {
+        const res = await fetch(`/api/users/events/participating?creatorId=${userId}`, {
           cache: "no-store",
         });
         const data: Event[] = await res.json();

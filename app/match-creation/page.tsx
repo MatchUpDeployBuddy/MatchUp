@@ -111,6 +111,11 @@ export default function MatchCreationPage() {
       const { latitude, longitude } = coordinates;
       const locationPoint = `SRID=4326;POINT(${longitude} ${latitude})`;
 
+
+      if (!user?.id) {
+        throw new Error("Something went wrong. Try it again.");
+      }
+
       // data for insert
       const eventData = {
         sport: data.sport,
@@ -118,7 +123,7 @@ export default function MatchCreationPage() {
         skill_level: data.skillLevel,
         event_time,
         description: data.description,
-        creator_id: user?.id,
+        creator_id: user.id,
         location: locationPoint,
       };
 

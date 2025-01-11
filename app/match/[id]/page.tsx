@@ -4,155 +4,246 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FaUsers, FaCalendarAlt, FaRegClock, FaPencilAlt, FaTimes, FaCheck } from "react-icons/fa";
 import { Textarea } from "@/components/ui/textarea";
-import { useUserStore } from "@/store/userStore";
+import {
+  FaUsers,
+  FaCalendarAlt,
+  FaRegClock,
+  FaPencilAlt,
+  FaTimes,
+  FaCheck,
+  FaMapMarkerAlt,
+  FaUserCircle,
+} from "react-icons/fa";
+import { reverseGeocodeCoordinates } from "@/utils/geocoding";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface EventDetails {
   id: string;
-  sport: string;
-  event_time: string;
-  participants_needed: number;
-  description: string;
-  location?: string;
   creator_id: string;
+  sport: string;
+  participants_needed: number;
+  skill_level: string;
+  event_time: string;
+  description: string;
+  longitude: number;
+  latitude: number;
+  created_at: string;
+  updated_at: string;
 }
 
 interface Buddy {
-  id: string;
+  joined_user_id: string;
   name: string;
+  profile_picture_url: string;
 }
 
 interface Request {
-  id: string;
-  name: string;
+  requester_id: string;
+  user_name: string;
   message: string;
+  profile_picture_url: string;
 }
 
 export default function EventDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
+
+  const [isLoading, setIsLoading] = useState(true);
   const [event, setEvent] = useState<EventDetails | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [editedDescription, setEditedDescription] = useState<string>("");
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [showCancelDialog, setShowCancelDialog] = useState<boolean>(false);
-  const [isOwner, setIsOwner] = useState<boolean>(false);
-  const user = useUserStore((state) => state.user);
+  const [participants, setParticipants] = useState<Buddy[]>([]);
+  const [requests, setRequests] = useState<Request[]>([]);
+  const [locationAddress, setLocationAddress] = useState<string | null>(null);
 
-  // Dummy data for Buddys and Requests
-  const dummyBuddys: Buddy[] = [
-    { id: "b1", name: "Jannik Schneider" },
-    { id: "b2", name: "Yassine Charm" },
-  ];
-
-  const dummyRequests: Request[] = [
-    { id: "r1", name: "Kathalena Remz", message: "Hi, I would love to join!" },
-    { id: "r2", name: "Ems Kretsch", message: "Are we focusing on core too?" },
-  ];
+  const [editedDescription, setEditedDescription] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   useEffect(() => {
-    async function fetchEventDetails() {
-      if (!id) return;
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/get-match-details?id=${id}`);
-        const data: EventDetails = await res.json();
-        setEvent(data);
-        setEditedDescription(data.description || "");
-        setIsOwner(data.creator_id === user?.id);
-      } catch (err) {
-        console.error("Failed to fetch event details:", err);
-      } finally {
-        setLoading(false);
-      }
+    if (!id) return;
+    fetchAllData(id as string);
+  }, [id]);
+
+  useEffect(() => {
+    if (event && event.latitude && event.longitude) {
+      fetchAddress(event.latitude, event.longitude);
     }
+  }, [event]);
 
-    fetchEventDetails();
-  }, [id, user]);
+  async function fetchAddress(latitude: number, longitude: number) {
+    try {
+      const address = await reverseGeocodeCoordinates(latitude, longitude);
+      setLocationAddress(address);
+    } catch (error) {
+      console.error("Failed to fetch address:", error);
+      setLocationAddress(null);
+    }
+  }
 
-  const handleSaveDescription = async () => {
+  async function fetchAllData(eventId: string) {
+    try {
+      setIsLoading(true);
+
+      // load all data in parallel
+      const [eventRes, participantsRes, requestsRes] = await Promise.all([
+        fetch(`/api/events/event-details?id=${eventId}`),
+        fetch(`/api/event-participants?eventId=${eventId}`),
+        fetch(`/api/event-request?eventId=${eventId}`),
+      ]);
+
+      if (!eventRes.ok || !participantsRes.ok || !requestsRes.ok) {
+        throw new Error("Failed to fetch data");
+      }
+
+      const eventData = await eventRes.json();
+      const participantsData = await participantsRes.json();
+      const requestsData = await requestsRes.json();
+
+      setEvent(eventData.event);
+      setEditedDescription(eventData.event?.description || "");
+      setParticipants(participantsData?.participants || []);
+      setRequests(requestsData?.pendingRequesters || []);
+    } catch (err) {
+      console.error("Failed to fetch data:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function doRequest(
+    url: string,
+    method: string,
+    body?: Record<string, any>
+  ) {
+    const response = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "An unknown error occurred.");
+    }
+    return data;
+  }
+
+  async function handleSaveDescription() {
     if (!event || editedDescription === event.description) return;
 
     try {
-      const res = await fetch(`/api/update-match-description`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: event.id,
-          description: editedDescription,
-        }),
+      await doRequest("/api/update-match-description", "PUT", {
+        id: event.id,
+        description: editedDescription,
       });
-
-      if (res.ok) {
-        setEvent((prevEvent) => prevEvent ? { ...prevEvent, description: editedDescription } : null);
-        setIsEditing(false);
-      } else {
-        console.error("Failed to save description");
-      }
+      setEvent((prev) =>
+        prev ? { ...prev, description: editedDescription } : null
+      );
+      setIsEditing(false);
     } catch (err) {
       console.error("Error saving description:", err);
     }
-  };
+  }
 
-  const handleConfirmCancelMatch = async (eventId: string, router: any) => {
+  async function handleCancelMatch(eventId: string) {
     try {
-      const res = await fetch(`/api/cancel-match`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id: eventId }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        console.log(data.message);
-        alert("Event deleted successfully!");
-
-        router.push("/dashboard");
-      } else {
-        const error = await res.json();
-        console.error("Error deleting event:", error);
-        alert(error.error || "Failed to delete the event.");
-      }
+      const data = await doRequest("/api/events", "DELETE", { id: eventId });
+      console.log(data.message);
+      alert("Event deleted successfully!");
+      router.push("/dashboard");
     } catch (err) {
-      console.error("Unexpected error:", err);
-      alert("An unexpected error occurred.");
+      console.error("Error deleting event:", err);
+      alert(String(err));
     }
-  };
+  }
 
-  const handleRequestJoin = async () => {
-    if (!event || !user) return;
+  async function handleAcceptRequest(requesterId: string) {
+    if (!event) return;
 
     try {
-      const res = await fetch(`/api/request-join`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          eventId: event.id,
-          userId: user.id,
-        }),
+      const response = await doRequest("/api/event-request/accept", "PATCH", {
+        requesterId,
+        eventId: event.id,
+      });
+      const acceptedRequest = response.participant?.[0];
+      if (!acceptedRequest) {
+        throw new Error("Unexpected API response format");
+      }
+
+      const { requester_id, user_name, profile_picture_url } = acceptedRequest;
+
+      setRequests((prev) =>
+        prev.filter((req) => req.requester_id !== requesterId)
+      );
+
+      setParticipants((prev) => [
+        ...prev,
+        { joined_user_id: requester_id, name: user_name || "New Buddy", profile_picture_url: profile_picture_url},
+      ]);
+    } catch (err) {
+      console.error("Failed to accept request:", err);
+      alert(String(err));
+    }
+  }
+
+  async function handleRejectRequest(requesterId: string) {
+    if (!event) return;
+
+    try {
+      await doRequest("/api/event-request/reject", "PATCH", {
+        requesterId,
+        eventId: event.id,
+      });
+      // remove request from list
+      setRequests((prev) =>
+        prev.filter((req) => req.requester_id !== requesterId)
+      );
+    } catch (err) {
+      console.error("Error rejecting request:", err);
+      alert(String(err));
+    }
+  }
+
+
+  async function handleRemoveParticipant(participantId: string) {
+    if (!event) return;
+
+    try {
+      const data = await doRequest("/api/event-participants", "DELETE", {
+        participantId,
+        eventId: event.id,
       });
 
-      if (res.ok) {
-        alert("Join request sent successfully!");
-      } else {
-        const error = await res.json();
-        console.error("Error sending join request:", error);
-        alert(error.error || "Failed to send join request.");
-      }
-    } catch (err) {
-      console.error("Unexpected error:", err);
-      alert("An unexpected error occurred while sending the join request.");
-    }
-  };
+      console.log("Participant removed:", data.message);
 
-  if (loading) {
+      // Remove the participant from local state
+      setParticipants((prev) =>
+        prev.filter((buddy) => buddy.joined_user_id !== participantId)
+      );
+    } catch (err) {
+      console.error("Failed to remove participant:", err);
+      alert(String(err));
+    }
+  }
+
+  function formatDate(dateString: string) {
+    return new Date(dateString).toLocaleDateString("en-EN", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    });
+  }
+
+  function formatTime(dateString: string) {
+    return new Date(dateString).toLocaleTimeString("en-EN", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  }
+
+  if (isLoading) {
     return <p>Loading event details...</p>;
   }
 
@@ -160,20 +251,12 @@ export default function EventDetailsPage() {
     return <p>No event found.</p>;
   }
 
-  const formattedDate = new Date(event.event_time).toLocaleDateString("en-EN", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-  const formattedTime = new Date(event.event_time).toLocaleTimeString("en-EN", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+  const formattedDate = formatDate(event.event_time);
+  const formattedTime = formatTime(event.event_time);
 
   return (
     <div className="container mx-auto p-6">
-      <Button onClick={() => router.push('/dashboard')} className="mb-4">
+      <Button onClick={() => router.push("/dashboard")} className="mb-4">
         Back to Dashboard
       </Button>
 
@@ -182,24 +265,51 @@ export default function EventDetailsPage() {
           <CardTitle className="text-2xl">Details for: {event.sport}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Datum */}
           <div className="flex items-center gap-2">
             <FaCalendarAlt className="h-5 w-5" />
             <span>{formattedDate}</span>
           </div>
+
+          {/* Uhrzeit */}
           <div className="flex items-center gap-2">
             <FaRegClock className="h-5 w-5" />
             <span>{formattedTime}</span>
           </div>
+
+          {/* Teilnehmeranzahl */}
           <div className="flex items-center gap-2">
             <FaUsers className="h-5 w-5" />
             <span>{event.participants_needed}</span>
           </div>
 
-          {/* Event Description Section */}
+          {/* Location */}
+          <div className="flex items-center gap-2">
+            <FaMapMarkerAlt className="h-5 w-5" />
+            <span>
+              {locationAddress
+                ? locationAddress
+                : `Latitude: ${event.latitude.toFixed(6)}, Longitude: ${event.longitude.toFixed(6)}`}
+            </span>
+          </div>
+
+          {/* Creator */}
+          {event.creator_id && participants.length > 0 && (
+            <div className="flex items-center gap-2">
+              <FaUserCircle className="h-5 w-5" />
+              <span>
+                {participants.find(
+                  (participant) => participant.joined_user_id === event.creator_id
+                )?.name || "Unknown Creator"}
+              </span>
+            </div>
+          )}
+
+          {/* Beschreibung */}
           <div className="space-y-2">
             <h3 className="text-lg font-medium">Event Description</h3>
             <div className="relative">
-              {isEditing && isOwner ? (
+              {isEditing ? (
                 <div className="space-y-2">
                   <Textarea
                     value={editedDescription}
@@ -224,89 +334,134 @@ export default function EventDetailsPage() {
                   <div className="p-4 rounded-md border border-gray-300 min-h-[100px]">
                     {event.description}
                   </div>
-                  {isOwner && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => setIsEditing(true)}
-                    >
-                      <FaPencilAlt className="h-4 w-4" />
-                    </Button>
-                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    <FaPencilAlt className="h-4 w-4" />
+                  </Button>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Buddys Section */}
+          {/* Teilnehmer */}
           <div className="space-y-2">
-            <h3 className="text-lg font-medium">Buddys ({dummyBuddys.length}/{event.participants_needed})</h3>
+            <h3 className="text-lg font-medium">
+              Buddys ({participants.length}/{event.participants_needed})
+            </h3>
             <div className="space-y-2">
-              {dummyBuddys.map((buddy) => (
-                <div key={buddy.id} className="flex items-center justify-between p-2 bg-gray-100 rounded-md">
-                  <span>{buddy.name}</span>
-                  {isOwner && (
-                    <Button size="icon" variant="ghost">
-                      <FaTimes className="h-5 w-5" />
-                    </Button>
-                  )}
+              {participants.map((buddy) => (
+                <div
+                  key={buddy.joined_user_id}
+                  className="flex items-center justify-between p-2 bg-gray-100 rounded-md"
+                >
+                  {/* Profilbild + Name */}
+                  <div className="flex items-center gap-2">
+                    {/* Hier kommt statt <img> jetzt das Avatar-Stack */}
+                    <Avatar className="w-8 h-8 border-2 border-primary">
+                      <AvatarImage
+                        src={buddy.profile_picture_url}
+                        alt={buddy.name}
+                        className="object-cover w-full h-full"
+                      />
+                      <AvatarFallback className="bg-secondary text-secondary-foreground">
+                        {buddy.name ? buddy.name.charAt(0).toUpperCase() : "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span>{buddy.name}</span>
+                  </div>
+
+                  {/* Entfernen-Button */}
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleRemoveParticipant(buddy.joined_user_id)}
+                  >
+                    <FaTimes className="h-5 w-5" />
+                  </Button>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Requests Section */}
-          {isOwner && (
+          {/* Requests */}
+          <div className="space-y-2">
+            <h3 className="text-lg font-medium">Requests ({requests.length})</h3>
             <div className="space-y-2">
-              <h3 className="text-lg font-medium">Requests ({dummyRequests.length})</h3>
-              <div className="space-y-2">
-                {dummyRequests.map((request) => (
-                  <div key={request.id} className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded-md">
-                    <div>
-                      <span className="font-medium">{request.name}</span>
-                      <p className="text-sm text-gray-500">{request.message}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="icon" variant="ghost">
-                        <FaTimes className="h-5 w-5" />
-                      </Button>
-                      <Button size="icon" variant="ghost">
-                        <FaCheck className="h-5 w-5" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+            {requests.map((request) => (
+            <div
+              key={request.requester_id}
+              className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded-md"
+            >
+              {/* Profilbild + Name + Nachricht */}
+              <div className="flex items-center gap-3">
+                <Avatar className="w-8 h-8 border-2 border-primary">
+                  <AvatarImage
+                    src={request.profile_picture_url || "/default-avatar.png"}
+                    alt={request.user_name}
+                    className="object-cover w-full h-full"
+                  />
+                  <AvatarFallback className="bg-secondary text-secondary-foreground">
+                    {request.user_name ? request.user_name.charAt(0).toUpperCase() : "?"}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <span className="font-medium">{request.user_name}</span>
+                  <p className="text-sm text-gray-500">{request.message}</p>
+                </div>
+              </div>
+
+              {/* Annehmen / Ablehnen Buttons */}
+              <div className="flex gap-2">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => handleAcceptRequest(request.requester_id)}
+                  disabled={participants.length >= event.participants_needed}
+                >
+                  <FaCheck className="h-5 w-5" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => handleRejectRequest(request.requester_id)}
+                >
+                  <FaTimes className="h-5 w-5" />
+                </Button>
               </div>
             </div>
-          )}
+          ))}
 
-          {/* Action Button */}
+            </div>
+          </div>
+
+          {/* Event stornieren */}
           <div className="text-center mt-6">
-            {isOwner ? (
-              <Button onClick={() => setShowCancelDialog(true)} className="mx-auto">
-                Cancel Match
-              </Button>
-            ) : (
-              <Button onClick={handleRequestJoin} className="mx-auto">
-                Request Join
-              </Button>
-            )}
+            <Button onClick={() => setShowCancelDialog(true)} className="mx-auto">
+              Cancel Match
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Dialog Modal */}
+      {/* Dialog zum Bestätigen des Löschens */}
       {showCancelDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 space-y-4 w-[400px]">
             <h3 className="text-lg font-semibold">Cancel Match</h3>
-            <p>Are you sure you want to cancel this match? This action cannot be undone.</p>
+            <p>
+              Are you sure you want to cancel this match? This action cannot be undone.
+            </p>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setShowCancelDialog(false)}>
                 No, go back
               </Button>
-              <Button onClick={() => handleConfirmCancelMatch(event.id, router)}>Yes, cancel it</Button>
+              <Button onClick={() => handleCancelMatch(event.id)}>
+                Yes, cancel it
+              </Button>
             </div>
           </div>
         </div>
@@ -314,4 +469,3 @@ export default function EventDetailsPage() {
     </div>
   );
 }
-

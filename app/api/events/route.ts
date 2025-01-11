@@ -4,20 +4,13 @@ import { NextResponse } from "next/server";
 export async function DELETE(request: Request) {
   try {
     const supabase = await createClient();
-    const { id } = await request.json(); // Event-ID aus der Anfrage abrufen
+    const { id } = await request.json();
 
     if (!id) {
-      return NextResponse.json(
-        { error: "Missing event ID" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing event ID" }, { status: 400 });
     }
 
-    // Event aus der Datenbank löschen
-    const { error } = await supabase
-      .from("events")
-      .delete()
-      .eq("id", id); // Event mit der angegebenen ID löschen
+    const { error } = await supabase.from("events").delete().eq("id", id);
 
     if (error) {
       throw new Error(error.message);
