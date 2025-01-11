@@ -148,6 +148,7 @@ create table event_requests (
     requester_id uuid references users(id) on delete cascade,
     status request_status not null default 'pending', 
     created_at timestamp default now(),
+    messages VARCHAR(500) DEFAULT '',
     unique (event_id, requester_id) 
 );
 

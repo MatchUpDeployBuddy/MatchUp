@@ -176,9 +176,7 @@ export default function EventDetailsPage() {
     }
   }
 
-  /**
-   * Removes a participant from the event by calling the DELETE /api/event-participant endpoint.
-   */
+
   async function handleRemoveParticipant(participantId: string) {
     if (!event) return;
 

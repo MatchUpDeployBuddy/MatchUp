@@ -21,7 +21,7 @@ BEGIN
     WHERE event_id = NEW.event_id AND joined_user_id = NEW.requester_id;
   END IF;
 
-  RETURN NEW; -- Return the new record
+  RETURN NEW; 
 END;
 $$ LANGUAGE plpgsql;
 
