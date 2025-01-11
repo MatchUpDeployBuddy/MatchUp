@@ -64,8 +64,11 @@ export default function Chat() {
         };
 
         fetchEvents();
-    }, [user]);
+    }, [user, events.length, fetchPictures]);
 
+    if(loading){
+      <div>loading...</div>
+    }
 
     return (
         <div className="p-6 max-w-lg mx-auto bg-gray-100 rounded-lg shadow-md">
