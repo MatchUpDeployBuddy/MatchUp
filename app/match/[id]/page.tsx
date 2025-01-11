@@ -1,11 +1,12 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation"; 
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FaUsers, FaCalendarAlt, FaRegClock, FaPencilAlt, FaTimes, FaCheck } from "react-icons/fa";
 import { Textarea } from "@/components/ui/textarea";
+import { useUserStore } from "@/store/userStore";
 
 interface EventDetails {
   id: string;
@@ -14,6 +15,7 @@ interface EventDetails {
   participants_needed: number;
   description: string;
   location?: string;
+  creator_id: string;
 }
 
 interface Buddy {
@@ -28,13 +30,15 @@ interface Request {
 }
 
 export default function EventDetailsPage() {
-  const { id } = useParams(); 
+  const { id } = useParams();
   const router = useRouter();
   const [event, setEvent] = useState<EventDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [editedDescription, setEditedDescription] = useState<string>("");
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [showCancelDialog, setShowCancelDialog] = useState<boolean>(false); // State für das Dialogfeld
+  const [showCancelDialog, setShowCancelDialog] = useState<boolean>(false);
+  const [isOwner, setIsOwner] = useState<boolean>(false);
+  const user = useUserStore((state) => state.user);
 
   // Dummy data for Buddys and Requests
   const dummyBuddys: Buddy[] = [
@@ -49,13 +53,14 @@ export default function EventDetailsPage() {
 
   useEffect(() => {
     async function fetchEventDetails() {
-      if (!id) return; 
+      if (!id) return;
       setLoading(true);
       try {
         const res = await fetch(`/api/get-match-details?id=${id}`);
         const data: EventDetails = await res.json();
         setEvent(data);
         setEditedDescription(data.description || "");
+        setIsOwner(data.creator_id === user?.id);
       } catch (err) {
         console.error("Failed to fetch event details:", err);
       } finally {
@@ -64,10 +69,10 @@ export default function EventDetailsPage() {
     }
 
     fetchEventDetails();
-  }, [id]);
+  }, [id, user]);
 
   const handleSaveDescription = async () => {
-    if (!event || editedDescription === event.description) return; 
+    if (!event || editedDescription === event.description) return;
 
     try {
       const res = await fetch(`/api/update-match-description`, {
@@ -101,12 +106,12 @@ export default function EventDetailsPage() {
         },
         body: JSON.stringify({ id: eventId }),
       });
-  
+
       if (res.ok) {
         const data = await res.json();
-        console.log(data.message); 
+        console.log(data.message);
         alert("Event deleted successfully!");
-  
+
         router.push("/dashboard");
       } else {
         const error = await res.json();
@@ -118,7 +123,34 @@ export default function EventDetailsPage() {
       alert("An unexpected error occurred.");
     }
   };
-  
+
+  const handleRequestJoin = async () => {
+    if (!event || !user) return;
+
+    try {
+      const res = await fetch(`/api/request-join`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          eventId: event.id,
+          userId: user.id,
+        }),
+      });
+
+      if (res.ok) {
+        alert("Join request sent successfully!");
+      } else {
+        const error = await res.json();
+        console.error("Error sending join request:", error);
+        alert(error.error || "Failed to send join request.");
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      alert("An unexpected error occurred while sending the join request.");
+    }
+  };
 
   if (loading) {
     return <p>Loading event details...</p>;
@@ -167,7 +199,7 @@ export default function EventDetailsPage() {
           <div className="space-y-2">
             <h3 className="text-lg font-medium">Event Description</h3>
             <div className="relative">
-              {isEditing ? (
+              {isEditing && isOwner ? (
                 <div className="space-y-2">
                   <Textarea
                     value={editedDescription}
@@ -178,8 +210,8 @@ export default function EventDetailsPage() {
                     <Button
                       variant="outline"
                       onClick={() => {
-                        setIsEditing(false); 
-                        setEditedDescription(event.description || ""); 
+                        setIsEditing(false);
+                        setEditedDescription(event.description || "");
                       }}
                     >
                       Cancel
@@ -190,64 +222,76 @@ export default function EventDetailsPage() {
               ) : (
                 <div className="relative group">
                   <div className="p-4 rounded-md border border-gray-300 min-h-[100px]">
-                    {event.description} 
+                    {event.description}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => setIsEditing(true)} 
-                  >
-                    <FaPencilAlt className="h-4 w-4" />
-                  </Button>
+                  {isOwner && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => setIsEditing(true)}
+                    >
+                      <FaPencilAlt className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
           </div>
 
-           {/* Buddys Section */}
-           <div className="space-y-2">
+          {/* Buddys Section */}
+          <div className="space-y-2">
             <h3 className="text-lg font-medium">Buddys ({dummyBuddys.length}/{event.participants_needed})</h3>
             <div className="space-y-2">
               {dummyBuddys.map((buddy) => (
                 <div key={buddy.id} className="flex items-center justify-between p-2 bg-gray-100 rounded-md">
                   <span>{buddy.name}</span>
-                  <Button size="icon" variant="ghost"> 
-                      <FaTimes className="h-5 w-5" /> 
+                  {isOwner && (
+                    <Button size="icon" variant="ghost">
+                      <FaTimes className="h-5 w-5" />
                     </Button>
+                  )}
                 </div>
               ))}
             </div>
           </div>
 
           {/* Requests Section */}
-          <div className="space-y-2">
-            <h3 className="text-lg font-medium">Requests ({dummyRequests.length})</h3>
+          {isOwner && (
             <div className="space-y-2">
-              {dummyRequests.map((request) => (
-                <div key={request.id} className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded-md">
-                  <div>
-                    <span className="font-medium">{request.name}</span>
-                    <p className="text-sm text-gray-500">{request.message}</p>
+              <h3 className="text-lg font-medium">Requests ({dummyRequests.length})</h3>
+              <div className="space-y-2">
+                {dummyRequests.map((request) => (
+                  <div key={request.id} className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded-md">
+                    <div>
+                      <span className="font-medium">{request.name}</span>
+                      <p className="text-sm text-gray-500">{request.message}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="icon" variant="ghost">
+                        <FaTimes className="h-5 w-5" />
+                      </Button>
+                      <Button size="icon" variant="ghost">
+                        <FaCheck className="h-5 w-5" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button size="icon" variant="ghost">
-                      <FaTimes className="h-5 w-5" />
-                    </Button>
-                    <Button size="icon" variant="ghost">
-                      <FaCheck className="h-5 w-5" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Cancel Match Button */}
+          {/* Action Button */}
           <div className="text-center mt-6">
-            <Button onClick={() => setShowCancelDialog(true)} className="mx-auto">
-              Cancel Match
-            </Button>
+            {isOwner ? (
+              <Button onClick={() => setShowCancelDialog(true)} className="mx-auto">
+                Cancel Match
+              </Button>
+            ) : (
+              <Button onClick={handleRequestJoin} className="mx-auto">
+                Request Join
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -270,3 +314,4 @@ export default function EventDetailsPage() {
     </div>
   );
 }
+
