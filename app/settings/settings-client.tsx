@@ -319,7 +319,7 @@ function AccountSettings({
       return;
     }
     try {
-      const response = await fetch('/api/update-user', {
+      const response = await fetch('/api/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

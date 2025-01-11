@@ -62,7 +62,7 @@ create table events (
     skill_level varchar(50) not null,
     event_time timestamp not null,
     description text,
-    location geography(point, 4326), -- geospalte für standort
+    location geography(point, 4326) not null, -- geospalte für standort
     created_at timestamp default now(),
     updated_at timestamp default now()
 );
@@ -107,6 +107,36 @@ create policy "event participants are viewable by everyone." on event_participan
 for select
 using (true);
 
+CREATE POLICY "event creators can delete participants from their events" 
+ON public.event_participants
+FOR DELETE
+USING (
+  EXISTS (
+    SELECT 1 
+    FROM public.events e 
+    WHERE e.id = event_participants.event_id 
+    AND e.creator_id = auth.uid()
+  )
+);
+
+
+CREATE OR REPLACE FUNCTION update_event_request_status_on_participant_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Update the status to 'rejected' for the specific user and event
+  UPDATE public.event_requests
+  SET status = 'rejected'
+  WHERE requester_id = OLD.joined_user_id AND event_id = OLD.event_id;
+
+  RETURN NULL; -- No need to return anything
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER participant_delete_trigger
+AFTER DELETE ON public.event_participants
+FOR EACH ROW
+EXECUTE FUNCTION public.update_event_request_status_on_participant_delete();
+
 
 
 
@@ -118,14 +148,19 @@ create table event_requests (
     requester_id uuid references users(id) on delete cascade,
     status request_status not null default 'pending', 
     created_at timestamp default now(),
+    messages VARCHAR(500) DEFAULT '',
     unique (event_id, requester_id) 
 );
 
 alter table event_requests enable row level security;
 
-create policy "users can request to join events" on event_requests
-for insert
-with check ((select auth.uid()) = requester_id);
+CREATE POLICY "users can request to join events" 
+ON event_requests
+FOR INSERT
+WITH CHECK (
+  (select auth.uid()) = requester_id AND 
+  EXISTS (SELECT 1 FROM public.events WHERE id = event_id)
+);
 
 create policy "event creators can view requests for their events" on event_requests
 for select
@@ -139,25 +174,57 @@ REVOKE INSERT (id, status, created_at) ON TABLE event_requests FROM public;
 REVOKE UPDATE ON TABLE event_requests FROM public;
 GRANT UPDATE (status) ON TABLE event_requests TO public;
 
-create or replace function handle_request_accepted()
-returns trigger
-language plpgsql
-security definer
-as $$
-begin
-  if new.status = 'accepted' then
-    insert into event_participants (event_id, joined_user_id)
-    values (new.event_id, new.requester_id);
-  end if;
-  return new;
-end;
+CREATE OR REPLACE FUNCTION handle_request_accepted()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  IF NEW.status = 'accepted' THEN
+    IF NOT EXISTS (
+      SELECT 1
+      FROM event_participants
+      WHERE event_id = NEW.event_id AND joined_user_id = NEW.requester_id
+    ) THEN
+      INSERT INTO event_participants (event_id, joined_user_id)
+      VALUES (NEW.event_id, NEW.requester_id);
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
 $$;
+
 
 create trigger after_request_accepted
 after update on event_requests
 for each row
 when (new.status = 'accepted')
 execute function handle_request_accepted();
+
+
+
+CREATE OR REPLACE FUNCTION delete_participant_on_reject()
+RETURNS TRIGGER 
+security definer
+AS $$
+BEGIN
+  -- Check if the status is updated to 'rejected'
+  IF NEW.status = 'rejected' THEN
+    -- Delete the participant entry if it exists
+    DELETE FROM public.event_participants
+    WHERE event_id = NEW.event_id AND joined_user_id = NEW.requester_id;
+  END IF;
+
+  RETURN NEW; -- Return the new record
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER reject_status_trigger
+AFTER UPDATE OF status ON public.event_requests
+FOR EACH ROW
+when (new.status = 'rejected')
+EXECUTE FUNCTION delete_participant_on_reject();
+
 
 
 create table messages (
