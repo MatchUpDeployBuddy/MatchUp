@@ -146,7 +146,7 @@ export default function EventDetailsPage() {
 
   async function handleCancelMatch(eventId: string) {
     try {
-      const data = await doRequest("/api/cancel-match", "DELETE", { id: eventId });
+      const data = await doRequest("/api/events", "DELETE", { id: eventId });
       console.log(data.message);
       alert("Event deleted successfully!");
       router.push("/dashboard");
@@ -280,7 +280,7 @@ export default function EventDetailsPage() {
             <FaUsers className="h-5 w-5" />
             <span>{event.participants_needed}</span>
           </div>
-          
+
           {/* Location */}
           <div className="flex items-center gap-2">
             <FaMapMarkerAlt className="h-5 w-5" />
