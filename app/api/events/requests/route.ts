@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
-// Beispiel: GET /api/pending-event-requesters?eventId=60199094-8cf5-485d-9361-829f9eb8b339
+// Beispiel: GET /api/events/requests?eventId=60199094-8cf5-485d-9361-829f9eb8b339
 
 export async function GET(request: Request): Promise<NextResponse> {
   try {

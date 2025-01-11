@@ -84,9 +84,9 @@ export default function EventDetailsPage() {
 
       // load all data in parallel
       const [eventRes, participantsRes, requestsRes] = await Promise.all([
-        fetch(`/api/get-match-details?id=${eventId}`),
+        fetch(`/api/events/event-details?id=${eventId}`),
         fetch(`/api/event-participants?eventId=${eventId}`),
-        fetch(`/api/pending-event-requesters?eventId=${eventId}`),
+        fetch(`/api/events/requests?eventId=${eventId}`),
       ]);
 
       if (!eventRes.ok || !participantsRes.ok || !requestsRes.ok) {
