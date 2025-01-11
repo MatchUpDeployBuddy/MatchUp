@@ -12,15 +12,24 @@ import {
   FaPencilAlt,
   FaTimes,
   FaCheck,
+  FaMapMarkerAlt,
+  FaUser,
+  FaUserCircle,
 } from "react-icons/fa";
+import { reverseGeocodeCoordinates } from "@/utils/geocoding";
 
 interface EventDetails {
   id: string;
+  creator_id: string;
   sport: string;
-  event_time: string;
   participants_needed: number;
+  skill_level: string;
+  event_time: string;
   description: string;
-  location?: string;
+  longitude: number;
+  latitude: number;
+  created_at: string;
+  updated_at: string;
 }
 
 interface Buddy {
@@ -42,6 +51,7 @@ export default function EventDetailsPage() {
   const [event, setEvent] = useState<EventDetails | null>(null);
   const [participants, setParticipants] = useState<Buddy[]>([]);
   const [requests, setRequests] = useState<Request[]>([]);
+  const [locationAddress, setLocationAddress] = useState<string | null>(null);
 
   const [editedDescription, setEditedDescription] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -51,6 +61,22 @@ export default function EventDetailsPage() {
     if (!id) return;
     fetchAllData(id as string);
   }, [id]);
+
+  useEffect(() => {
+    if (event && event.latitude && event.longitude) {
+      fetchAddress(event.latitude, event.longitude);
+    }
+  }, [event]);
+
+  async function fetchAddress(latitude: number, longitude: number) {
+    try {
+      const address = await reverseGeocodeCoordinates(latitude, longitude);
+      setLocationAddress(address);
+    } catch (error) {
+      console.error("Failed to fetch address:", error);
+      setLocationAddress(null);
+    }
+  }
 
   async function fetchAllData(eventId: string) {
     try {
@@ -71,8 +97,8 @@ export default function EventDetailsPage() {
       const participantsData = await participantsRes.json();
       const requestsData = await requestsRes.json();
 
-      setEvent(eventData);
-      setEditedDescription(eventData?.description || "");
+      setEvent(eventData.event);
+      setEditedDescription(eventData.event?.description || "");
       setParticipants(participantsData?.participants || []);
       setRequests(requestsData?.pendingRequesters || []);
     } catch (err) {
@@ -254,6 +280,28 @@ export default function EventDetailsPage() {
             <FaUsers className="h-5 w-5" />
             <span>{event.participants_needed}</span>
           </div>
+          
+          {/* Location */}
+          <div className="flex items-center gap-2">
+            <FaMapMarkerAlt className="h-5 w-5" />
+            <span>
+              {locationAddress
+                ? locationAddress
+                : `Latitude: ${event.latitude.toFixed(6)}, Longitude: ${event.longitude.toFixed(6)}`}
+            </span>
+          </div>
+
+          {/* Creator */}
+          {event.creator_id && participants.length > 0 && (
+            <div className="flex items-center gap-2">
+              <FaUserCircle className="h-5 w-5" />
+              <span>
+                {participants.find(
+                  (participant) => participant.joined_user_id === event.creator_id
+                )?.name || "Unknown Creator"}
+              </span>
+            </div>
+          )}
 
           {/* Beschreibung */}
           <div className="space-y-2">

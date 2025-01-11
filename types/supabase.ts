@@ -1125,6 +1125,24 @@ export type Database = {
           name: string;
         }[];
       };
+      get_event_with_location: {
+        Args: {
+          p_id: string;
+        };
+        Returns: {
+          id: string;
+          creator_id: string;
+          sport: string;
+          participants_needed: number;
+          skill_level: string;
+          event_time: string;
+          description: string;
+          longitude: number;
+          latitude: number;
+          created_at: string;
+          updated_at: string;
+        }[];
+      };
       get_events_with_coordinates: {
         Args: Record<PropertyKey, never>;
         Returns: {

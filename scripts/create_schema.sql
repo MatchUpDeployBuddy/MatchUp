@@ -62,7 +62,7 @@ create table events (
     skill_level varchar(50) not null,
     event_time timestamp not null,
     description text,
-    location geography(point, 4326), -- geospalte für standort
+    location geography(point, 4326) not null, -- geospalte für standort
     created_at timestamp default now(),
     updated_at timestamp default now()
 );
