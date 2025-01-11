@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useUserStore } from "@/store/userStore";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/ui/event-card";
-import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -34,7 +33,6 @@ export default function BuddysClient() {
   const [sportImages, setSportImages] = useState<Record<string, string>>({});
   const [userLocation, setUserLocation] = useState<string>("Germany");
   const [userCoordinates, setUserCoordinates] = useState<[number, number]>([10.4515, 51.1657]);
-  const router = useRouter();
 
   useEffect(() => {
     getUserLocation();
