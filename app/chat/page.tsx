@@ -36,7 +36,6 @@ export default function Chat() {
       };
       for (const event of events) {
         const sport = event.sport;
-        console.log(sport)
         if (!sportImages[sport]) {
           await fetchImage(sport);
         }
@@ -88,7 +87,7 @@ export default function Chat() {
                   />
                 </Avatar>
                 <div className="flex-1">
-                  <h4 className="text-lg font-semibold">{event.sport}</h4>
+                  <h4 className="text-lg font-semibold">{event.event_name || event.sport}</h4>
                 </div>
               </div>
             ))}
