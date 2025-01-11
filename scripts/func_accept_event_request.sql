@@ -2,7 +2,7 @@ CREATE OR REPLACE FUNCTION public.accept_event_request(
     p_requester_id UUID, 
     p_event_id UUID
 )
-RETURNS TABLE(requester_id UUID, user_name TEXT) AS $$
+RETURNS TABLE(requester_id UUID, user_name TEXT, profile_picture_url TEXT) AS $$
 DECLARE
   available_slots INTEGER;
 BEGIN
@@ -22,7 +22,7 @@ BEGIN
 
     -- Return the requester_id and corresponding username
     RETURN QUERY
-    SELECT p_requester_id AS requester_id, u.name::TEXT AS user_name
+    SELECT p_requester_id AS requester_id, u.name::TEXT AS user_name, u.profile_picture_url::TEXT
     FROM public.users u
     WHERE u.id = p_requester_id;
   ELSE

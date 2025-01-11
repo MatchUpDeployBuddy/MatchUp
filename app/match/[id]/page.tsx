@@ -13,10 +13,10 @@ import {
   FaTimes,
   FaCheck,
   FaMapMarkerAlt,
-  FaUser,
   FaUserCircle,
 } from "react-icons/fa";
 import { reverseGeocodeCoordinates } from "@/utils/geocoding";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface EventDetails {
   id: string;
@@ -35,12 +35,14 @@ interface EventDetails {
 interface Buddy {
   joined_user_id: string;
   name: string;
+  profile_picture_url: string;
 }
 
 interface Request {
   requester_id: string;
   user_name: string;
-  message: string
+  message: string;
+  profile_picture_url: string;
 }
 
 export default function EventDetailsPage() {
@@ -86,7 +88,7 @@ export default function EventDetailsPage() {
       const [eventRes, participantsRes, requestsRes] = await Promise.all([
         fetch(`/api/events/event-details?id=${eventId}`),
         fetch(`/api/event-participants?eventId=${eventId}`),
-        fetch(`/api/events/requests?eventId=${eventId}`),
+        fetch(`/api/event-request?eventId=${eventId}`),
       ]);
 
       if (!eventRes.ok || !participantsRes.ok || !requestsRes.ok) {
@@ -169,7 +171,7 @@ export default function EventDetailsPage() {
         throw new Error("Unexpected API response format");
       }
 
-      const { requester_id, user_name } = acceptedRequest;
+      const { requester_id, user_name, profile_picture_url } = acceptedRequest;
 
       setRequests((prev) =>
         prev.filter((req) => req.requester_id !== requesterId)
@@ -177,7 +179,7 @@ export default function EventDetailsPage() {
 
       setParticipants((prev) => [
         ...prev,
-        { joined_user_id: requester_id, name: user_name || "New Buddy" },
+        { joined_user_id: requester_id, name: user_name || "New Buddy", profile_picture_url: profile_picture_url},
       ]);
     } catch (err) {
       console.error("Failed to accept request:", err);
@@ -356,7 +358,23 @@ export default function EventDetailsPage() {
                   key={buddy.joined_user_id}
                   className="flex items-center justify-between p-2 bg-gray-100 rounded-md"
                 >
-                  <span>{buddy.name}</span>
+                  {/* Profilbild + Name */}
+                  <div className="flex items-center gap-2">
+                    {/* Hier kommt statt <img> jetzt das Avatar-Stack */}
+                    <Avatar className="w-8 h-8 border-2 border-primary">
+                      <AvatarImage
+                        src={buddy.profile_picture_url}
+                        alt={buddy.name}
+                        className="object-cover w-full h-full"
+                      />
+                      <AvatarFallback className="bg-secondary text-secondary-foreground">
+                        {buddy.name ? buddy.name.charAt(0).toUpperCase() : "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span>{buddy.name}</span>
+                  </div>
+
+                  {/* Entfernen-Button */}
                   <Button
                     size="icon"
                     variant="ghost"
@@ -373,37 +391,50 @@ export default function EventDetailsPage() {
           <div className="space-y-2">
             <h3 className="text-lg font-medium">Requests ({requests.length})</h3>
             <div className="space-y-2">
-              {requests.map((request) => (
-                <div
-                  key={request.requester_id}
-                  className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded-md"
-                >
-                  <div>
-                    <span className="font-medium">{request.user_name}</span>
-                    <p className="text-sm text-gray-500">{request.message}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    {/* Annehmen */}
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => handleAcceptRequest(request.requester_id)}
-                      disabled={participants.length >= event.participants_needed}
-                    >
-                      <FaCheck className="h-5 w-5" />
-                    </Button>
-
-                    {/* Ablehnen */}
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => handleRejectRequest(request.requester_id)}
-                    >
-                      <FaTimes className="h-5 w-5" />
-                    </Button>
-                  </div>
+            {requests.map((request) => (
+            <div
+              key={request.requester_id}
+              className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded-md"
+            >
+              {/* Profilbild + Name + Nachricht */}
+              <div className="flex items-center gap-3">
+                <Avatar className="w-8 h-8 border-2 border-primary">
+                  <AvatarImage
+                    src={request.profile_picture_url || "/default-avatar.png"}
+                    alt={request.user_name}
+                    className="object-cover w-full h-full"
+                  />
+                  <AvatarFallback className="bg-secondary text-secondary-foreground">
+                    {request.user_name ? request.user_name.charAt(0).toUpperCase() : "?"}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <span className="font-medium">{request.user_name}</span>
+                  <p className="text-sm text-gray-500">{request.message}</p>
                 </div>
-              ))}
+              </div>
+
+              {/* Annehmen / Ablehnen Buttons */}
+              <div className="flex gap-2">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => handleAcceptRequest(request.requester_id)}
+                  disabled={participants.length >= event.participants_needed}
+                >
+                  <FaCheck className="h-5 w-5" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => handleRejectRequest(request.requester_id)}
+                >
+                  <FaTimes className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+          ))}
+
             </div>
           </div>
 

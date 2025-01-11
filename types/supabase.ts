@@ -479,6 +479,7 @@ export type Database = {
         Returns: {
           requester_id: string;
           user_name: string;
+          profile_picture_url: string;
         }[];
       };
       addauth: {
@@ -1123,6 +1124,7 @@ export type Database = {
         Returns: {
           joined_user_id: string;
           name: string;
+          profile_picture_url: string;
         }[];
       };
       get_event_with_location: {
@@ -1191,6 +1193,7 @@ export type Database = {
           requester_id: string;
           user_name: string;
           message: string;
+          profile_picture_url: string;
         }[];
       };
       get_proj4_from_srid: {
