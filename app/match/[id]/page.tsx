@@ -31,6 +31,7 @@ interface Buddy {
 interface Request {
   requester_id: string;
   user_name: string;
+  message: string
 }
 
 export default function EventDetailsPage() {
@@ -331,7 +332,7 @@ export default function EventDetailsPage() {
                 >
                   <div>
                     <span className="font-medium">{request.user_name}</span>
-                    <p className="text-sm text-gray-500">{"request.message"}</p>
+                    <p className="text-sm text-gray-500">{request.message}</p>
                   </div>
                   <div className="flex gap-2">
                     {/* Ablehnen */}

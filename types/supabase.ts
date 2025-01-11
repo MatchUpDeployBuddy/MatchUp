@@ -50,6 +50,7 @@ export type Database = {
           created_at: string | null;
           event_id: string | null;
           id: string;
+          messages: string | null;
           requester_id: string | null;
           status: "PENDING" | "SUCCESS" | "ERROR";
         };
@@ -57,6 +58,7 @@ export type Database = {
           created_at?: string | null;
           event_id?: string | null;
           id?: string;
+          messages?: string | null;
           requester_id?: string | null;
           status?: "PENDING" | "SUCCESS" | "ERROR";
         };
@@ -64,6 +66,7 @@ export type Database = {
           created_at?: string | null;
           event_id?: string | null;
           id?: string;
+          messages?: string | null;
           requester_id?: string | null;
           status?: "PENDING" | "SUCCESS" | "ERROR";
         };
@@ -1169,6 +1172,7 @@ export type Database = {
         Returns: {
           requester_id: string;
           user_name: string;
+          message: string;
         }[];
       };
       get_proj4_from_srid: {
