@@ -154,9 +154,13 @@ create table event_requests (
 
 alter table event_requests enable row level security;
 
-create policy "users can request to join events" on event_requests
-for insert
-with check ((select auth.uid()) = requester_id);
+CREATE POLICY "users can request to join events" 
+ON event_requests
+FOR INSERT
+WITH CHECK (
+  (select auth.uid()) = requester_id AND 
+  EXISTS (SELECT 1 FROM public.events WHERE id = event_id)
+);
 
 create policy "event creators can view requests for their events" on event_requests
 for select
