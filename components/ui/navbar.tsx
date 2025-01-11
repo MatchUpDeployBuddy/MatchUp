@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FaRocket, FaUsers, FaWhmcs } from "react-icons/fa";
+import { BsChatText } from "react-icons/bs";
 import { cn } from "@/lib/utils";
+import { NAVBAR_HEIGHT } from "@/constants";
 
 interface NavItem {
   label: string;
@@ -23,6 +25,11 @@ const navItems: NavItem[] = [
     icon: FaUsers,
   },
   {
+    label: "Chat",
+    href: "/chat",
+    icon: BsChatText,
+  },
+  {
     label: "Settings",
     href: "/settings",
     icon: FaWhmcs,
@@ -33,7 +40,9 @@ export function Navbar() {
   const currentPath = usePathname(); 
 
   return (
-    <nav className="fixed bottom-4 left-4 right-4 z-50 bg-[#1C1C1E] px-4 py-2 rounded-full shadow-md">
+    <nav className="fixed bottom-4 left-4 right-4 z-50 bg-[#1C1C1E] px-4 py-2 rounded-full shadow-md"
+    style={{ height: NAVBAR_HEIGHT }}
+    >
       <div className="flex justify-center items-center max-w-screen-xl mx-auto">
         <div className="flex gap-2">
           {navItems.map((item) => (

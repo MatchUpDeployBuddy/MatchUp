@@ -2,19 +2,21 @@ import React from "react";
 import ChatInput from "./ChatInput";
 import ChatHeader from "./ChatHeader";
 import ChatMessages from "./ChatMessages";
+import { NAVBAR_HEIGHT } from "@/constants";
 
-export default function ChatPage() {
+export default async function ChatPage({ params }: { params: { id: string } }) {
+    const awaitedParams = await params;
+    const { id } = awaitedParams;
     
-    const event_id = "12714bda-3e84-44b3-8d2a-c42832e37aee";
     return (
-        <div className="max-w-3x1 mx-auto md:py-10 h-screen">
-
+        <div className="max-w-3x1 mx-auto md:py-10 h-screen"
+        style={{ paddingBottom: `${NAVBAR_HEIGHT + 20}px` }}>
             <div className="h-full border rounded-md flex flex-col relative">
-                <ChatHeader id={event_id} />
-                <ChatMessages id={event_id} />
-                <ChatInput id={event_id} />
+                <ChatHeader id={id} />
+                <ChatMessages id={id} />
+                <ChatInput id={id} />
             </div>
 
         </div>
     )
-    }
+}

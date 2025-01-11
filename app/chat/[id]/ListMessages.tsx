@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FaArrowDown } from "react-icons/fa";
 import { MESSAGE_LIMIT } from "@/constants";
 import { Button } from "@/components/ui/button";
+import { useUserStore } from "@/store/userStore";
 
 export default function ListMessages({ eventId, currentMessages }: { eventId: string, currentMessages: Imessage[]}) {
     const { page, messages, setMessages, addMessage, addMessages, setPage, setHasMore, hasMore } = useMessagesStore();
@@ -16,16 +17,19 @@ export default function ListMessages({ eventId, currentMessages }: { eventId: st
     const { toast } = useToast();
     const [userScroll, setUserScroll] = useState(false);
     const [notification, setNotification] = useState(0);
+    const { user } = useUserStore();
 
     useEffect(() => {
         // Initialize messages if not already set
+        console.log("Inital messages",messages[eventId])
         if (!messages[eventId] || messages[eventId].length === 0) {
           console.log("Initializing messages");
           setMessages(eventId, currentMessages);
           setPage(eventId, 1);
           setHasMore(eventId, currentMessages.length >= MESSAGE_LIMIT);
+          console.log("After init set messages",messages[eventId])
         }
-      }, [eventId, currentMessages, messages, setMessages, setHasMore, setPage]);
+      }, [eventId, currentMessages, messages[eventId], setMessages, setHasMore, setPage]);
 
     useEffect(() => {
 
@@ -109,9 +113,7 @@ export default function ListMessages({ eventId, currentMessages }: { eventId: st
     }
 
     const fetchMoreMessages = async () => {
-        console.log(page[eventId])
         const { from, to } = getFromAndTo(page[eventId], MESSAGE_LIMIT);
-        console.log(from, to)
         const { data, error } = await supabase.from("messages")
                             .select("*, users(id, name, username, profile_picture_url)")
                             .eq("event_id", eventId)
@@ -130,43 +132,47 @@ export default function ListMessages({ eventId, currentMessages }: { eventId: st
     }
 
     return (
-        <div className="flex-1 flex flex-col p-5 h-full overflow-y-auto gap-5" 
+        <div className="relative flex-1 flex flex-col p-5 h-full overflow-y-auto overflow-x-hidden gap-5" 
              ref={scrollRef}
              onScroll={handleOnScroll}
              >
             <div className="flex-1">
                 {hasMore[eventId] && (
-                    <Button variant="outline" className="w-full" onClick={fetchMoreMessages}>
+                    <Button variant="outline" className="w-full mb-4" onClick={fetchMoreMessages}>
                         Load More
                     </Button>
                 )}
                 
             </div>
-            <div className="space-y-7">
+            <div className="space-y-4">
             {messages[eventId] && messages[eventId].length > 0 ? (
                 messages[eventId].map((value) => (
-                    <Message key={value.id} message={value} />
+                    <Message key={value.id} message={value} currentUserId={user?.id || ""} />
                 ))
                 ) : (
-                <p>No messages available.</p>
+                <p className="text-center text-gray-500">No messages available.</p>
             )}
             </div>
             {userScroll && (
-                <div className="absolute bottom-20 w-full">
-                    {notification ? (
-                        <div className="w-36 mx-auto bg-green-500 p-1 text-white rounded-md cursor-pointer"
-                             onClick={handleScrollDown}
-                            >
-                            <h1> New {notification} messages</h1>
-                        </div>
-                        ) : (
-                        <div className="w-7 h-7 bg-green-500 rounded-full flex items-center justify-center mx-auto border cursor-pointer hover:scale-110 transition-all"
-                            onClick={handleScrollDown}>
-                            <FaArrowDown />
-                        </div>
-                    )}
+            <div className="fixed bottom-40 left-1/2 transform -translate-x-1/2 w-auto z-20">
+                {notification ? (
+                <div 
+                    className="w-36 mx-auto bg-green-500 p-1 text-white rounded-md cursor-pointer"
+                    onClick={handleScrollDown}
+                >
+                    <h1> Neue {notification} Nachrichten</h1>
                 </div>
+                ) : (
+                <div 
+                    className="w-7 h-7 bg-green-500 rounded-full flex items-center justify-center mx-auto border cursor-pointer hover:scale-110 transition-all"
+                    onClick={handleScrollDown}
+                >
+                    <FaArrowDown />
+                </div>
+                )}
+            </div>
             )}
+
         </div>
-    )
+    );
 }
