@@ -8,46 +8,20 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { getRandomImage, getSportImage } from "@/utils/supabase/match-images"; 
 import { CreateMatchCard } from "@/components/ui/create-match-card"; 
+import { useEventStore } from "@/store/eventStore";
 
-interface Event {
-  id: string;
-  sport: string;
-  event_time: string;
-}
 
 interface DashboardProps {
   userId: string;
 }
 
 export default function DashboardComponent({ userId }: DashboardProps) {
-  const [events, setEvents] = useState<Event[]>([]);
   const [randomImageUrl, setRandomImageUrl] = useState<string>(""); 
   const [sportImages, setSportImages] = useState<Record<string, string>>({});
   const router = useRouter();
   const user = useUserStore((state) => state.user);
+  const events = useEventStore((state) => state.events);
   const clearUser = useUserStore((state) => state.clearUser);
-
-  // Fetch user events
-  useEffect(() => {
-    async function fetchUserEvents() {
-      try {
-        const res = await fetch(`/api/users/events/participating?creatorId=${userId}`, {
-          cache: "no-store",
-        });
-        const data: Event[] = await res.json();
-  
-        // Filter nur zukünftige Events
-        const now = new Date();
-        const futureEvents = data.filter((event) => new Date(event.event_time) > now);
-  
-        setEvents(futureEvents);
-      } catch (err) {
-        console.error("Failed to fetch events:", err);
-      }
-    }
-  
-    fetchUserEvents();
-  }, [userId]);
   
 
   // Get random match picture
@@ -67,9 +41,9 @@ export default function DashboardComponent({ userId }: DashboardProps) {
 
   // Get specific match picture
   useEffect(() => {
+    if (!events) return;
     async function fetchSportImages() {
       const images: Record<string, string> = {};
-  
       for (const event of events) {
         try {
           images[event.sport] = await getSportImage(event.sport);
@@ -135,10 +109,12 @@ export default function DashboardComponent({ userId }: DashboardProps) {
       <h2 className="text-2xl font-bold mb-4">Active MATCHES</h2>
       <div className="space-y-4">
         {events.length > 0 ? (
-          events.map((event) => (
+          events.filter((event) => new Date(event.event_time) > new Date()).map((event) => (
             <EventCard
               key={event.id}
-              {...event}
+              id={event.id}
+              sport={event.sport}
+              event_time={event.event_time}
               imageUrl={sportImages[event.sport]} 
             />
           ))
