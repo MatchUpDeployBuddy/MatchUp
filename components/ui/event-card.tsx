@@ -1,4 +1,10 @@
-import { FaCalendarAlt, FaRegClock, FaAngleRight } from "react-icons/fa";
+import {
+  FaCalendarAlt,
+  FaRegClock,
+  FaAngleRight,
+  FaMapMarkerAlt,
+  FaUsers,
+} from "react-icons/fa";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -8,10 +14,10 @@ interface EventCardProps {
   sport: string;
   event_time: string;
   imageUrl?: string;
-  // location: string
-  // status: "Own" | "Joined"
-  // participants: number
-  // imageUrl: string
+  location?: string;
+  participants_needed?: number;
+  creator_id?: string;
+  currentUserId?: string;
 }
 
 export function EventCard({
@@ -19,11 +25,11 @@ export function EventCard({
   sport,
   event_time,
   imageUrl,
-}: // location,
-// status,
-// participants,
-// imageUrl,
-EventCardProps) {
+  location,
+  participants_needed,
+  creator_id,
+  currentUserId,
+}: EventCardProps) {
   const date = new Date(event_time);
   const formattedDate = date.toLocaleDateString("en-EN", {
     weekday: "long",
@@ -40,43 +46,69 @@ EventCardProps) {
     return <div></div>
   }
 
+  const isCreator = creator_id && currentUserId && creator_id === currentUserId;
+  const showAdditionalInfo = location && participants_needed !== undefined;
+
+  console.log(
+    "EventCardProps",
+    location,
+  );
+
   return (
-    <Card className="overflow-hidden bg-white p-2">
+    <Card className="overflow-hidden bg-white p-4">
       <div className="flex items-center bg-white transition-colors">
-          {/* Bild */}
-          <div
-            className="relative h-24 w-24 rounded-lg overflow-hidden flex-shrink-0 mr-4" 
-            style={{
-              backgroundImage: `url(${imageUrl})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }}
-          ></div>
+        {/* Image */}
+        <div
+          className="relative h-24 w-24 rounded-lg overflow-hidden flex-shrink-0 mr-4"
+          style={{
+            backgroundImage: `url(${imageUrl || "/placeholder.svg"})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        ></div>
 
-          <div className="flex-1">
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="text-xl font-semibold">{sport}</h3>
-            </div>
-
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <FaCalendarAlt className="h-4 w-4" />
-                <span className="text-sm">{formattedDate}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FaRegClock className="h-4 w-4" />
-                <span className="text-sm">{formattedTime}</span>
-              </div>
-            </div>
+        <div className="flex-1">
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-xl font-semibold">{sport}</h3>
           </div>
 
-          <Link href={`/match/${id}`}>
-            <Button variant="ghost" size="sm" className="ml-4">
-              View Details
-              <FaAngleRight className="h-4 w-4 ml-2" />
-            </Button>
-          </Link>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <FaCalendarAlt className="h-4 w-4 text-gray-500" />
+              <span className="text-sm">{formattedDate}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <FaRegClock className="h-4 w-4 text-gray-500" />
+              <span className="text-sm">{formattedTime}</span>
+            </div>
+            {showAdditionalInfo && (
+              <>
+                <div className="flex items-center gap-2">
+                  <FaMapMarkerAlt className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm">{location}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <FaUsers className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm">
+                    {participants_needed} participants needed
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
         </div>
+
+        <Link href={`/match/${id}`} className="ml-4">
+          <Button variant="outline" size="sm">
+            {isCreator !== undefined
+              ? isCreator
+                ? "View Details"
+                : "Request Join"
+              : "View Details"}
+            <FaAngleRight className="h-4 w-4 ml-2" />
+          </Button>
+        </Link>
+      </div>
     </Card>
   );
 }

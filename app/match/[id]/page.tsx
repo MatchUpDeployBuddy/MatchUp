@@ -18,6 +18,9 @@ import {
 import { reverseGeocodeCoordinates } from "@/utils/geocoding";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
+// EXAMPLE: If you have a userStore
+import { useUserStore } from "@/store/userStore"; // or wherever your user store is
+
 interface EventDetails {
   id: string;
   creator_id: string;
@@ -49,6 +52,7 @@ export default function EventDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
 
+  const user = useUserStore((state) => state.user); // <-- Get the logged-in user
   const [isLoading, setIsLoading] = useState(true);
   const [event, setEvent] = useState<EventDetails | null>(null);
   const [participants, setParticipants] = useState<Buddy[]>([]);
@@ -58,6 +62,9 @@ export default function EventDetailsPage() {
   const [editedDescription, setEditedDescription] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+
+  // For user who is not in participants, we'll show "Request Join" button
+  const [hasJoined, setHasJoined] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -69,6 +76,16 @@ export default function EventDetailsPage() {
       fetchAddress(event.latitude, event.longitude);
     }
   }, [event]);
+
+  // Whenever participants changes, check if current user is a participant
+  useEffect(() => {
+    if (!user || !participants) {
+      setHasJoined(false);
+      return;
+    }
+    const isParticipant = participants.some((p) => p.joined_user_id === user.id);
+    setHasJoined(isParticipant);
+  }, [participants, user]);
 
   async function fetchAddress(latitude: number, longitude: number) {
     try {
@@ -84,7 +101,6 @@ export default function EventDetailsPage() {
     try {
       setIsLoading(true);
 
-      // load all data in parallel
       const [eventRes, participantsRes, requestsRes] = await Promise.all([
         fetch(`/api/events/event-details?id=${eventId}`),
         fetch(`/api/event-participants?eventId=${eventId}`),
@@ -129,6 +145,7 @@ export default function EventDetailsPage() {
     return data;
   }
 
+  // Save (edit) event description
   async function handleSaveDescription() {
     if (!event || editedDescription === event.description) return;
 
@@ -146,6 +163,7 @@ export default function EventDetailsPage() {
     }
   }
 
+  // Cancel the match (owner only)
   async function handleCancelMatch(eventId: string) {
     try {
       const data = await doRequest("/api/events", "DELETE", { id: eventId });
@@ -158,6 +176,7 @@ export default function EventDetailsPage() {
     }
   }
 
+  // Accept request (owner only)
   async function handleAcceptRequest(requesterId: string) {
     if (!event) return;
 
@@ -173,13 +192,19 @@ export default function EventDetailsPage() {
 
       const { requester_id, user_name, profile_picture_url } = acceptedRequest;
 
+      // Remove from requests
       setRequests((prev) =>
         prev.filter((req) => req.requester_id !== requesterId)
       );
 
+      // Add to participants
       setParticipants((prev) => [
         ...prev,
-        { joined_user_id: requester_id, name: user_name || "New Buddy", profile_picture_url: profile_picture_url},
+        {
+          joined_user_id: requester_id,
+          name: user_name || "New Buddy",
+          profile_picture_url: profile_picture_url,
+        },
       ]);
     } catch (err) {
       console.error("Failed to accept request:", err);
@@ -187,6 +212,7 @@ export default function EventDetailsPage() {
     }
   }
 
+  // Reject request (owner only)
   async function handleRejectRequest(requesterId: string) {
     if (!event) return;
 
@@ -195,7 +221,7 @@ export default function EventDetailsPage() {
         requesterId,
         eventId: event.id,
       });
-      // remove request from list
+      // remove request from local state
       setRequests((prev) =>
         prev.filter((req) => req.requester_id !== requesterId)
       );
@@ -205,7 +231,7 @@ export default function EventDetailsPage() {
     }
   }
 
-
+  // Remove participant (owner only)
   async function handleRemoveParticipant(participantId: string) {
     if (!event) return;
 
@@ -227,6 +253,25 @@ export default function EventDetailsPage() {
     }
   }
 
+  // For non-participants: "Request Join"
+  async function handleRequestJoin() {
+    if (!event || !user) return;
+
+    try {
+      const body = {
+        event_id: event.id,
+        requester_id: user.id,
+        message: "I would like to join this event!", // TODO custom message?
+      };
+      const data = await doRequest("/api/event-request", "POST", body);
+      alert(data.message || "Request sent!");
+    } catch (err) {
+      console.error("Failed to send join request:", err);
+      alert(String(err));
+    }
+  }
+
+  // Helper: format date/time
   function formatDate(dateString: string) {
     return new Date(dateString).toLocaleDateString("en-EN", {
       weekday: "long",
@@ -234,7 +279,6 @@ export default function EventDetailsPage() {
       month: "long",
     });
   }
-
   function formatTime(dateString: string) {
     return new Date(dateString).toLocaleTimeString("en-EN", {
       hour: "numeric",
@@ -242,7 +286,6 @@ export default function EventDetailsPage() {
       hour12: true,
     });
   }
-
   if (isLoading) {
     return <p>Loading event details...</p>;
   }
@@ -250,6 +293,7 @@ export default function EventDetailsPage() {
   if (!event) {
     return <p>No event found.</p>;
   }
+  const isOwner = user && user.id === event.creator_id;
 
   const formattedDate = formatDate(event.event_time);
   const formattedTime = formatTime(event.event_time);
@@ -265,19 +309,19 @@ export default function EventDetailsPage() {
           <CardTitle className="text-2xl">Details for: {event.sport}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Datum */}
+          {/* Date */}
           <div className="flex items-center gap-2">
             <FaCalendarAlt className="h-5 w-5" />
             <span>{formattedDate}</span>
           </div>
 
-          {/* Uhrzeit */}
+          {/* Time */}
           <div className="flex items-center gap-2">
             <FaRegClock className="h-5 w-5" />
             <span>{formattedTime}</span>
           </div>
 
-          {/* Teilnehmeranzahl */}
+          {/* Participants needed */}
           <div className="flex items-center gap-2">
             <FaUsers className="h-5 w-5" />
             <span>{event.participants_needed}</span>
@@ -289,23 +333,28 @@ export default function EventDetailsPage() {
             <span>
               {locationAddress
                 ? locationAddress
-                : `Latitude: ${event.latitude.toFixed(6)}, Longitude: ${event.longitude.toFixed(6)}`}
+                : `Lat: ${event.latitude.toFixed(
+                    6
+                  )}, Lng: ${event.longitude.toFixed(6)}`}
             </span>
           </div>
 
-          {/* Creator */}
+          {/* Creator (show the name if found among participants) */}
           {event.creator_id && participants.length > 0 && (
             <div className="flex items-center gap-2">
               <FaUserCircle className="h-5 w-5" />
               <span>
-                {participants.find(
-                  (participant) => participant.joined_user_id === event.creator_id
-                )?.name || "Unknown Creator"}
+                {
+                  participants.find(
+                    (participant) =>
+                      participant.joined_user_id === event.creator_id
+                  )?.name || "Unknown Creator"
+                }
               </span>
             </div>
           )}
 
-          {/* Beschreibung */}
+          {/* Description & Edit */}
           <div className="space-y-2">
             <h3 className="text-lg font-medium">Event Description</h3>
             <div className="relative">
@@ -334,20 +383,22 @@ export default function EventDetailsPage() {
                   <div className="p-4 rounded-md border border-gray-300 min-h-[100px]">
                     {event.description}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => setIsEditing(true)}
-                  >
-                    <FaPencilAlt className="h-4 w-4" />
-                  </Button>
+                  {isOwner && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => setIsEditing(true)}
+                    >
+                      <FaPencilAlt className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
           </div>
 
-          {/* Teilnehmer */}
+          {/* Participants List (owner can remove) */}
           <div className="space-y-2">
             <h3 className="text-lg font-medium">
               Buddys ({participants.length}/{event.participants_needed})
@@ -358,9 +409,8 @@ export default function EventDetailsPage() {
                   key={buddy.joined_user_id}
                   className="flex items-center justify-between p-2 bg-gray-100 rounded-md"
                 >
-                  {/* Profilbild + Name */}
+                  {/* Profile + Name */}
                   <div className="flex items-center gap-2">
-                    {/* Hier kommt statt <img> jetzt das Avatar-Stack */}
                     <Avatar className="w-8 h-8 border-2 border-primary">
                       <AvatarImage
                         src={buddy.profile_picture_url}
@@ -374,87 +424,104 @@ export default function EventDetailsPage() {
                     <span>{buddy.name}</span>
                   </div>
 
-                  {/* Entfernen-Button */}
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => handleRemoveParticipant(buddy.joined_user_id)}
-                  >
-                    <FaTimes className="h-5 w-5" />
-                  </Button>
+                  {/* Only the owner can remove participants */}
+                  {isOwner && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() =>
+                        handleRemoveParticipant(buddy.joined_user_id)
+                      }
+                    >
+                      <FaTimes className="h-5 w-5" />
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Requests */}
-          <div className="space-y-2">
-            <h3 className="text-lg font-medium">Requests ({requests.length})</h3>
+          {/* Show requests only if owner */}
+          {isOwner && (
             <div className="space-y-2">
-            {requests.map((request) => (
-            <div
-              key={request.requester_id}
-              className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded-md"
-            >
-              {/* Profilbild + Name + Nachricht */}
-              <div className="flex items-center gap-3">
-                <Avatar className="w-8 h-8 border-2 border-primary">
-                  <AvatarImage
-                    src={request.profile_picture_url || "/default-avatar.png"}
-                    alt={request.user_name}
-                    className="object-cover w-full h-full"
-                  />
-                  <AvatarFallback className="bg-secondary text-secondary-foreground">
-                    {request.user_name ? request.user_name.charAt(0).toUpperCase() : "?"}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <span className="font-medium">{request.user_name}</span>
-                  <p className="text-sm text-gray-500">{request.message}</p>
-                </div>
-              </div>
+              <h3 className="text-lg font-medium">Requests ({requests.length})</h3>
+              <div className="space-y-2">
+                {requests.map((request) => (
+                  <div
+                    key={request.requester_id}
+                    className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded-md"
+                  >
+                    {/* Profile + Name + Message */}
+                    <div className="flex items-center gap-3">
+                      <Avatar className="w-8 h-8 border-2 border-primary">
+                        <AvatarImage
+                          src={request.profile_picture_url || "/default-avatar.png"}
+                          alt={request.user_name}
+                          className="object-cover w-full h-full"
+                        />
+                        <AvatarFallback className="bg-secondary text-secondary-foreground">
+                          {request.user_name
+                            ? request.user_name.charAt(0).toUpperCase()
+                            : "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <span className="font-medium">{request.user_name}</span>
+                        <p className="text-sm text-gray-500">
+                          {request.message}
+                        </p>
+                      </div>
+                    </div>
 
-              {/* Annehmen / Ablehnen Buttons */}
-              <div className="flex gap-2">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => handleAcceptRequest(request.requester_id)}
-                  disabled={participants.length >= event.participants_needed}
-                >
-                  <FaCheck className="h-5 w-5" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => handleRejectRequest(request.requester_id)}
-                >
-                  <FaTimes className="h-5 w-5" />
-                </Button>
+                    {/* Accept / Reject Buttons */}
+                    <div className="flex gap-2">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleAcceptRequest(request.requester_id)}
+                        disabled={participants.length >= event.participants_needed}
+                      >
+                        <FaCheck className="h-5 w-5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleRejectRequest(request.requester_id)}
+                      >
+                        <FaTimes className="h-5 w-5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
+          )}
 
+          {/* Show "Cancel Match" only if owner */}
+          {isOwner ? (
+            <div className="text-center mt-6">
+              <Button onClick={() => setShowCancelDialog(true)} className="mx-auto">
+                Cancel Match
+              </Button>
             </div>
-          </div>
+          ) : !hasJoined && (
+            // If the user is not the owner & not a participant, show "Request Join"
+            <div className="text-center mt-6">
+              <Button onClick={handleRequestJoin} className="mx-auto">
+                Request Join
+              </Button>
+            </div>
+          )}
 
-          {/* Event stornieren */}
-          <div className="text-center mt-6">
-            <Button onClick={() => setShowCancelDialog(true)} className="mx-auto">
-              Cancel Match
-            </Button>
-          </div>
         </CardContent>
       </Card>
 
-      {/* Dialog zum Bestätigen des Löschens */}
+      {/* Dialog for confirming match cancellation */}
       {showCancelDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 space-y-4 w-[400px]">
             <h3 className="text-lg font-semibold">Cancel Match</h3>
-            <p>
-              Are you sure you want to cancel this match? This action cannot be undone.
-            </p>
+            <p>Are you sure you want to cancel this match? This action cannot be undone.</p>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setShowCancelDialog(false)}>
                 No, go back
