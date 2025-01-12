@@ -54,9 +54,9 @@ export default function Chat() {
           <div className="space-y-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scroll-smooth">
             {events.map((event) => (
               <div
-                key={event.event_id}
+                key={event.id}
                 className="flex items-center p-4 rounded-lg shadow-md bg-white hover:bg-gray-50 cursor-pointer"
-                onClick={() => router.push(`/chat/${event.event_id}`)}
+                onClick={() => router.push(`/chat/${event.id}`)}
               >
                 <Avatar className="w-12 h-12 rounded-full object-cover mr-4">
                   <AvatarImage
