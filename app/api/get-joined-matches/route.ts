@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     }
 
     const { data: events, error: error } = await supabase.rpc("get_events_for_user", {user_id: id})
-    console.log()
+    console.log(events)
     if (error) {
       throw new Error(error.message);
     }

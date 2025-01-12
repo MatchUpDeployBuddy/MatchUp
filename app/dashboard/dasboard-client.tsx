@@ -111,15 +111,11 @@ export default function DashboardComponent({ userId }: DashboardProps) {
         {events.length > 0 ? (
           events.filter((event) => new Date(event.event_time) > new Date()).map((event) => (
             <EventCard
-              key={event.event_id}
-              id={event.event_id}
-              sport={event.sport}
-              event_time={event.event_time}
+              key={event.id}
+              {...event}
               imageUrl={sportImages[event.sport]}
-              latitude={event.latitude}
-              longitude={event.longitude}
-              participants_needed={event.participants_needed}
               isCreator={event.creator_id === userId} 
+              dashboardView={true}
             />
           ))
         ) : (

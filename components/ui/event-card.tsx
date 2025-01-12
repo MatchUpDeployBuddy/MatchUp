@@ -20,6 +20,7 @@ interface EventCardProps {
   latitude: number;
   longitude: number;
   participants_needed?: number;
+  dashboardView: boolean;
 }
 
 export function EventCard({
@@ -31,6 +32,7 @@ export function EventCard({
   latitude,
   longitude,
   participants_needed,
+  dashboardView
 }:
 EventCardProps) {
   const [locationAddress, setLocationAddress] = useState<string | null>(null);
@@ -68,7 +70,8 @@ EventCardProps) {
 
   return (
     <Card className="overflow-hidden bg-white p-2 relative">
-      <div
+      {dashboardView ? (
+        <div
         className={`absolute top-2 right-2 px-3 py-1.5 rounded-full text-xs font-semibold shadow-md ${
           isCreator
             ? "bg-green-100 text-green-700 border border-green-400"
@@ -77,6 +80,8 @@ EventCardProps) {
       >
         {isCreator ? "Own" : "Joined"}
       </div>
+      ): <div></div>}
+      
 
       <div className="flex items-center bg-white transition-colors">
         <div

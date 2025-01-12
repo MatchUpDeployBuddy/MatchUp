@@ -15,17 +15,8 @@ import { FaFilter } from "react-icons/fa";
 import { FilterContent } from "./filter-content";
 import { getSportImage } from "@/utils/supabase/match-images";
 import { reverseGeocodeCoordinates, formatAddress } from "@/utils/geocoding";
+import { Event } from "@/types";
 
-interface Event {
-  id: string;
-  sport: string;
-  event_time: string;
-  skill_level: string;
-  description: string;
-  location: string;
-  participants_needed: number;
-  creator_id: string;
-}
 
 export default function BuddysClient() {
   const user = useUserStore((state) => state.user);
@@ -90,6 +81,7 @@ export default function BuddysClient() {
       const response = await fetch(`/api/events/available?${params}`);
       if (!response.ok) throw new Error("Failed to fetch events");
       const data = await response.json();
+      console.log(data)
       setEvents(data.events);
     } catch (error) {
       console.error("Error fetching events:", error);
@@ -165,7 +157,8 @@ export default function BuddysClient() {
                 key={event.id}
                 {...event}
                 imageUrl={sportImages[event.sport]}
-                currentUserId={user.id}
+                isCreator={event.creator_id === user.id}
+                dashboardView={false}
               />
             ))
           ) : (

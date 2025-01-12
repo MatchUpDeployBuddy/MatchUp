@@ -12,7 +12,7 @@ export type Buddy = {
 };
 
 export type Event = {
-  event_id: string; 
+  id: string; 
   creator_id: string;
   sport: string;
   participants_needed: number;
