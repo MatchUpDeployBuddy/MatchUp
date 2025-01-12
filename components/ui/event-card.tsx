@@ -35,6 +35,10 @@ EventCardProps) {
     minute: "2-digit",
     hour12: true,
   });
+  
+  if(!imageUrl) {
+    return <div></div>
+  }
 
   return (
     <Card className="overflow-hidden bg-white p-2">
