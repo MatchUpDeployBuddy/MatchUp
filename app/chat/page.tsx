@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useUserStore } from "@/store/userStore";
 import { Tables } from "@/types/supabase";
 import { Avatar,  } from "@/components/ui/avatar";
@@ -21,7 +21,7 @@ export default function Chat() {
     const [sportImages, setSportImages] = useState<SportImage>({});
     const router = useRouter();
 
-    const fetchPictures = async (events: Tables<"events">[]) => {
+    const fetchPictures = useCallback(async (events: Tables<"events">[]) => {
       const fetchImage = async (sport: string) => {
         try {
           const imageUrl = await getSportImage(sport);
@@ -40,7 +40,7 @@ export default function Chat() {
           await fetchImage(sport);
         }
       }
-    }
+    }, [sportImages]); 
 
     useEffect(() => {
         if (!user?.id || events.length > 0) return; 

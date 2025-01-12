@@ -25,6 +25,10 @@ export default function ChatHeader({ id }: { id: string}) {
             })
         })
 
+      return () => {
+        channel.unsubscribe();
+      }
+
     }, [user, id, supabase]);
 
     if(!user){
