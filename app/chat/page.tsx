@@ -1,74 +1,50 @@
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
 import { useUserStore } from "@/store/userStore";
-import { Tables } from "@/types/supabase";
 import { Avatar,  } from "@/components/ui/avatar";
 import { AvatarImage } from "@radix-ui/react-avatar";
 import { useRouter } from 'next/navigation'
 import { getSportImage } from "@/utils/supabase/match-images"; 
+import { useEventStore } from "@/store/eventStore";
 
-type EventWrapper = {
-    events: Tables<"events">;
-};
 type SportImage = {
   [sport: string]: string;
 };
 
 export default function Chat() {
     const user = useUserStore((state) => state.user)
-    const [events, setEvents] = useState<Tables<"events">[]>([]);
-    const [loading, setLoading] = useState(false);
     const [sportImages, setSportImages] = useState<SportImage>({});
     const router = useRouter();
+    const events = useEventStore((state) => state.events);
 
-    const fetchPictures = useCallback(async (events: Tables<"events">[]) => {
-      const fetchImage = async (sport: string) => {
-        try {
-          const imageUrl = await getSportImage(sport);
-          setSportImages((prev) => ({
-            ...prev,
-            [sport]: imageUrl,
-          }));
-        } catch (error) {
-          console.error(`Error fetching image for sport "${sport}":`, error);
-          return null;
-        }
-      };
-      for (const event of events) {
-        const sport = event.sport;
-        if (!sportImages[sport]) {
-          await fetchImage(sport);
-        }
+  // Fetch sport images for events
+  const fetchPictures = useCallback(async () => {
+    const fetchImage = async (sport: string) => {
+      try {
+        const imageUrl = await getSportImage(sport);
+        setSportImages((prev) => ({
+          ...prev,
+          [sport]: imageUrl,
+        }));
+      } catch (error) {
+        console.error(`Error fetching image for sport "${sport}":`, error);
       }
-    }, [sportImages]); 
+    };
 
-    useEffect(() => {
-        if (!user?.id || events.length > 0) return; 
-
-        const fetchEvents = async (): Promise<void> => {
-            setLoading(true);
-            try {
-                const res = await fetch(`/api/get-joined-matches?id=${user.id}`);
-                if (!res.ok) {
-                    throw new Error("Failed to fetch events");
-                }
-                const data: EventWrapper[] = await res.json();
-                const eventList = data.map(wrapper => wrapper.events);
-                setEvents(eventList);
-                await fetchPictures(eventList);
-            } catch (error) {
-                console.error("Error fetching events:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchEvents();
-    }, [user, events.length, fetchPictures]);
-
-    if(loading){
-      <div>loading...</div>
+    for (const event of events) {
+      const sport = event.sport;
+      if (!sportImages[sport]) {
+        await fetchImage(sport);
+      }
     }
+  }, [events, sportImages]);
+
+  // Fetch images when events change
+  useEffect(() => {
+    if (events.length > 0) {
+      fetchPictures();
+    }
+  }, [events, fetchPictures]);
 
     return (
         <div className="p-6 max-w-lg mx-auto bg-gray-100 rounded-lg shadow-md">
