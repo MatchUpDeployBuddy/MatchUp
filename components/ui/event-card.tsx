@@ -15,6 +15,7 @@ interface EventCardProps {
   id: string;
   sport: string;
   event_time: string;
+  event_name?: string | null;
   imageUrl?: string;
   isCreator: boolean;
   latitude: number;
@@ -27,6 +28,7 @@ export function EventCard({
   id,
   sport,
   event_time,
+  event_name,
   imageUrl,
   isCreator,
   latitude,
@@ -95,7 +97,7 @@ EventCardProps) {
 
         <div className="flex-1">
           <div className="flex justify-between items-start mb-2">
-            <h3 className="text-xl font-semibold">{sport}</h3>
+            <h3 className="text-xl font-semibold">{`${event_name?`${event_name} | `: ""} ${sport}`}</h3>
           </div>
 
           <div className="space-y-1">
