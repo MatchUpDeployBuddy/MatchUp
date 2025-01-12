@@ -32,6 +32,7 @@ import {
 } from "react-icons/fa";
 import { FiBarChart } from "react-icons/fi";
 import { IoMdInformationCircleOutline } from "react-icons/io";
+import { FaTrophy } from "react-icons/fa";
 import { Card } from "@/components/ui/card";
 import AddressSearch from "@/components/adress";
 import { geocodeAddress, Coordinates } from "@/utils/geocoding";
@@ -40,6 +41,7 @@ import { useUserStore } from "@/store/userStore";
 const supabase = await createClient();
 
 const matchSchema = z.object({
+  event_name: z.string().min(1, { message: "Please enter a group name" }),
   sport: z.string().min(1, { message: "Please select a sport" }),
   skillLevel: z.string().min(1, { message: "Please select a skill level" }),
   date: z.string().min(1, { message: "Please select a date" }),
@@ -79,6 +81,7 @@ export default function MatchCreationPage() {
   const form = useForm<z.infer<typeof matchSchema>>({
     resolver: zodResolver(matchSchema),
     defaultValues: {
+      event_name: "",
       sport: "",
       skillLevel: "",
       date: "",
@@ -111,14 +114,20 @@ export default function MatchCreationPage() {
       const { latitude, longitude } = coordinates;
       const locationPoint = `SRID=4326;POINT(${longitude} ${latitude})`;
 
+
+      if (!user?.id) {
+        throw new Error("Something went wrong. Try it again.");
+      }
+
       // data for insert
       const eventData = {
+        event_name: data.event_name,
         sport: data.sport,
         participants_needed: data.buddies,
         skill_level: data.skillLevel,
         event_time,
         description: data.description,
-        creator_id: user?.id,
+        creator_id: user.id,
         location: locationPoint,
       };
 
@@ -154,6 +163,29 @@ export default function MatchCreationPage() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)}>
                 <div className="space-y-8">
+                  {/* Event Name */}
+                  <FormField
+                      control={form.control}
+                      name="event_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-text-primary flex items-center text-lg">
+                            <FaTrophy className="mr-2" />
+                            Match Name
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="text"
+                              maxLength={50}
+                              {...field}
+                              placeholder="Enter a name for your match"
+                              className="border-secondary text-md rounded-full"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   {/* Sport */}
                   <FormField
                     control={form.control}

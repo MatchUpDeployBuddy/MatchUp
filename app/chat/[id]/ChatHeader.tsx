@@ -1,5 +1,4 @@
 "use client";
-import { Button } from "@/components/ui/button";
 import { useUserStore } from "@/store/userStore";
 import { createClient } from "@/utils/supabase/client";
 import React, { useEffect, useState } from "react";
@@ -26,26 +25,25 @@ export default function ChatHeader({ id }: { id: string}) {
             })
         })
 
+      return () => {
+        channel.unsubscribe();
+      }
+
     }, [user, id, supabase]);
 
     if(!user){
         return <div className="h-3 w-1"></div>
     }
 
-    return(
-        <div className="h-20">
-            <div className="p-5 border-b flex items-center justify-between h-full">
-
-                <div>
-                    <h1 className="text-x1 font-bold">Chat</h1>
-                    <div className="flex items-center gap-1">
-                        <div className="h-4 w-4 bg-green-500 rounded-full animate-pulse">
-                        </div>
-                        <h1 className="text-sm text-gray-400">{onlineUsers} online</h1>
-                    </div>
-                </div>
-            <Button>Join</Button>
-            </div>
+    return (
+      <div className="h-20 bg-gray-100 border-b flex items-center justify-between sticky top-0 z-10">
+        <div className="p-5 flex flex-col">
+          <h1 className="text-xl font-bold">Chat</h1>
+          <div className="flex items-center gap-1">
+            <div className="h-4 w-4 bg-green-500 rounded-full animate-pulse"></div>
+            <h2 className="text-sm text-gray-500">{onlineUsers} online</h2>
+          </div>
         </div>
-    )
+      </div>
+    );
 }

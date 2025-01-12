@@ -50,22 +50,25 @@ export type Database = {
           created_at: string | null
           event_id: string | null
           id: string
+          messages: string | null
           requester_id: string | null
-          status: Database["public"]["Enums"]["request_status"]
+          status: "PENDING" | "SUCCESS" | "ERROR"
         }
         Insert: {
           created_at?: string | null
           event_id?: string | null
           id?: string
+          messages?: string | null
           requester_id?: string | null
-          status?: Database["public"]["Enums"]["request_status"]
+          status?: "PENDING" | "SUCCESS" | "ERROR"
         }
         Update: {
           created_at?: string | null
           event_id?: string | null
           id?: string
+          messages?: string | null
           requester_id?: string | null
-          status?: Database["public"]["Enums"]["request_status"]
+          status?: "PENDING" | "SUCCESS" | "ERROR"
         }
         Relationships: [
           {
@@ -87,8 +90,9 @@ export type Database = {
       events: {
         Row: {
           created_at: string | null
-          creator_id: string | null
+          creator_id: string
           description: string | null
+          event_name: string | null
           event_time: string
           id: string
           location: unknown | null
@@ -99,8 +103,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          creator_id?: string | null
+          creator_id: string
           description?: string | null
+          event_name?: string | null
           event_time: string
           id?: string
           location?: unknown | null
@@ -111,8 +116,9 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
-          creator_id?: string | null
+          creator_id?: string
           description?: string | null
+          event_name?: string | null
           event_time?: string
           id?: string
           location?: unknown | null
@@ -468,6 +474,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      accept_event_request: {
+        Args: {
+          p_requester_id: string
+          p_event_id: string
+        }
+        Returns: {
+          requester_id: string
+          user_name: string
+          profile_picture_url: string
+        }[]
+      }
       addauth: {
         Args: {
           "": string
@@ -605,6 +622,13 @@ export type Database = {
             }
             Returns: string
           }
+      delete_event_participant: {
+        Args: {
+          p_participant_id: string
+          p_event_id: string
+        }
+        Returns: undefined
+      }
       disablelongtransactions: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1096,6 +1120,52 @@ export type Database = {
         }
         Returns: unknown
       }
+      get_event_participants_names: {
+        Args: {
+          event_uuid: string
+        }
+        Returns: {
+          joined_user_id: string
+          name: string
+          profile_picture_url: string
+        }[]
+      }
+      get_event_with_location: {
+        Args: {
+          p_id: string
+        }
+        Returns: {
+          id: string
+          creator_id: string
+          sport: string
+          participants_needed: number
+          skill_level: string
+          event_time: string
+          description: string
+          longitude: number
+          latitude: number
+          created_at: string
+          updated_at: string
+        }[]
+      }
+      get_events_for_user: {
+        Args: {
+          user_id: string
+        }
+        Returns: {
+          event_id: string
+          creator_id: string
+          sport: string
+          participants_needed: number
+          skill_level: string
+          event_time: string
+          description: string
+          longitude: number
+          latitude: number
+          created_at: string
+          updated_at: string
+        }[]
+      }
       get_events_with_coordinates: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1134,6 +1204,33 @@ export type Database = {
           description: string
           longitude: number
           latitude: number
+        }[]
+      }
+      get_joined_events_with_coordinates: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          creator_id: string
+          sport: string
+          participants_needed: number
+          skill_level: string
+          event_time: string
+          description: string
+          longitude: number
+          latitude: number
+          created_at: string
+          updated_at: string
+        }[]
+      }
+      get_pending_requester_ids: {
+        Args: {
+          event_uuid: string
+        }
+        Returns: {
+          requester_id: string
+          user_name: string
+          message: string
+          profile_picture_url: string
         }[]
       }
       get_proj4_from_srid: {
@@ -1431,6 +1528,13 @@ export type Database = {
       postgis_wagyu_version: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      reject_event_request: {
+        Args: {
+          p_requester_id: string
+          p_event_id: string
+        }
+        Returns: undefined
       }
       spheroid_in: {
         Args: {
