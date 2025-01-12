@@ -1,4 +1,10 @@
-import { FaCalendarAlt, FaRegClock, FaAngleRight, FaMapMarkerAlt } from "react-icons/fa";
+import {
+  FaCalendarAlt,
+  FaRegClock,
+  FaAngleRight,
+  FaMapMarkerAlt,
+  FaUsers,
+} from "react-icons/fa";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -13,9 +19,7 @@ interface EventCardProps {
   isCreator: boolean;
   latitude: number;
   longitude: number;
-  // status: "Own" | "Joined"
-  // participants: number
-  // imageUrl: string
+  participants_needed?: number;
 }
 
 export function EventCard({
@@ -25,7 +29,8 @@ export function EventCard({
   imageUrl,
   isCreator,
   latitude,
-  longitude
+  longitude,
+  participants_needed,
 }:
 EventCardProps) {
   const [locationAddress, setLocationAddress] = useState<string | null>(null);
@@ -77,7 +82,7 @@ EventCardProps) {
         <div
           className="relative h-24 w-24 rounded-lg overflow-hidden flex-shrink-0 mr-4"
           style={{
-            backgroundImage: `url(${imageUrl})`,
+            backgroundImage: `url(${imageUrl || "/placeholder.svg"})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
@@ -90,27 +95,35 @@ EventCardProps) {
 
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <FaCalendarAlt className="h-4 w-4" />
+              <FaCalendarAlt className="h-4 w-4 text-gray-500" />
               <span className="text-sm">{formattedDate}</span>
             </div>
             <div className="flex items-center gap-2">
-              <FaRegClock className="h-4 w-4" />
+              <FaRegClock className="h-4 w-4 text-gray-500" />
               <span className="text-sm">{formattedTime}</span>
             </div>
             <div className="flex items-center gap-2">
-            <FaMapMarkerAlt className="h-4 w-4" />
-            <span className="text-sm">
-              {locationAddress
-                ? locationAddress
-                : `Latitude: ${latitude.toFixed(6)}, Longitude: ${longitude.toFixed(6)}`}
-            </span>
-          </div>
+              <FaMapMarkerAlt className="h-4 w-4 text-gray-500" />
+              <span className="text-sm">
+                {locationAddress
+                  ? locationAddress
+                  : `Latitude: ${latitude.toFixed(6)}, Longitude: ${longitude.toFixed(6)}`}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+                <FaUsers className="h-4 w-4 text-gray-500" />
+                <span className="text-sm">
+                  {participants_needed} participants needed
+                </span>
+              </div>
           </div>
         </div>
 
-        <Link href={`/match/${id}`}>
-          <Button variant="ghost" size="sm" className="ml-4">
-            View Details
+        <Link href={`/match/${id}`} className="ml-4">
+          <Button variant="outline" size="sm">
+            {isCreator
+                ? "View Details"
+                : "Request Join"}
             <FaAngleRight className="h-4 w-4 ml-2" />
           </Button>
         </Link>

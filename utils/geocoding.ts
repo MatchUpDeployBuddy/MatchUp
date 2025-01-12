@@ -45,7 +45,7 @@ export async function geocodeAddress(
 }
 
 // Reverse geocoding: Coordinates to address
-export async function reverseGeocodeCoordinates(
+export async function reverseGeocodeCoordinates( // TODO: nutze das hier gleich für longitude und latitude
   latitude: number,
   longitude: number
 ): Promise<string | null> {
@@ -79,3 +79,11 @@ export async function reverseGeocodeCoordinates(
     return null;
   }
 }
+
+export const formatAddress = (address: string) => {
+  const addressParts = address
+    .split(",")
+    .slice(-2)
+    .map((part) => part.replace(/\d+/g, "").trim());
+  return addressParts.join(", ");
+};

@@ -118,6 +118,7 @@ export default function DashboardComponent({ userId }: DashboardProps) {
               imageUrl={sportImages[event.sport]}
               latitude={event.latitude}
               longitude={event.longitude}
+              participants_needed={event.participants_needed}
               isCreator={event.creator_id === userId} 
             />
           ))
