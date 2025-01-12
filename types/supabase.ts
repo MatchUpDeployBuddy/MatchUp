@@ -1148,6 +1148,24 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_events_for_user: {
+        Args: {
+          user_id: string
+        }
+        Returns: {
+          event_id: string
+          creator_id: string
+          sport: string
+          participants_needed: number
+          skill_level: string
+          event_time: string
+          description: string
+          longitude: number
+          latitude: number
+          created_at: string
+          updated_at: string
+        }[]
+      }
       get_events_with_coordinates: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1186,6 +1204,22 @@ export type Database = {
           description: string
           longitude: number
           latitude: number
+        }[]
+      }
+      get_joined_events_with_coordinates: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          creator_id: string
+          sport: string
+          participants_needed: number
+          skill_level: string
+          event_time: string
+          description: string
+          longitude: number
+          latitude: number
+          created_at: string
+          updated_at: string
         }[]
       }
       get_pending_requester_ids: {

@@ -1,14 +1,14 @@
 // store/eventStore.ts
 import { create } from "zustand";
-import { createClient } from "@/utils/supabase/client";
 import { persist } from "zustand/middleware";
-import { Tables } from "@/types/supabase";
+import { Event } from "@/types";
+
 
 interface EventState {
-  events: Tables<"events">[];
+  events: Event[];
   fetchEvents: (userId: string) => Promise<void>;
-  setEvents: (events: Tables<"events">[]) => void;
-  addEvent: (event: Tables<"events">) => void;
+  setEvents: (events: Event[]) => void;
+  addEvent: (event: Event) => void;
 }
 
 export const useEventStore = create<EventState>()(
@@ -22,14 +22,13 @@ export const useEventStore = create<EventState>()(
           });
           if (!res.ok) throw new Error("Failed to fetch events");
           const data = await res.json();
-          const eventList: Tables<"events">[] = data.map((wrapper: any) => wrapper.events);
-          set({ events: eventList });
+          set({ events: data });
         } catch (error) {
           console.error("Error fetching events:", error);
         }
       },
       setEvents: (events) => set({ events }),
-      addEvent: (event: Tables<"events">) => {
+      addEvent: (event: Event) => {
         set((state) => ({
             events: [
                 ...state.events,

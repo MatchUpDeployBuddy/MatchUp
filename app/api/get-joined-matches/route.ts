@@ -12,11 +12,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Missing id" }, { status: 400 });
     }
 
-    const { data: events, error } = await supabase
-      .from("event_participants")
-      .select("events(*)")
-      .eq("joined_user_id", id);
-
+    const { data: events, error: error } = await supabase.rpc("get_events_for_user", {user_id: id})
+    console.log()
     if (error) {
       throw new Error(error.message);
     }
