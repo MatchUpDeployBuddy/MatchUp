@@ -17,7 +17,7 @@ export const useEventStore = create<EventState>()(
       events: [],
       fetchEvents: async (userId: string) => {
         try {
-          const res = await fetch(`/api/get-joined-matches?id=${userId}`, {
+          const res = await fetch(`/api/get-joined-events?id=${userId}`, {
             cache: "no-store",
           });
           if (!res.ok) throw new Error("Failed to fetch events");

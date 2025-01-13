@@ -126,7 +126,7 @@ EventCardProps) {
           </div>
         </div>
 
-        <Link href={`/match/${id}`} className="ml-4">
+        <Link href={`/event/${id}`} className="ml-4">
           <Button variant="outline" size="sm">
             {isCreator
                 ? "View Details"

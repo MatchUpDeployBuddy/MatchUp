@@ -150,7 +150,7 @@ export default function EventDetailsPage() {
     if (!event || editedDescription === event.description) return;
 
     try {
-      await doRequest("/api/update-match-description", "PUT", {
+      await doRequest("/api/update-event-description", "PUT", {
         id: event.id,
         description: editedDescription,
       });
@@ -164,7 +164,7 @@ export default function EventDetailsPage() {
   }
 
   // Cancel the match (owner only)
-  async function handleCancelMatch(eventId: string) {
+  async function handleCancelEvent(eventId: string) {
     try {
       const data = await doRequest("/api/events", "DELETE", { id: eventId });
       console.log(data.message);
@@ -526,7 +526,7 @@ export default function EventDetailsPage() {
               <Button variant="outline" onClick={() => setShowCancelDialog(false)}>
                 No, go back
               </Button>
-              <Button onClick={() => handleCancelMatch(event.id)}>
+              <Button onClick={() => handleCancelEvent(event.id)}>
                 Yes, cancel it
               </Button>
             </div>

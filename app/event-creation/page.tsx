@@ -40,7 +40,7 @@ import { useUserStore } from "@/store/userStore";
 
 const supabase = await createClient();
 
-const matchSchema = z.object({
+const eventSchema = z.object({
   event_name: z.string().min(1, { message: "Please enter a group name" }),
   sport: z.string().min(1, { message: "Please select a sport" }),
   skillLevel: z.string().min(1, { message: "Please select a skill level" }),
@@ -72,14 +72,14 @@ const sports = [
 // Skill (Dropdown)
 const skill = ["Beginner", "Amateur", "Medium", "Expert", "Irrelevant"];
 
-export default function MatchCreationPage() {
+export default function EventCreationPage() {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const user = useUserStore((state) => state.user);
   // Formular-Hook
-  const form = useForm<z.infer<typeof matchSchema>>({
-    resolver: zodResolver(matchSchema),
+  const form = useForm<z.infer<typeof eventSchema>>({
+    resolver: zodResolver(eventSchema),
     defaultValues: {
       event_name: "",
       sport: "",
@@ -92,7 +92,7 @@ export default function MatchCreationPage() {
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof matchSchema>) => {
+  const onSubmit = async (data: z.infer<typeof eventSchema>) => {
     try {
       // Combine date and start time into an event timestamp
       const event_time = new Date(
