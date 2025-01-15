@@ -23,7 +23,7 @@ import {
   CheckCircledIcon,
   ExclamationTriangleIcon,
 } from "@radix-ui/react-icons";
-import { Spinner } from "@/components/ui/spinner"; // Importiere den Spinner
+import { Spinner } from "@/components/ui/spinner";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/userStore";
 
@@ -63,7 +63,7 @@ export default function LoginPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false); // Neuer State für das Laden
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
   const fetchUser = useUserStore((state) => state.fetchUser);
 
@@ -84,7 +84,7 @@ export default function LoginPage() {
   const onSubmit = async (
     data: z.infer<typeof formSchemaLogin> | z.infer<typeof formSchemaSignup>
   ) => {
-    setIsLoading(true); // Ladezustand aktivieren
+    setIsLoading(true);
     setSuccessMessage(null);
     setErrorMessage(null);
     try {
@@ -101,7 +101,7 @@ export default function LoginPage() {
         }
         setSuccessMessage("Account created successfully!");
       }
-    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
       setErrorMessage(error.message || "An error occurred.");
     } finally {
       setIsLoading(false);
@@ -111,9 +111,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 animate-gradient-x p-8 flex items-center justify-center">
       <div className="w-full max-w-md">
-        <h1 className="text-4xl font-bold text-center text-primary mb-8">
-          MatchUp
-        </h1>
+        <h1 className="text-4xl font-bold text-center mb-8">MatchUp</h1>
         {successMessage && (
           <Alert variant="default" className="mb-4">
             <CheckCircledIcon className="h-4 w-4" />
@@ -135,10 +133,16 @@ export default function LoginPage() {
           className="bg-white rounded-lg shadow-lg p-6"
         >
           <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="login" className="text-lg">
+            <TabsTrigger
+              value="login"
+              className="text-lg flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
+            >
               Login
             </TabsTrigger>
-            <TabsTrigger value="signup" className="text-lg">
+            <TabsTrigger
+              value="signup"
+              className="text-lg flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
+            >
               Sign Up
             </TabsTrigger>
           </TabsList>
@@ -205,12 +209,10 @@ export default function LoginPage() {
                       {isLoading ? (
                         <>
                           <Spinner />
-                          {mode === "login" ? "Logging in..." : "Signing up..."}
+                          Logging in...
                         </>
-                      ) : mode === "login" ? (
-                        "Login"
                       ) : (
-                        "Sign Up"
+                        "Login"
                       )}
                     </Button>
                   </form>
@@ -312,12 +314,10 @@ export default function LoginPage() {
                       {isLoading ? (
                         <>
                           <Spinner />
-                          {mode === "signup" ? "Signing up..." : "Login..."}
+                          Signing up...
                         </>
-                      ) : mode === "signup" ? (
-                        "Sign Up"
                       ) : (
-                        "Login"
+                        "Sign Up"
                       )}
                     </Button>
                   </form>
@@ -328,7 +328,7 @@ export default function LoginPage() {
           <div className="mt-6">
             <Button
               variant="outline"
-              className="w-full border-primary text-primary hover:bg-primary/10 text-lg px-6 py-3 rounded-full flex items-center justify-center"
+              className="w-full border-primary hover:bg-primary/10 text-lg px-6 py-3 rounded-full flex items-center justify-center"
               onClick={() => signInWithOAuth("google")}
               disabled={isLoading}
             >
