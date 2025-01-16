@@ -37,6 +37,8 @@ import { Card } from "@/components/ui/card";
 import AddressSearch from "@/components/adress";
 import { geocodeAddress, Coordinates } from "@/utils/geocoding";
 import { useUserStore } from "@/store/userStore";
+import { useEventStore } from "@/store/eventStore";
+import { Event } from "@/types";
 
 const supabase = await createClient();
 
@@ -77,6 +79,7 @@ export default function EventCreationPage() {
   const [selectedDate, setSelectedDate] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const user = useUserStore((state) => state.user);
+  const addEvent = useEventStore((state) => state.addEvent)
   // Formular-Hook
   const form = useForm<z.infer<typeof eventSchema>>({
     resolver: zodResolver(eventSchema),
@@ -131,10 +134,18 @@ export default function EventCreationPage() {
         location: locationPoint,
       };
 
-      const { error } = await supabase.from("events").insert([eventData]);
+      const { data: newEntry, error } = await supabase.from("events").insert([eventData]).select();
       if (error) {
         throw new Error(error.message);
       }
+
+      delete newEntry[0].location
+
+      addEvent({
+        ...newEntry[0],
+        latitude: latitude,
+        longitude: longitude
+      } as Event);
 
       router.push("/dashboard");
     } catch (error) {

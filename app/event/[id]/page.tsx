@@ -18,8 +18,8 @@ import {
 import { reverseGeocodeCoordinates } from "@/utils/geocoding";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
-// EXAMPLE: If you have a userStore
-import { useUserStore } from "@/store/userStore"; // or wherever your user store is
+import { useUserStore } from "@/store/userStore";
+import { useEventStore } from "@/store/eventStore";
 
 interface EventDetails {
   id: string;
@@ -52,7 +52,8 @@ export default function EventDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
 
-  const user = useUserStore((state) => state.user); // <-- Get the logged-in user
+  const user = useUserStore((state) => state.user);
+  const removeEvent = useEventStore((state) => state.removeEvent)
   const [isLoading, setIsLoading] = useState(true);
   const [event, setEvent] = useState<EventDetails | null>(null);
   const [participants, setParticipants] = useState<Buddy[]>([]);
@@ -168,6 +169,7 @@ export default function EventDetailsPage() {
     try {
       const data = await doRequest("/api/events", "DELETE", { id: eventId });
       console.log(data.message);
+      removeEvent(eventId);
       alert("Event deleted successfully!");
       router.push("/dashboard");
     } catch (err) {

@@ -9,6 +9,7 @@ interface EventState {
   fetchEvents: (userId: string) => Promise<void>;
   setEvents: (events: Event[]) => void;
   addEvent: (event: Event) => void;
+  removeEvent: (eventId: string) => void;
 }
 
 export const useEventStore = create<EventState>()(
@@ -36,6 +37,11 @@ export const useEventStore = create<EventState>()(
             ]
         }))
       },
+      removeEvent: (eventId: string) => {
+        set((state) => ({
+          events: state.events.filter(event => event.id !== eventId),
+        }));
+      }
     }),
     {
       name: "event-storage",
