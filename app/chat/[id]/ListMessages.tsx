@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useMessagesStore } from "@/store/messagesStore";
 import Message from "./Message";
 import { createClient } from "@/utils/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { FaArrowDown } from "react-icons/fa";
 import { MESSAGE_LIMIT } from "@/constants";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,6 @@ export default function ListMessages({ eventId, currentMessages }: { eventId: st
     const { page, messages, setMessages, addMessage, addMessages, setPage, setHasMore, hasMore } = useMessagesStore();
     const scrollRef = useRef<HTMLDivElement>(null);
     const supabase = createClient();
-    const { toast } = useToast();
     const [userScroll, setUserScroll] = useState(false);
     const [notification, setNotification] = useState(0);
     const { user } = useUserStore();
@@ -48,10 +47,7 @@ export default function ListMessages({ eventId, currentMessages }: { eventId: st
                                                             .eq("id", payload.new.sender_id)
                                                             .single();
                     if (error) {
-                        toast({
-                            title: "Error",
-                            description: "Failed to fetch user information"
-                        })
+                        toast.error("Failed to fetch user information")
                     }else {
                         const newMessage = {
                             ...payload.new,
@@ -121,10 +117,7 @@ export default function ListMessages({ eventId, currentMessages }: { eventId: st
                             .order("created_at", { ascending: false });
 
         if (error) {
-            toast({
-                title: "Error",
-                description: "Failed to fetch more messages"
-            })
+            toast.error("Failed to fetch more messages");
         } else {
             addMessages(eventId, data.reverse());
         }

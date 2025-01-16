@@ -17,6 +17,7 @@ import {
 } from "react-icons/fa";
 import { reverseGeocodeCoordinates } from "@/utils/geocoding";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { toast } from "sonner";
 
 import { useUserStore } from "@/store/userStore";
 import { useEventStore } from "@/store/eventStore";
@@ -170,11 +171,11 @@ export default function EventDetailsPage() {
       const data = await doRequest("/api/events", "DELETE", { id: eventId });
       console.log(data.message);
       removeEvent(eventId);
-      alert("Event deleted successfully!");
+      toast.success("Event deleted successfully!");
       router.push("/dashboard");
     } catch (err) {
       console.error("Error deleting event:", err);
-      alert(String(err));
+      toast.error("Error canceling Event");
     }
   }
 
@@ -210,7 +211,7 @@ export default function EventDetailsPage() {
       ]);
     } catch (err) {
       console.error("Failed to accept request:", err);
-      alert(String(err));
+      toast.error("Failed to accept request");
     }
   }
 
@@ -229,7 +230,7 @@ export default function EventDetailsPage() {
       );
     } catch (err) {
       console.error("Error rejecting request:", err);
-      alert(String(err));
+      toast.error("Error rejecting request");
     }
   }
 
@@ -251,7 +252,7 @@ export default function EventDetailsPage() {
       );
     } catch (err) {
       console.error("Failed to remove participant:", err);
-      alert(String(err));
+      toast.error("Failed to remove participant");
     }
   }
 
@@ -266,10 +267,10 @@ export default function EventDetailsPage() {
         message: "I would like to join this event!", // TODO custom message?
       };
       const data = await doRequest("/api/event-request", "POST", body);
-      alert(data.message || "Request sent!");
+      toast.info(data.message || "Request sent!");
     } catch (err) {
       console.error("Failed to send join request:", err);
-      alert(String(err));
+      toast.error("Failed to send join request");
     }
   }
 
