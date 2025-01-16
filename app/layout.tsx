@@ -1,6 +1,6 @@
 "use client";
 
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/sonner";
 import localFont from "next/font/local";
 import "./globals.css";
 import { UserProvider } from "@/components/user-provider";
@@ -33,10 +33,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Toaster position="top-center" />
         <UserProvider>
           <EventProvider>{children}</EventProvider>
         </UserProvider>
-        <Toaster />
         {!isLandingPage && !isLogin && <Navbar />}
       </body>
     </html>
