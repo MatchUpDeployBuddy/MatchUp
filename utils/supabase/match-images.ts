@@ -25,38 +25,33 @@ export async function getRandomImage(): Promise<string> {
     return publicUrlData.publicUrl;
   }
   
+  const sportImageMapping: Record<string, string> = {
+    soccer: "soccer.jpeg",
+    basketball: "basketball.jpg",
+    volleyball: "volleyball.jpeg",
+    tennis: "tennis.jpg",
+    swimming: "swimming.jpg",
+    cycling: "cycling.jpeg",
+    running: "running.jpg",
+    badminton: "badminton.jpeg",
+    tabletennis: "tabletennis.jpg",
+    hiking: "hiking.jpg"
+  };
+
   // getSportImage.ts
   export async function getSportImage(sport: string): Promise<string> {
     const supabase = createClient();
-  
-    // Erstelle eine Liste der unterstützten Bildformate
-    const supportedFormats = ['jpg', 'jpeg', 'png'];
-  
-    let imageUrl = '';
-  
-    // Versuche, das Bild für jedes Format zu laden
-    for (const format of supportedFormats) {
-      let imageName = ""
-      if (sport === "Soccer") {
-        imageName = `${sport.toLowerCase()}.jpeg`;
-      }
-      else {
-        imageName = `${sport.toLowerCase()}.${format}`;
-      }
-      const { data: publicUrlData } = supabase.storage
-        .from("match_images")
-        .getPublicUrl(imageName);
-
-      if (publicUrlData?.publicUrl) {
-        imageUrl = publicUrlData.publicUrl; 
-        break; 
-      }
-    }
-  
-    if (!imageUrl) {
+    const fileName = sportImageMapping[sport.toLowerCase().replace(/\s+/g, '')];
+    
+    if (!fileName) {
       throw new Error(`Error fetching image for sport "${sport}": No valid image found`);
     }
   
-    return imageUrl; 
+    const { data: publicUrlData } = supabase
+      .storage
+      .from("match_images")
+      .getPublicUrl(fileName);
+
+    return publicUrlData.publicUrl;
   }
   
