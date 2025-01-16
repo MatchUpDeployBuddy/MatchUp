@@ -40,8 +40,6 @@ import { useUserStore } from "@/store/userStore";
 import { useEventStore } from "@/store/eventStore";
 import { Event } from "@/types";
 
-const supabase = await createClient();
-
 const eventSchema = z.object({
   event_name: z.string().min(1, { message: "Please enter a group name" }),
   sport: z.string().min(1, { message: "Please select a sport" }),
@@ -79,7 +77,8 @@ export default function EventCreationPage() {
   const [selectedDate, setSelectedDate] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const user = useUserStore((state) => state.user);
-  const addEvent = useEventStore((state) => state.addEvent)
+  const addEvent = useEventStore((state) => state.addEvent);
+  const supabase = createClient();
   // Formular-Hook
   const form = useForm<z.infer<typeof eventSchema>>({
     resolver: zodResolver(eventSchema),

@@ -27,6 +27,7 @@ export default function RootLayout({
   const pathname = usePathname();
   const isLandingPage = pathname === "/" || pathname === "/landingpage";
   const isLogin = pathname === "/login";
+  const isAccountCreation = pathname === "/account-creation"
 
   return (
     <html lang="en">
@@ -37,7 +38,7 @@ export default function RootLayout({
         <UserProvider>
           <EventProvider>{children}</EventProvider>
         </UserProvider>
-        {!isLandingPage && !isLogin && <Navbar />}
+        {!isLandingPage && !isLogin && !isAccountCreation && <Navbar />}
       </body>
     </html>
   );
