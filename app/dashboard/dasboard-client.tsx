@@ -7,7 +7,7 @@ import { EventCard } from "@/components/ui/event-card";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { getRandomImage, getSportImage } from "@/utils/supabase/match-images"; 
-import { CreateMatchCard } from "@/components/ui/create-match-card"; 
+import { CreateEventCard } from "@/components/ui/create-event-card"; 
 import { useEventStore } from "@/store/eventStore";
 
 
@@ -99,7 +99,7 @@ export default function DashboardComponent({ userId }: DashboardProps) {
 
       <h2 className="text-2xl font-bold mb-4">Create your own MATCH</h2>
       {randomImageUrl ? (
-        <CreateMatchCard imageUrl={randomImageUrl} />
+        <CreateEventCard imageUrl={randomImageUrl} />
       ) : (
         <p>No random image found. Try again later.</p>
       )}

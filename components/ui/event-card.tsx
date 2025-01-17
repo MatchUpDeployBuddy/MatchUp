@@ -126,11 +126,11 @@ EventCardProps) {
           </div>
         </div>
 
-        <Link href={`/match/${id}`} className="ml-4">
+        <Link href={`/event/${id}`} className="ml-4">
           <Button variant="outline" size="sm">
             {isCreator
                 ? "View Details"
-                : "Request Join"}
+                : dashboardView ? "View Details" : "Request Join"} 
             <FaAngleRight className="h-4 w-4 ml-2" />
           </Button>
         </Link>

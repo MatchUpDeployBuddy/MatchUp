@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { z } from "zod";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const settingsSections = [
   { id: "account", title: "Account", icon: FaUser },
@@ -200,7 +200,6 @@ function AccountSettings({
     string | null
   >(null);
   const [cacheBust, setCacheBust] = useState(0);
-  const { toast } = useToast();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -227,18 +226,12 @@ function AccountSettings({
       const allowedTypes = ["image/jpeg", "image/png"];
 
       if (file.size > MAX_SIZE) {
-        toast({
-          title: "Error",
-          description: "File size exceeds 2MB",
-        });
+        toast.error("File size exceeds 2MB")
         return;
       }
 
       if (!allowedTypes.includes(file.type)) {
-        toast({
-          title: "Error",
-          description: "Invalid file type. Please upload a JPEG or PNG image",
-        });
+        toast.error("Invalid file type. Please upload a JPEG or PNG image")
         return;
       }
 
@@ -296,18 +289,12 @@ function AccountSettings({
         formData.profile_picture_url = uploadedUrl;
         setCacheBust((prev) => prev + 1);
       } else {
-        toast({
-          title: "Error",
-          description: "Could not upload profile picture",
-        });
+        toast.error("Could not upload profile picture");
       }
     }
 
-    if (!validate()) {
-      toast({
-        title: "Error",
-        description: "An error occurred while updating the user data",
-      });
+    if(!validate()) {
+      toast("An error occurred while updating the user data");
       setProfilePicturePreview(null);
       setProfilePictureFile(null);
       return;
@@ -343,16 +330,10 @@ function AccountSettings({
       setProfilePictureFile(null);
       updateUser(result.data[0]);
       setIsEditing(false);
-      toast({
-        title: "Success",
-        description: "User data updated successfully",
-      });
+      toast.success("User data updated successfully")
     } catch (error: unknown) {
-      console.error("Update failed:", error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-      });
+      console.error('Update failed:', error);
+      toast.error("An unexpected error occurred")
     }
   };
 

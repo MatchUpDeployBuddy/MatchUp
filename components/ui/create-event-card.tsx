@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { FaPlus } from "react-icons/fa";
 
-export function CreateMatchCard({ imageUrl }: { imageUrl: string }) {
+export function CreateEventCard({ imageUrl }: { imageUrl: string }) {
   return (
-    <Link href="/match-creation" className="block">
+    <Link href="/event-creation" className="block">
       <div className="relative overflow-hidden rounded-3xl mb-8 w-full h-40">
         <div
           className="absolute inset-0 bg-cover bg-center"

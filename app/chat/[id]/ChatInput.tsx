@@ -3,7 +3,7 @@
 import { Input } from "@/components/ui/input";
 import React, { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner";
 import { v4 as uuidv4 } from 'uuid';
 import { useUserStore } from "@/store/userStore";
 import { Imessage, useMessagesStore } from "@/store/messagesStore";
@@ -14,7 +14,6 @@ export default function ChatInput({ id }: { id: string }) {
     const user = useUserStore(state => state.user);
     const addMessage = useMessagesStore(state => state.addMessage);
     const supabase = createClient();
-    const { toast } = useToast()
     const [message, setMessage] = useState("");
 
     const handleSendMessage = async () => {
@@ -47,10 +46,7 @@ export default function ChatInput({ id }: { id: string }) {
         });
 
         if (error) {
-            toast({
-                title: 'Error',
-                description: "Failed to send message"
-            });
+            toast.error("Failed to send message");
             console.log(error)
         }
     }

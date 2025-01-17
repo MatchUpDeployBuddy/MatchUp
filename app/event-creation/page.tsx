@@ -37,10 +37,10 @@ import { Card } from "@/components/ui/card";
 import AddressSearch from "@/components/adress";
 import { geocodeAddress, Coordinates } from "@/utils/geocoding";
 import { useUserStore } from "@/store/userStore";
+import { useEventStore } from "@/store/eventStore";
+import { Event } from "@/types";
 
-const supabase = await createClient();
-
-const matchSchema = z.object({
+const eventSchema = z.object({
   event_name: z.string().min(1, { message: "Please enter a group name" }),
   sport: z.string().min(1, { message: "Please select a sport" }),
   skillLevel: z.string().min(1, { message: "Please select a skill level" }),
@@ -72,14 +72,16 @@ const sports = [
 // Skill (Dropdown)
 const skill = ["Beginner", "Amateur", "Medium", "Expert", "Irrelevant"];
 
-export default function MatchCreationPage() {
+export default function EventCreationPage() {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const user = useUserStore((state) => state.user);
+  const addEvent = useEventStore((state) => state.addEvent);
+  const supabase = createClient();
   // Formular-Hook
-  const form = useForm<z.infer<typeof matchSchema>>({
-    resolver: zodResolver(matchSchema),
+  const form = useForm<z.infer<typeof eventSchema>>({
+    resolver: zodResolver(eventSchema),
     defaultValues: {
       event_name: "",
       sport: "",
@@ -92,7 +94,7 @@ export default function MatchCreationPage() {
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof matchSchema>) => {
+  const onSubmit = async (data: z.infer<typeof eventSchema>) => {
     try {
       // Combine date and start time into an event timestamp
       const event_time = new Date(
@@ -131,10 +133,18 @@ export default function MatchCreationPage() {
         location: locationPoint,
       };
 
-      const { error } = await supabase.from("events").insert([eventData]);
+      const { data: newEntry, error } = await supabase.from("events").insert([eventData]).select();
       if (error) {
         throw new Error(error.message);
       }
+
+      delete newEntry[0].location
+
+      addEvent({
+        ...newEntry[0],
+        latitude: latitude,
+        longitude: longitude
+      } as Event);
 
       router.push("/dashboard");
     } catch (error) {

@@ -17,9 +17,10 @@ import {
 } from "react-icons/fa";
 import { reverseGeocodeCoordinates } from "@/utils/geocoding";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { toast } from "sonner";
 
-// EXAMPLE: If you have a userStore
-import { useUserStore } from "@/store/userStore"; // or wherever your user store is
+import { useUserStore } from "@/store/userStore";
+import { useEventStore } from "@/store/eventStore";
 
 interface EventDetails {
   id: string;
@@ -52,7 +53,8 @@ export default function EventDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
 
-  const user = useUserStore((state) => state.user); // <-- Get the logged-in user
+  const user = useUserStore((state) => state.user);
+  const removeEvent = useEventStore((state) => state.removeEvent)
   const [isLoading, setIsLoading] = useState(true);
   const [event, setEvent] = useState<EventDetails | null>(null);
   const [participants, setParticipants] = useState<Buddy[]>([]);
@@ -150,7 +152,7 @@ export default function EventDetailsPage() {
     if (!event || editedDescription === event.description) return;
 
     try {
-      await doRequest("/api/update-match-description", "PUT", {
+      await doRequest("/api/update-event-description", "PUT", {
         id: event.id,
         description: editedDescription,
       });
@@ -164,15 +166,16 @@ export default function EventDetailsPage() {
   }
 
   // Cancel the match (owner only)
-  async function handleCancelMatch(eventId: string) {
+  async function handleCancelEvent(eventId: string) {
     try {
       const data = await doRequest("/api/events", "DELETE", { id: eventId });
       console.log(data.message);
-      alert("Event deleted successfully!");
+      removeEvent(eventId);
+      toast.success("Event deleted successfully!");
       router.push("/dashboard");
     } catch (err) {
       console.error("Error deleting event:", err);
-      alert(String(err));
+      toast.error("Error canceling Event");
     }
   }
 
@@ -208,7 +211,7 @@ export default function EventDetailsPage() {
       ]);
     } catch (err) {
       console.error("Failed to accept request:", err);
-      alert(String(err));
+      toast.error("Failed to accept request");
     }
   }
 
@@ -227,7 +230,7 @@ export default function EventDetailsPage() {
       );
     } catch (err) {
       console.error("Error rejecting request:", err);
-      alert(String(err));
+      toast.error("Error rejecting request");
     }
   }
 
@@ -249,7 +252,7 @@ export default function EventDetailsPage() {
       );
     } catch (err) {
       console.error("Failed to remove participant:", err);
-      alert(String(err));
+      toast.error("Failed to remove participant");
     }
   }
 
@@ -264,10 +267,10 @@ export default function EventDetailsPage() {
         message: "I would like to join this event!", // TODO custom message?
       };
       const data = await doRequest("/api/event-request", "POST", body);
-      alert(data.message || "Request sent!");
+      toast.info(data.message || "Request sent!");
     } catch (err) {
       console.error("Failed to send join request:", err);
-      alert(String(err));
+      toast.error("Failed to send join request");
     }
   }
 
@@ -526,7 +529,7 @@ export default function EventDetailsPage() {
               <Button variant="outline" onClick={() => setShowCancelDialog(false)}>
                 No, go back
               </Button>
-              <Button onClick={() => handleCancelMatch(event.id)}>
+              <Button onClick={() => handleCancelEvent(event.id)}>
                 Yes, cancel it
               </Button>
             </div>

@@ -9,6 +9,7 @@ interface EventState {
   fetchEvents: (userId: string) => Promise<void>;
   setEvents: (events: Event[]) => void;
   addEvent: (event: Event) => void;
+  removeEvent: (eventId: string) => void;
 }
 
 export const useEventStore = create<EventState>()(
@@ -17,7 +18,7 @@ export const useEventStore = create<EventState>()(
       events: [],
       fetchEvents: async (userId: string) => {
         try {
-          const res = await fetch(`/api/get-joined-matches?id=${userId}`, {
+          const res = await fetch(`/api/get-joined-events?id=${userId}`, {
             cache: "no-store",
           });
           if (!res.ok) throw new Error("Failed to fetch events");
@@ -36,6 +37,11 @@ export const useEventStore = create<EventState>()(
             ]
         }))
       },
+      removeEvent: (eventId: string) => {
+        set((state) => ({
+          events: state.events.filter(event => event.id !== eventId),
+        }));
+      }
     }),
     {
       name: "event-storage",
