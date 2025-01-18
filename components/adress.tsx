@@ -46,6 +46,10 @@ export default function AddressSearch({ value, onChange }: AddressSearchProps) {
       },
       (err) => {
         console.log("Geolocation error:", err);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 60000, // use location from cache, maximum 60 seconds
       }
     );
   }, []);
@@ -61,9 +65,7 @@ export default function AddressSearch({ value, onChange }: AddressSearchProps) {
     });
     mapRef.current = map;
 
-    const marker = new mapboxgl.Marker({
-      draggable: false,
-    })
+    const marker = new mapboxgl.Marker({})
       .setLngLat(mapCenter)
       .addTo(map);
 
@@ -72,8 +74,10 @@ export default function AddressSearch({ value, onChange }: AddressSearchProps) {
     const handleMove = () => {
       if (!mapRef.current) return;
       const center = mapRef.current.getCenter();
-      setMapCenter([center.lng, center.lat]);
+      const newCenter: [number, number] = [center.lng, center.lat];
+      setMapCenter(newCenter);
       marker.setLngLat([center.lng, center.lat]);
+      //markerRef.current?.setLngLat(newCenter);
     };
 
     const handleMoveEnd = async () => {
@@ -96,6 +100,9 @@ export default function AddressSearch({ value, onChange }: AddressSearchProps) {
     return () => {
       map.off("move", handleMove);
       map.off("moveend", handleMoveEnd);
+      map.remove(); // remove mapbox instance completely
+      mapRef.current = null;
+      markerRef.current = null;
     };
   }, []);
 
@@ -158,10 +165,9 @@ export default function AddressSearch({ value, onChange }: AddressSearchProps) {
       )}
 
       <div
-        style={{ position: "relative", width: "100%", height: "400px", marginTop: "1rem" }}
-      >
-        <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
-      </div>
+        ref={mapContainerRef}
+        style={{ width: "100%", height: "500px", marginTop: "1rem" }}
+      />
     </div>
   );
 }
