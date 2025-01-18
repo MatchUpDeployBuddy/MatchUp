@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.0.0';
-import * as OneSignal from 'https://esm.sh/@onesignal/node-onesignal@1.0.0-beta7';
+import * as OneSignal from 'npm:onesignal-node';
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 
 const ONESIGNAL_APP_ID = Deno.env.get('ONESIGNAL_APP_ID')!;
@@ -7,15 +7,11 @@ const ONESIGNAL_REST_API_KEY = Deno.env.get('ONESIGNAL_REST_API_KEY')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 
-const configuration = OneSignal.createConfiguration({
-  appKey: ONESIGNAL_REST_API_KEY,
-});
-
-const onesignal = new OneSignal.DefaultApi(configuration);
+const client = new OneSignal.Client(ONESIGNAL_APP_ID, ONESIGNAL_REST_API_KEY);
 
 serve(async (req: Request) => {
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+  
   try {
     if (req.method !== 'POST') {
       console.warn('Invalid method:', req.method);
@@ -30,26 +26,31 @@ serve(async (req: Request) => {
       const { event_id: eventId, joined_user_id: joinedUserId } = record;
 
       const { data: eventData, error: eventError } = await supabase.from("events").select("creator_id, event_name").eq("id", eventId);
-      
+
       if(eventError){
         console.log(eventError);
         return new Response('Error fetching event', { status: 405 });
       }
 
       if(joinedUserId === eventData[0].creator_id) {
-        return;
+        return new Response(
+            JSON.stringify({ message: 'Event ignored.' }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } },
+        );
       }
 
-      const notification = new OneSignal.Notification();
-      notification.app_id = ONESIGNAL_APP_ID;
-      notification.contents = {
-        en: `You got accepted into ${eventData[0].event_name}!`,
+      const event_name = eventData[0].event_name;
+
+      const notification = {
+        contents: { en: `You got accepted into ${eventData[0].event_name}!` },
+        include_aliases: {
+          external_id: [String(joinedUserId)]
+        },
+        target_channel: "push"
       };
-      notification.include_external_user_ids = [joinedUserId];
 
       try {
-        const onesignalApiRes = await onesignal.createNotification(notification);
-        console.log('OneSignal API response:', onesignalApiRes);
+        const onesignalApiRes = await client.createNotification(notification);
 
         return new Response(
           JSON.stringify({ onesignalResponse: onesignalApiRes }),
