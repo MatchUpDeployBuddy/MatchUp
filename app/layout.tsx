@@ -1,5 +1,3 @@
-"use client";
-
 import { Toaster } from "@/components/ui/sonner";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -24,11 +22,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const pathname = usePathname();
-  const isLandingPage = pathname === "/" || pathname === "/landingpage";
-  const isLogin = pathname === "/login";
-  const isAccountCreation = pathname === "/account-creation"
-
   return (
     <html lang="en">
       <body
@@ -38,7 +31,7 @@ export default function RootLayout({
         <UserProvider>
           <EventProvider>{children}</EventProvider>
         </UserProvider>
-        {!isLandingPage && !isLogin && !isAccountCreation && <Navbar />}
+        <Navbar />
       </body>
     </html>
   );

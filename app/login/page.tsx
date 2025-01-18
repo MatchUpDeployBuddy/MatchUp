@@ -27,7 +27,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/userStore";
 
-// Zod Schema Definition
 const formSchemaLogin = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
   password: z
@@ -37,10 +36,6 @@ const formSchemaLogin = z.object({
 
 const formSchemaSignup = z
   .object({
-    name: z
-      .string()
-      .min(1, { message: "Name is required" })
-      .max(50, { message: "Name must be 50 characters or less" }),
     email: z.string().email({ message: "Please enter a valid email address" }),
     password: z
       .string()
@@ -74,7 +69,7 @@ export default function LoginPage() {
       mode === "login" ? formSchemaLogin : formSchemaSignup
     ),
     defaultValues: {
-      name: "",
+      // Remove `name` since it’s no longer part of signup
       email: "",
       password: "",
       passwordConfirm: "",
@@ -97,9 +92,9 @@ export default function LoginPage() {
       } else {
         const response = await signup(data as z.infer<typeof formSchemaSignup>);
         if (response?.signupSuccess) {
+          setSuccessMessage("Account created successfully!");
           router.push("/account-creation");
         }
-        setSuccessMessage("Account created successfully!");
       }
     } catch (error: any) {
       setErrorMessage(error.message || "An error occurred.");
@@ -146,6 +141,7 @@ export default function LoginPage() {
               Sign Up
             </TabsTrigger>
           </TabsList>
+
           <AnimatePresence mode="wait">
             <motion.div
               key={mode}
@@ -154,6 +150,9 @@ export default function LoginPage() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
+              {/* --------------------
+                  LOGIN TAB
+              -------------------- */}
               <TabsContent value="login">
                 <Form {...form}>
                   <form
@@ -171,7 +170,7 @@ export default function LoginPage() {
                           </FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="your@email.com"
+                              placeholder="john.doe@example.com"
                               {...field}
                               className="border-secondary text-md rounded-full placeholder-gray-400 placeholder-opacity-50 text-sm"
                             />
@@ -201,6 +200,7 @@ export default function LoginPage() {
                         </FormItem>
                       )}
                     />
+
                     <Button
                       type="submit"
                       disabled={isLoading}
@@ -218,32 +218,16 @@ export default function LoginPage() {
                   </form>
                 </Form>
               </TabsContent>
+
+              {/* --------------------
+                  SIGNUP TAB
+              -------------------- */}
               <TabsContent value="signup">
                 <Form {...form}>
                   <form
                     onSubmit={form.handleSubmit(onSubmit)}
                     className="space-y-4"
                   >
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-text-primary flex items-center text-lg">
-                            <FaUser className="mr-2" />
-                            Name
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="John Doe"
-                              {...field}
-                              className="border-secondary text-md rounded-full placeholder-gray-400 placeholder-opacity-50 text-sm"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                     <FormField
                       control={form.control}
                       name="email"

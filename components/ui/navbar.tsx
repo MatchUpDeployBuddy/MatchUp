@@ -37,11 +37,20 @@ const navItems: NavItem[] = [
 ];
 
 export function Navbar() {
-  const currentPath = usePathname(); 
+  const currentPath = usePathname();
+
+  const hideNav =
+    currentPath === "/" ||
+    currentPath === "/landingpage" ||
+    currentPath === "/login" ||
+    currentPath === "/account-creation";
 
   return (
-    <nav className="fixed bottom-4 left-4 right-4 z-50 bg-[#1C1C1E] px-4 py-2 rounded-full shadow-md"
-    style={{ height: NAVBAR_HEIGHT }}
+    <nav
+      className={`fixed bottom-4 left-4 right-4 z-50 bg-[#1C1C1E] px-4 py-2 rounded-full shadow-md ${
+        hideNav ? "hidden" : ""
+      }`}
+      style={{ height: NAVBAR_HEIGHT }}
     >
       <div className="flex justify-center items-center max-w-screen-xl mx-auto">
         <div className="flex gap-2">

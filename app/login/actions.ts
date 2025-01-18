@@ -13,7 +13,6 @@ const loginSchema = z.object({
 });
 
 const signupSchema = z.object({
-  name: z.string().min(1).max(50),
   email: z.string().email(),
   password: z
     .string()
@@ -23,11 +22,13 @@ const signupSchema = z.object({
     ),
 });
 
+// -----------------------------
+// LOGIN Action
+// -----------------------------
 export async function login(data: z.infer<typeof loginSchema>) {
   const supabase = await createClient();
 
   const parsedData = loginSchema.safeParse(data);
-
   if (!parsedData.success) {
     throw new Error(JSON.stringify(parsedData.error.flatten()));
   }
@@ -48,11 +49,13 @@ export async function login(data: z.infer<typeof loginSchema>) {
   return { loginSuccess: true };
 }
 
+// -----------------------------
+// SIGNUP Action
+// -----------------------------
 export async function signup(data: z.infer<typeof signupSchema>) {
   const supabase = await createClient();
 
   const parsedData = signupSchema.safeParse(data);
-
   if (!parsedData.success) {
     console.log("Signup validation failed:", parsedData.error);
     throw new Error(JSON.stringify(parsedData.error.flatten()));
@@ -61,11 +64,6 @@ export async function signup(data: z.infer<typeof signupSchema>) {
   const { error } = await supabase.auth.signUp({
     email: parsedData.data.email,
     password: parsedData.data.password,
-    options: {
-      data: {
-        name: parsedData.data.name,
-      },
-    },
   });
 
   if (error) {
@@ -82,6 +80,9 @@ export async function signup(data: z.infer<typeof signupSchema>) {
   return { signupSuccess: true };
 }
 
+// -----------------------------
+// OAuth (e.g., Google) Action
+// -----------------------------
 export async function signInWithOAuth(provider: Provider) {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({

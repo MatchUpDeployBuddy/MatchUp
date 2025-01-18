@@ -101,7 +101,7 @@ export function FilterContent({ onApplyFilters }: FilterContentProps) {
         </div>
 
         <div>
-          <Label htmlFor="requiredSlots" className="text-sm font-medium text-gray-700">Required Slots</Label>
+          <Label htmlFor="requiredSlots" className="text-sm font-medium text-gray-700">Remaining Slots</Label>
           <Input
             id="requiredSlots"
             type="number"
