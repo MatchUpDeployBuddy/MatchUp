@@ -50,6 +50,7 @@ import {
   CheckCircledIcon,
   ExclamationTriangleIcon,
 } from "@radix-ui/react-icons";
+import { useUserStore } from "@/store/userStore";
 
 const accountSchema = z.object({
   name: z
@@ -123,6 +124,7 @@ export default function AccountCreationPage() {
     string | null
   >(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const fetchUser = useUserStore((state) => state.fetchUser)
 
   const handleProfilePictureChange = async (
     e: React.ChangeEvent<HTMLInputElement>
@@ -190,6 +192,9 @@ export default function AccountCreationPage() {
       }
 
       await updateAccount(data);
+
+      await fetchUser();
+
       setSuccessMessage("Account created successfully!");
       setTimeout(() => {
         router.push("/dashboard");
