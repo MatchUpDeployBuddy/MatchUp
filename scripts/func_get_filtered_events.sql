@@ -13,7 +13,7 @@ RETURNS TABLE (
     creator_id uuid,
     sport varchar(50),
     participants_needed int,
-    available_slots int,                      -- Neue Spalte hinzugefügt
+    available_slots int,                      
     skill_level varchar(50),
     event_time timestamp,
     description text,

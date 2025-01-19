@@ -30,7 +30,7 @@ CREATE POLICY "Users can update own profile."
   with check ( (select auth.uid()) = id);
 
 REVOKE UPDATE ON TABLE users FROM public;
-GRANT UPDATE (name) ON TABLE users TO public;
+GRANT UPDATE (username) ON TABLE users TO public;
 
 create or replace function public.handle_new_user()
 returns trigger
