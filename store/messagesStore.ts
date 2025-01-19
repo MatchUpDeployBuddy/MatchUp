@@ -10,7 +10,6 @@ export type Imessage = {
   sender_id: string | null;
   users: {
       id: string;
-      name: string;
       username: string | null;
       profile_picture_url: string | null;
   } | null;
