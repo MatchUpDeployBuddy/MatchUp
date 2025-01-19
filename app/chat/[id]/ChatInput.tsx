@@ -30,7 +30,6 @@ export default function ChatInput({ id }: { id: string }) {
             created_at: new Date().toISOString(),
             users: {
                 id: user?.id,
-                name: user?.name,
                 username: user?.username,
                 profile_picture_url: user?.profile_picture_url
             }

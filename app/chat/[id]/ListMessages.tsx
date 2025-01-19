@@ -43,7 +43,7 @@ export default function ListMessages({ eventId, currentMessages }: { eventId: st
                 },
                 async (payload) => {
                     const  { data, error } = await supabase.from("users")
-                                                            .select("id, name, username, profile_picture_url")
+                                                            .select("id, username, profile_picture_url")
                                                             .eq("id", payload.new.sender_id)
                                                             .single();
                     if (error) {
@@ -111,7 +111,7 @@ export default function ListMessages({ eventId, currentMessages }: { eventId: st
     const fetchMoreMessages = async () => {
         const { from, to } = getFromAndTo(page[eventId], MESSAGE_LIMIT);
         const { data, error } = await supabase.from("messages")
-                            .select("*, users(id, name, username, profile_picture_url)")
+                            .select("*, users(id, username, profile_picture_url)")
                             .eq("event_id", eventId)
                             .range(from, to)
                             .order("created_at", { ascending: false });
