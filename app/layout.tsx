@@ -1,12 +1,10 @@
-"use client";
-
 import { Toaster } from "@/components/ui/sonner";
 import localFont from "next/font/local";
 import "./globals.css";
 import { UserProvider } from "@/components/user-provider";
 import { Navbar } from "@/components/ui/navbar";
 import { EventProvider } from "@/components/EventProvider";
-import { usePathname } from "next/navigation";
+import ServiceWorkerRegistration from "./service-worker-registration";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -21,14 +19,9 @@ const geistMono = localFont({
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-  const pathname = usePathname();
-  const isLandingPage = pathname === "/" || pathname === "/landingpage";
-  const isLogin = pathname === "/login";
-  const isAccountCreation = pathname === "/account-creation"
-
+}) {
   return (
     <html lang="en">
       <body
@@ -36,9 +29,12 @@ export default function RootLayout({
       >
         <Toaster position="top-center" />
         <UserProvider>
-          <EventProvider>{children}</EventProvider>
+          <EventProvider>
+            <ServiceWorkerRegistration />
+            {children}
+          </EventProvider>
+          <Navbar />
         </UserProvider>
-        {!isLandingPage && !isLogin && !isAccountCreation && <Navbar />}
       </body>
     </html>
   );

@@ -1,5 +1,6 @@
 "use server";
 import { createClient } from "@/utils/supabase/server";
+import { revalidatePath } from "next/cache";
 import * as z from "zod";
 
 const accountSchema = z.object({
@@ -17,39 +18,44 @@ const accountSchema = z.object({
     .array(z.string())
     .min(1, { message: "Please select at least one sport" }),
   city: z.string().min(1, { message: "Please select a city" }),
-  profilePicture: z
-    .string()
-    .url({ message: "Please upload a profile picture" })
-    .optional(),
+  profilePicture: z.string().optional(),
 });
 
 export async function updateAccount(data: z.infer<typeof accountSchema>) {
-    const supabase = await createClient();
+  const supabase = await createClient();
+  const parsedData = accountSchema.safeParse(data);
+  if (!parsedData.success) {
+    const errors = parsedData.error.errors.map((err) => err.message).join(", ");
+    throw new Error(errors);
+  }
 
-    const parsedData = accountSchema.safeParse(data);
-    if (!parsedData.success) {
-        const errors = parsedData.error.errors.map((err) => err.message).join(', ');
-        throw new Error(errors);
-    }
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-        throw new Error('User not authenticated');
-    }
-    const userId = user.id;
+  if (userError || !user) {
+    throw new Error("User not authenticated");
+  }
 
-    const { error } = await supabase.from('users').update({
+  const userId = user.id;
+
+  const { error } = await supabase
+    .from("users")
+    .update({
       username: parsedData.data.name,
       birthday: parsedData.data.birthday,
       gender: parsedData.data.gender,
       sport_interests: parsedData.data.sportInterests,
       city: parsedData.data.city,
       profile_picture_url: parsedData.data.profilePicture || null,
-      is_profile_complete: true
-    }).eq('id', userId);
-  
-    if (error) {
-      throw new Error(error.message);
-    }
+      is_profile_complete: true,
+    })
+    .eq("id", userId);
 
+    revalidatePath("/", "layout");
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }

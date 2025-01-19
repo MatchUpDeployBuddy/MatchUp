@@ -127,7 +127,7 @@ export default function BuddysClient() {
         <div className="mb-8 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold mb-1">{getGreeting()}</h1>
-            <p className="text-3xl font-bold">{user.name}</p>
+            <p className="text-3xl font-bold">{user.username}</p>
             {userLocation && (
               <p className="text-sm text-gray-500">
                 Your location: {userLocation}

@@ -33,6 +33,7 @@ import {
   FaCalendarAlt,
   FaMapMarkerAlt,
   FaCamera,
+  FaTableTennis,
 } from "react-icons/fa";
 import {
   GiSoccerBall,
@@ -44,12 +45,12 @@ import {
 } from "react-icons/gi";
 import { GrSwim } from "react-icons/gr";
 import { IoMdBicycle } from "react-icons/io";
-import { FaTableTennis } from "react-icons/fa";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   CheckCircledIcon,
   ExclamationTriangleIcon,
 } from "@radix-ui/react-icons";
+import { useUserStore } from "@/store/userStore";
 
 const accountSchema = z.object({
   name: z
@@ -66,6 +67,8 @@ const accountSchema = z.object({
     .array(z.string())
     .min(1, { message: "Please select at least one sport" }),
   city: z.string().min(1, { message: "Please select a city" }),
+  // Make profilePicture a simple optional string.
+  // If none is chosen, it can remain empty or undefined.
   profilePicture: z.string().optional(),
 });
 
@@ -121,13 +124,14 @@ export default function AccountCreationPage() {
     string | null
   >(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const fetchUser = useUserStore((state) => state.fetchUser)
 
   const handleProfilePictureChange = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validation will also be done in the backend
+      // Basic validation (size and type) can be done here.
       const MAX_SIZE = 2 * 1024 * 1024; // 2MB
       const allowedTypes = ["image/jpeg", "image/png"];
 
@@ -149,6 +153,10 @@ export default function AccountCreationPage() {
         setProfilePicturePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+    } else {
+      // If user clears the file input, reset everything
+      setProfilePictureFile(null);
+      setProfilePicturePreview(null);
     }
   };
 
@@ -167,22 +175,31 @@ export default function AccountCreationPage() {
 
   const onSubmit = async (data: z.infer<typeof accountSchema>) => {
     try {
+      // Only upload if a file is actually chosen
       if (profilePictureFile) {
         setUploading(true);
         const uploadedUrl = await uploadProfilePicture(profilePictureFile);
+        setUploading(false);
+
         if (uploadedUrl) {
           data.profilePicture = uploadedUrl;
         } else {
           throw new Error("Error uploading profile picture");
         }
-        setUploading(false);
+      } else {
+        // If no file chosen, ensure it's an empty string
+        data.profilePicture = "";
       }
+
       await updateAccount(data);
+
+      await fetchUser();
+
       setSuccessMessage("Account created successfully!");
       setTimeout(() => {
         router.push("/dashboard");
       }, 2000);
-    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
       console.error("Error creating account:", error);
       setErrorMessage(error.message || "Failed to create account");
     }
@@ -197,7 +214,6 @@ export default function AccountCreationPage() {
       : [...selectedSports, sport];
 
     setSelectedSports(newSelectedSports);
-
     form.setValue("sportInterests", newSelectedSports);
   };
 
@@ -238,7 +254,7 @@ export default function AccountCreationPage() {
                 transition={{ duration: 0.3 }}
                 className="space-y-8"
               >
-                {/* Tell us about yourself */}
+                {/* =========== STEP 1: Basic Info =========== */}
                 {step === 1 && (
                   <>
                     <FormField
@@ -293,7 +309,7 @@ export default function AccountCreationPage() {
                             <RadioGroup
                               onValueChange={field.onChange}
                               defaultValue={field.value}
-                              className="flex flex-row space-x-2 "
+                              className="flex flex-row space-x-2"
                             >
                               {["male", "female", "other"].map((gender) => (
                                 <FormItem
@@ -319,7 +335,8 @@ export default function AccountCreationPage() {
                     />
                   </>
                 )}
-                {/* What are your interests? */}
+
+                {/* =========== STEP 2: Interests =========== */}
                 {step === 2 && (
                   <FormField
                     control={form.control}
@@ -356,7 +373,8 @@ export default function AccountCreationPage() {
                     )}
                   />
                 )}
-                {/* Where are you located? */}
+
+                {/* =========== STEP 3: Location & Picture =========== */}
                 {step === 3 && (
                   <>
                     <FormField
@@ -396,7 +414,7 @@ export default function AccountCreationPage() {
                         <FormItem>
                           <FormLabel className="text-text-primary flex items-center text-lg">
                             <FaCamera className="mr-2" />
-                            Profile Picture
+                            Profile Picture (Optional)
                           </FormLabel>
                           <FormControl>
                             <div className="flex items-center space-x-4">
@@ -413,7 +431,7 @@ export default function AccountCreationPage() {
                               <Input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => handleProfilePictureChange(e)}
+                                onChange={handleProfilePictureChange}
                                 className="border-secondary text-lg rounded-full cursor-pointer"
                               />
                             </div>
