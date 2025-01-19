@@ -92,7 +92,7 @@ export default function DashboardComponent({ userId }: DashboardProps) {
       <div className="mb-8 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold mb-1">{getGreeting()} 🔥</h1>
-          <p className="text-3xl font-bold">{user.name}</p>
+          <p className="text-3xl font-bold">{user.username}</p>
         </div>
         <Button onClick={handleLogout}>Logout</Button>
       </div>
