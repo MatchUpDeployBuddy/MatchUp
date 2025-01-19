@@ -4,7 +4,7 @@ import "./globals.css";
 import { UserProvider } from "@/components/user-provider";
 import { Navbar } from "@/components/ui/navbar";
 import { EventProvider } from "@/components/EventProvider";
-import { usePathname } from "next/navigation";
+import ServiceWorkerRegistration from "./service-worker-registration";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -19,9 +19,9 @@ const geistMono = localFont({
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
       <body
@@ -29,7 +29,10 @@ export default function RootLayout({
       >
         <Toaster position="top-center" />
         <UserProvider>
-          <EventProvider>{children}</EventProvider>
+          <EventProvider>
+            <ServiceWorkerRegistration />
+            {children}
+          </EventProvider>
         </UserProvider>
         <Navbar />
       </body>
