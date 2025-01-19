@@ -32,26 +32,23 @@ export default function AddressSearch({ value, onChange }: AddressSearchProps) {
   }, [value]);
 
   useEffect(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const userCoords: [number, number] = [
-          pos.coords.longitude,
-          pos.coords.latitude,
-        ];
-        setMapCenter(userCoords);
-        if (mapRef.current) {
-          mapRef.current.flyTo({ center: userCoords, zoom: 14 });
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          setMapCenter([longitude, latitude]);
+          if (mapRef.current) {
+            mapRef.current.flyTo({ center: [longitude, latitude], zoom: 14 });
+          }
+        },
+        (error) => {
+          console.error("Error getting user location:", error);
+        },
+        {
+          enableHighAccuracy: true
         }
-      },
-      (err) => {
-        console.log("Geolocation error:", err);
-      },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 60000, // use location from cache, maximum 60 seconds
-      }
-    );
+      );
+    }
   }, []);
 
   useEffect(() => {
