@@ -33,8 +33,8 @@ export default function RootLayout({
             <ServiceWorkerRegistration />
             {children}
           </EventProvider>
+          <Navbar />
         </UserProvider>
-        <Navbar />
       </body>
     </html>
   );

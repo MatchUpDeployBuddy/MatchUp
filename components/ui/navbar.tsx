@@ -6,6 +6,7 @@ import { FaRocket, FaUsers, FaWhmcs } from "react-icons/fa";
 import { BsChatText } from "react-icons/bs";
 import { cn } from "@/lib/utils";
 import { NAVBAR_HEIGHT } from "@/constants";
+import { useUserStore } from "@/store/userStore";
 
 interface NavItem {
   label: string;
@@ -38,11 +39,16 @@ const navItems: NavItem[] = [
 
 export function Navbar() {
   const currentPath = usePathname();
+  const user = useUserStore((state) => state.user);
 
-  const hideNav =
-    currentPath === "/landingpage" ||
-    currentPath === "/login" ||
-    currentPath === "/account-creation";
+  const hideNavIfNotLoggedIn = [
+    "/",
+    "/landingpage",
+    "/login",
+    "/account-creation",
+  ];
+
+  const hideNav = !user && hideNavIfNotLoggedIn.includes(currentPath);
 
   return (
     <nav
@@ -54,31 +60,35 @@ export function Navbar() {
       <div className="flex justify-center items-center max-w-screen-xl mx-auto">
         <div className="flex gap-2">
           {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-full transition-colors",
-                currentPath === item.href
-                  ? "bg-[hsl(81,89%,61%)] text-black"
-                  : "hover:bg-gray-800 text-white"
-              )}
-            >
-              <item.icon
-                className={cn(
-                  "h-5 w-5",
-                  currentPath === item.href ? "text-black" : "text-white"
-                )}
-              />
-              <span
-                className={cn(
-                  "text-sm font-medium transition-opacity",
-                  currentPath === item.href ? "opacity-100" : "hidden"
-                )}
-              >
-                {item.label}
-              </span>
-            </Link>
+          <Link
+          key={item.href}
+          href={item.href}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-full transition-colors",
+            currentPath === item.href || (currentPath === "/" && item.href === "/dashboard")
+              ? "bg-[hsl(81,89%,61%)] text-black"
+              : "hover:bg-gray-800 text-white"
+          )}
+        >
+          <item.icon
+            className={cn(
+              "h-5 w-5",
+              currentPath === item.href || (currentPath === "/" && item.href === "/dashboard")
+                ? "text-black"
+                : "text-white"
+            )}
+          />
+          <span
+            className={cn(
+              "text-sm font-medium transition-opacity",
+              currentPath === item.href || (currentPath === "/" && item.href === "/dashboard")
+                ? "opacity-100"
+                : "hidden"
+            )}
+          >
+            {item.label}
+          </span>
+        </Link>
           ))}
         </div>
       </div>
