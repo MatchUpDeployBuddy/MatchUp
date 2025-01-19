@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -12,7 +12,7 @@ import { FaUser, FaBell, FaQuestionCircle, FaUserPlus } from "react-icons/fa";
 import { useUserStore } from "@/store/userStore";
 import { Buddy } from "@/types";
 import { uploadProfilePicture } from "@/utils/supabase/storage";
-
+import OneSignal from "react-onesignal";
 import {
   Select,
   SelectContent,
@@ -78,8 +78,8 @@ const germanCities = [
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState("account");
   const [isEditing, setIsEditing] = useState(false);
-  const {user, updateUser} = useUserStore((state) => state);
-  
+  const { user, updateUser } = useUserStore((state) => state);
+
   const renderSectionContent = () => {
     switch (activeSection) {
       case "account":
@@ -135,13 +135,13 @@ export default function SettingsPage() {
                 </div>
               </div>
               {!isEditing && (
-                    <Button
-                      variant="outline"
-                      className="rounded-full"
-                      onClick={() => setIsEditing(!isEditing)}
-                    >
-                      Edit
-                    </Button>
+                <Button
+                  variant="outline"
+                  className="rounded-full"
+                  onClick={() => setIsEditing(!isEditing)}
+                >
+                  Edit
+                </Button>
               )}
             </CardTitle>
           </CardHeader>
@@ -266,7 +266,7 @@ function AccountSettings({
       return Object.keys(obj1).every((key) => {
         const value1 = obj1[key as keyof Buddy];
         const value2 = obj2[key as keyof Buddy];
-  
+
         if (Array.isArray(value1) && Array.isArray(value2)) {
           return (
             value1.length === value2.length &&
@@ -276,19 +276,18 @@ function AccountSettings({
         return value1 === value2;
       });
     };
-  
+
     const hasChanged = !isEqual(formData, user);
-  
+
     return hasChanged;
   };
 
   const handleSubmit = async () => {
-
     if (profilePictureFile) {
       const uploadedUrl = await uploadProfilePicture(profilePictureFile);
       if (uploadedUrl) {
         formData.profile_picture_url = uploadedUrl;
-        setCacheBust(prev => prev + 1);
+        setCacheBust((prev) => prev + 1);
       } else {
         toast.error("Could not upload profile picture");
       }
@@ -309,7 +308,7 @@ function AccountSettings({
       const response = await fetch('/api/users', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           userId: formData.id,
@@ -325,7 +324,7 @@ function AccountSettings({
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Error updating user');
+        throw new Error(result.error || "Error updating user");
       }
       setProfilePicturePreview(null);
       setProfilePictureFile(null);
@@ -409,7 +408,9 @@ function AccountSettings({
             <Button
               key={sport}
               variant={
-                formData.sport_interests!.includes(sport) ? "default" : "outline"
+                formData.sport_interests!.includes(sport)
+                  ? "default"
+                  : "outline"
               }
               onClick={() => handleSportToggle(sport)}
               disabled={!isEditing}
@@ -428,7 +429,101 @@ function AccountSettings({
   );
 }
 
+
 function NotificationSettings() {
+  const { user } = useUserStore((state) => state);
+  const [matchNotificationsEnabled, setMatchNotificationsEnabled] = useState(false);
+  const [oneSignalInitialized, setOneSignalInitialized] = useState(false);
+
+  let isInitializingOneSignal = false;
+
+  const initializeOneSignal = async () => {
+    if (isInitializingOneSignal) {
+      console.log("OneSignal wird gerade initialisiert, überspringe...");
+      return;
+    }
+
+    isInitializingOneSignal = true;
+    console.log("Starte OneSignal-Initialisierung...");
+
+    try {
+      await OneSignal.init({
+        appId: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID!,
+        notifyButton: {
+          enable: true,
+        },
+        allowLocalhostAsSecureOrigin: true,
+      });
+      console.log("OneSignal erfolgreich initialisiert.");
+
+      if (user?.id) {
+        await OneSignal.login(user.id);
+        console.log("OneSignal erfolgreich mit Benutzer-ID angemeldet:", user.id);
+      } else {
+        console.error("Benutzer-ID ist nicht vorhanden oder undefined");
+      }      
+
+      setOneSignalInitialized(true); // Markiere, dass OneSignal initialisiert wurde
+    } catch (error) {
+      console.error("Fehler bei der OneSignal-Initialisierung:", error);
+    } finally {
+      isInitializingOneSignal = false;
+    }
+  };
+
+  useEffect(() => {
+    if (user?.id && !oneSignalInitialized) {
+      initializeOneSignal();
+    } else {
+      console.log("OneSignal ist bereits initialisiert oder Benutzer-ID fehlt.");
+    }
+  }, [user?.id, oneSignalInitialized]);
+
+  useEffect(() => {
+    const fetchNotificationState = async () => {
+      if (!oneSignalInitialized) return;
+
+      try {
+        const isSubscribed = await OneSignal.User.PushSubscription.optedIn;
+        console.log("Abonnementstatus abgerufen:", isSubscribed);
+        setMatchNotificationsEnabled(isSubscribed ?? false); 
+      } catch (error) {
+        console.error("Fehler beim Abrufen des Abonnementstatus:", error);
+      }
+    };
+
+    fetchNotificationState();
+  }, [oneSignalInitialized]); 
+
+  const unsubscribeFromNotifications = async () => {
+    try {
+      await OneSignal.User.PushSubscription.optOut();
+      console.log("User unsubscribed from notifications");
+      setMatchNotificationsEnabled(false);
+    } catch (error) {
+      console.error("Error unsubscribing from notifications:", error);
+    }
+  };
+
+  const subscribeToNotifications = async () => {
+    try {
+      await OneSignal.User.PushSubscription.optIn();
+      console.log("User subscribed to notifications");
+      setMatchNotificationsEnabled(true);
+    } catch (error) {
+      console.error("Error subscribing to notifications:", error);
+    }
+  };
+
+  // Handler für den Toggle-Change
+  const handleToggleMatchNotifications = () => {
+    if (matchNotificationsEnabled) {
+      unsubscribeFromNotifications();
+    } else {
+      subscribeToNotifications(); 
+    }
+  };
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold mb-4">Notification Settings</h3>
@@ -439,11 +534,25 @@ function NotificationSettings() {
           <Switch />
         </div>
       </div>
+      {/* Match Notifications */}
       <div className="space-y-2">
         <Label>Match Notifications</Label>
         <div className="flex items-center justify-between">
           <span>Enable match notifications</span>
-          <Switch />
+          <Switch
+            checked={matchNotificationsEnabled}
+            onCheckedChange={handleToggleMatchNotifications} // Setze den Zustand basierend auf der Auswahl
+            className={`${
+              matchNotificationsEnabled ? "bg-indigo-600" : "bg-gray-200"
+            } relative inline-flex items-center h-6 rounded-full w-11`}
+          >
+            <span className="sr-only">Enable match notifications</span>
+            <span
+              className={`${
+                matchNotificationsEnabled ? "translate-x-6" : "translate-x-1"
+              } inline-block w-4 h-4 transform bg-white rounded-full`}
+            />
+          </Switch>
         </div>
       </div>
       <div className="space-y-2">
@@ -456,6 +565,7 @@ function NotificationSettings() {
     </div>
   );
 }
+
 
 function HelpCenter() {
   return (

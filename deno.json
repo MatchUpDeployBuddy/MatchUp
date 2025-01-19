@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "lib": ["deno.ns", "dom"]
+  },
+  "tasks": {
+    "run": {
+      "command": "deno run --allow-net --allow-read server.ts"
+    }
+  }
+}
