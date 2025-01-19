@@ -431,11 +431,11 @@ function AccountSettings({
 
 
 function NotificationSettings() {
-  const { user } = useUserStore((state) => state); // Hole den User-State
-  const [matchNotificationsEnabled, setMatchNotificationsEnabled] = useState(false); // Benachrichtigungseinstellungen
-  const [oneSignalInitialized, setOneSignalInitialized] = useState(false); // Überprüfen, ob OneSignal bereits initialisiert wurde
+  const { user } = useUserStore((state) => state);
+  const [matchNotificationsEnabled, setMatchNotificationsEnabled] = useState(false);
+  const [oneSignalInitialized, setOneSignalInitialized] = useState(false);
 
-  let isInitializingOneSignal = false; // Globale oder lokale Variable
+  let isInitializingOneSignal = false;
 
   const initializeOneSignal = async () => {
     if (isInitializingOneSignal) {
@@ -443,7 +443,7 @@ function NotificationSettings() {
       return;
     }
 
-    isInitializingOneSignal = true; // Markiere, dass die Initialisierung läuft
+    isInitializingOneSignal = true;
     console.log("Starte OneSignal-Initialisierung...");
 
     try {
@@ -467,52 +467,49 @@ function NotificationSettings() {
     } catch (error) {
       console.error("Fehler bei der OneSignal-Initialisierung:", error);
     } finally {
-      isInitializingOneSignal = false; // Markiere, dass die Initialisierung abgeschlossen ist
+      isInitializingOneSignal = false;
     }
   };
 
-  // useEffect, um OneSignal nur einmal zu initialisieren
   useEffect(() => {
     if (user?.id && !oneSignalInitialized) {
       initializeOneSignal();
     } else {
       console.log("OneSignal ist bereits initialisiert oder Benutzer-ID fehlt.");
     }
-  }, [user?.id, oneSignalInitialized]); // Entferne `oneSignalInitialized` aus den Abhängigkeiten, wenn du die Überprüfung direkt im Code machst
+  }, [user?.id, oneSignalInitialized]);
 
   useEffect(() => {
     const fetchNotificationState = async () => {
       if (!oneSignalInitialized) return;
 
       try {
-        const isSubscribed = await OneSignal.User.PushSubscription.optedIn; // Abonnementstatus abrufen
+        const isSubscribed = await OneSignal.User.PushSubscription.optedIn;
         console.log("Abonnementstatus abgerufen:", isSubscribed);
-        setMatchNotificationsEnabled(isSubscribed ?? false); // Fallback für undefined
+        setMatchNotificationsEnabled(isSubscribed ?? false); 
       } catch (error) {
         console.error("Fehler beim Abrufen des Abonnementstatus:", error);
       }
     };
 
     fetchNotificationState();
-  }, [oneSignalInitialized]); // Abhängig von `oneSignalInitialized`
+  }, [oneSignalInitialized]); 
 
-  // Funktion zum Deaktivieren der Benachrichtigungen (Opt-Out)
   const unsubscribeFromNotifications = async () => {
     try {
       await OneSignal.User.PushSubscription.optOut();
       console.log("User unsubscribed from notifications");
-      setMatchNotificationsEnabled(false); // Benachrichtigungen deaktivieren
+      setMatchNotificationsEnabled(false);
     } catch (error) {
       console.error("Error unsubscribing from notifications:", error);
     }
   };
 
-  // Funktion zum Aktivieren der Benachrichtigungen (Opt-In)
   const subscribeToNotifications = async () => {
     try {
       await OneSignal.User.PushSubscription.optIn();
       console.log("User subscribed to notifications");
-      setMatchNotificationsEnabled(true); // Benachrichtigungen aktivieren
+      setMatchNotificationsEnabled(true);
     } catch (error) {
       console.error("Error subscribing to notifications:", error);
     }
@@ -521,9 +518,9 @@ function NotificationSettings() {
   // Handler für den Toggle-Change
   const handleToggleMatchNotifications = () => {
     if (matchNotificationsEnabled) {
-      unsubscribeFromNotifications(); // Deaktiviere Benachrichtigungen
+      unsubscribeFromNotifications();
     } else {
-      subscribeToNotifications(); // Aktiviere Benachrichtigungen
+      subscribeToNotifications(); 
     }
   };
 
