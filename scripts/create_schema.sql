@@ -4,7 +4,6 @@ CREATE TYPE gender_enum AS ENUM ('male', 'female', 'other', 'prefer-not-to-say')
 
 create table users (
     id uuid not null references auth.users on delete cascade,
-    name varchar(100) not null unique,
     updated_at timestamp default now(),
     username VARCHAR(50),
     birthday DATE,
