@@ -40,7 +40,7 @@ export function Navbar() {
   const currentPath = usePathname();
 
   const hideNav =
-    currentPath === "/" ||
+    currentPath === "" ||
     currentPath === "/landingpage" ||
     currentPath === "/login" ||
     currentPath === "/account-creation";
