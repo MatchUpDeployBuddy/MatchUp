@@ -49,7 +49,7 @@ export default function Chat() {
     return (
         <div className="p-6 max-w-lg mx-auto bg-gray-100 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold">Good Morning 🔥</h2>
-          <h1 className="text-2xl font-bold mb-4">{user?.name}</h1>
+          <h1 className="text-2xl font-bold mb-4">{user?.username}</h1>
           <h3 className="text-lg font-medium mb-4">Your MATCH chats</h3>
           <div className="space-y-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scroll-smooth">
             {events.map((event) => (
