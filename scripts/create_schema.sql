@@ -5,7 +5,7 @@ CREATE TYPE gender_enum AS ENUM ('male', 'female', 'other', 'prefer-not-to-say')
 create table users (
     id uuid not null references auth.users on delete cascade,
     updated_at timestamp default now(),
-    username VARCHAR(100) not null,
+    username TEXT NOT NULL CHECK (LENGTH(username) <= 100), -- Begrenzung auf 100 Zeichen
     birthday DATE,
     gender gender_enum,
     sport_interests TEXT[] NOT NULL DEFAULT '{}',
@@ -35,16 +35,17 @@ GRANT UPDATE (name) ON TABLE users TO public;
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
-security definer set search_path = ''
+security definer
 as $$
 begin
-  -- Check whether the name exists and set a default value
-  insert into public.users (id, name)
-  values (NEW.id, NEW.raw_user_meta_data ->> 'name');
+  -- Insert the new user into the users table with the email as the username
+  insert into public.users (id, username)
+  values (NEW.id, NEW.email);
 
   return new;
 end;
 $$;
+
 
 create trigger on_auth_user_created
 after insert ON auth.users
