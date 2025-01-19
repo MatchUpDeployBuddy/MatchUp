@@ -119,18 +119,18 @@ USING (
   )
 );
 
-
 CREATE OR REPLACE FUNCTION update_event_request_status_on_participant_delete()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER 
+SECURITY DEFINER
+AS $$
 BEGIN
   -- Update the status to 'rejected' for the specific user and event
-  UPDATE public.event_requests
-  SET status = 'rejected'
+  DELETE FROM public.event_requests
   WHERE requester_id = OLD.joined_user_id AND event_id = OLD.event_id;
 
   RETURN NULL; -- No need to return anything
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql; 
 
 CREATE TRIGGER participant_delete_trigger
 AFTER DELETE ON public.event_participants
@@ -258,3 +258,8 @@ with check (
     where event_id = messages.event_id
   )
 );
+
+CREATE POLICY "Users can delete their own participation records." 
+ON public.event_participants 
+FOR DELETE 
+USING (auth.uid() = joined_user_id);

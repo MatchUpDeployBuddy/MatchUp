@@ -18,9 +18,22 @@ import {
 import { reverseGeocodeCoordinates } from "@/utils/geocoding";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
 
 import { useUserStore } from "@/store/userStore";
 import { useEventStore } from "@/store/eventStore";
+import { Input } from "@/components/ui/input";
 
 interface EventDetails {
   id: string;
@@ -63,7 +76,7 @@ export default function EventDetailsPage() {
 
   const [editedDescription, setEditedDescription] = useState("");
   const [isEditing, setIsEditing] = useState(false);
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [inputValue, setInputValue] = useState("");
 
   // For user who is not in participants, we'll show "Request Join" button
   const [hasJoined, setHasJoined] = useState(false);
@@ -260,17 +273,43 @@ export default function EventDetailsPage() {
   async function handleRequestJoin() {
     if (!event || !user) return;
 
+    const message = inputValue.trim() === "" 
+      ? "I would like to join this event!" 
+      : inputValue;
+    setInputValue("");
     try {
       const body = {
         event_id: event.id,
         requester_id: user.id,
-        message: "I would like to join this event!", // TODO custom message?
+        message: message,
       };
       const data = await doRequest("/api/event-request", "POST", body);
       toast.info(data.message || "Request sent!");
     } catch (err) {
       console.error("Failed to send join request:", err);
       toast.error("Failed to send join request");
+    }
+  }
+
+  // For non-participants "Leave Event"
+  async function handleLeave() {
+    if (!event || !user) return;
+
+    try {
+      const data = await doRequest("/api/event-participants", "DELETE", {
+        participantId: user.id,
+        eventId: event.id,
+      });
+
+      setParticipants((prev) =>
+        prev.filter((buddy) => buddy.joined_user_id !== user.id)
+      );
+      removeEvent(event.id);
+      setHasJoined(false);
+      toast.success("You have left the event.");
+    } catch (err) {
+      console.error("Failed to leave the event:", err);
+      toast.error("Failed to leave the event");
     }
   }
 
@@ -503,39 +542,74 @@ export default function EventDetailsPage() {
           {/* Show "Cancel Match" only if owner */}
           {isOwner ? (
             <div className="text-center mt-6">
-              <Button onClick={() => setShowCancelDialog(true)} className="mx-auto">
-                Cancel Match
-              </Button>
+              <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="default">Cancel Match</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Cancel Match</AlertDialogTitle>
+                      <AlertDialogDescription>
+                      Are you sure you want to cancel this match? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleCancelEvent(event.id)}>Continue</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
             </div>
-          ) : !hasJoined && (
-            // If the user is not the owner & not a participant, show "Request Join"
+          ) : !hasJoined ? (
             <div className="text-center mt-6">
-              <Button onClick={handleRequestJoin} className="mx-auto">
-                Request Join
-              </Button>
+              <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="default">Request Join</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Request Join</AlertDialogTitle>
+                      <AlertDialogDescription>
+                      Please provide a message explaining why you'd like to join the event. 
+                      This will help the organizer understand your interest.
+                      </AlertDialogDescription>
+                      <Input
+                        type="text"
+                        placeholder="Hey, I would like to join your match!"
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        className="w-full p-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel onClick={() => setInputValue("")}> Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleRequestJoin}>Continue</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
             </div>
-          )}
+          ) : <div className="text-center mt-6">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="default">Leave Match</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Leave Match</AlertDialogTitle>
+                      <AlertDialogDescription>
+                      Are you sure you want to leave this match? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleLeave}>Continue</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>}
 
         </CardContent>
       </Card>
-
-      {/* Dialog for confirming match cancellation */}
-      {showCancelDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 space-y-4 w-[400px]">
-            <h3 className="text-lg font-semibold">Cancel Match</h3>
-            <p>Are you sure you want to cancel this match? This action cannot be undone.</p>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowCancelDialog(false)}>
-                No, go back
-              </Button>
-              <Button onClick={() => handleCancelEvent(event.id)}>
-                Yes, cancel it
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
