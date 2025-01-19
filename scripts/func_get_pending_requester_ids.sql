@@ -3,7 +3,7 @@ RETURNS TABLE(requester_id UUID, user_name TEXT, message TEXT, profile_picture_u
 BEGIN
   RETURN QUERY
   SELECT er.requester_id, 
-         u.name::TEXT, 
+         u.username::TEXT, 
          er.messages::TEXT ,
          u.profile_picture_url::TEXT
   FROM public.event_requests er

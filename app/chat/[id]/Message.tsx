@@ -11,7 +11,6 @@ export default function Message({message, currentUserId}: {message: Imessage, cu
           <Avatar className="w-12 h-12 rounded-full border-2 border-primary shadow-sm">
             <AvatarImage
               src={message.users?.profile_picture_url || ''}
-              alt={message.users?.name}
             />
             <AvatarFallback>
               {message.users?.username?.charAt(0) || 'U'}

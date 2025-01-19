@@ -22,9 +22,6 @@ const signupSchema = z.object({
     ),
 });
 
-// -----------------------------
-// LOGIN Action
-// -----------------------------
 export async function login(data: z.infer<typeof loginSchema>) {
   const supabase = await createClient();
 
@@ -49,9 +46,6 @@ export async function login(data: z.infer<typeof loginSchema>) {
   return { loginSuccess: true };
 }
 
-// -----------------------------
-// SIGNUP Action
-// -----------------------------
 export async function signup(data: z.infer<typeof signupSchema>) {
   const supabase = await createClient();
 
@@ -80,9 +74,6 @@ export async function signup(data: z.infer<typeof signupSchema>) {
   return { signupSuccess: true };
 }
 
-// -----------------------------
-// OAuth (e.g., Google) Action
-// -----------------------------
 export async function signInWithOAuth(provider: Provider) {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({

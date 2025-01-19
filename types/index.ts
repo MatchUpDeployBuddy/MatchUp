@@ -1,9 +1,8 @@
 export type Buddy = {
-  id?: string;
-  name?: string | null;
+  id: string;
   updated_at?: string | null;
-  email?: string | null;
-  username?: string | null;
+  email: string | undefined;
+  username: string;
   birthday?: string | null;
   gender_enum?: "male" | "female" | "other" | "prefer-not-to-say";
   sport_interests?: string[];

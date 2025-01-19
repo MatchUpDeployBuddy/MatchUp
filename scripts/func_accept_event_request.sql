@@ -22,7 +22,7 @@ BEGIN
 
     -- Return the requester_id and corresponding username
     RETURN QUERY
-    SELECT p_requester_id AS requester_id, u.name::TEXT AS user_name, u.profile_picture_url::TEXT
+    SELECT p_requester_id AS requester_id, u.username::TEXT AS user_name, u.profile_picture_url::TEXT
     FROM public.users u
     WHERE u.id = p_requester_id;
   ELSE

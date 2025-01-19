@@ -1,5 +1,6 @@
 "use server";
 import { createClient } from "@/utils/supabase/server";
+import { revalidatePath } from "next/cache";
 import * as z from "zod";
 
 const accountSchema = z.object({
@@ -51,6 +52,8 @@ export async function updateAccount(data: z.infer<typeof accountSchema>) {
       is_profile_complete: true,
     })
     .eq("id", userId);
+
+    revalidatePath("/", "layout");
 
   if (error) {
     throw new Error(error.message);
