@@ -207,11 +207,10 @@ export type Database = {
           gender: Database["public"]["Enums"]["gender_enum"] | null
           id: string
           is_profile_complete: boolean | null
-          name: string
           profile_picture_url: string | null
           sport_interests: string[]
           updated_at: string | null
-          username: string | null
+          username: string
         }
         Insert: {
           birthday?: string | null
@@ -219,11 +218,10 @@ export type Database = {
           gender?: Database["public"]["Enums"]["gender_enum"] | null
           id: string
           is_profile_complete?: boolean | null
-          name: string
           profile_picture_url?: string | null
           sport_interests?: string[]
           updated_at?: string | null
-          username?: string | null
+          username: string
         }
         Update: {
           birthday?: string | null
@@ -231,11 +229,10 @@ export type Database = {
           gender?: Database["public"]["Enums"]["gender_enum"] | null
           id?: string
           is_profile_complete?: boolean | null
-          name?: string
           profile_picture_url?: string | null
           sport_interests?: string[]
           updated_at?: string | null
-          username?: string | null
+          username?: string
         }
         Relationships: []
       }
@@ -1153,7 +1150,7 @@ export type Database = {
           user_id: string
         }
         Returns: {
-          event_id: string
+          id: string
           creator_id: string
           sport: string
           participants_needed: number
@@ -1164,6 +1161,7 @@ export type Database = {
           latitude: number
           created_at: string
           updated_at: string
+          event_name: string
         }[]
       }
       get_events_with_coordinates: {
