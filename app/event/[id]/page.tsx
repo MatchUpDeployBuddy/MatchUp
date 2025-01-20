@@ -79,7 +79,7 @@ export default function EventDetailsPage() {
 
   // For user who is not in participants, we'll show "Request Join" button
   const [hasJoined, setHasJoined] = useState(false);
-  const [hasRequestedJoin, setHasRequestedJoin] = useState(false);
+  const [setHasRequestedJoin] = useState(false);
 
   useEffect(() => {
     if (!id) return;
