@@ -307,7 +307,7 @@ export default function EventDetailsPage() {
     if (!event || !user) return;
 
     try {
-      const data = await doRequest("/api/event-participants", "DELETE", {
+      await doRequest("/api/event-participants", "DELETE", {
         participantId: user.id,
         eventId: event.id,
       });
@@ -596,9 +596,9 @@ export default function EventDetailsPage() {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Request Join</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Please provide a message explaining why you'd like to join
-                      the event. This will help the organizer understand your
-                      interest.
+                      Please provide a message explaining why you&apos;d like to
+                      join the event. This will help the organizer understand
+                      your interest.
                     </AlertDialogDescription>
                     <Input
                       type="text"
