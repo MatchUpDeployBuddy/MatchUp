@@ -17,13 +17,14 @@ import { getSportImage } from "@/utils/supabase/match-images";
 import { reverseGeocodeCoordinates, formatAddress } from "@/utils/geocoding";
 import { Event } from "@/types";
 
-
 export default function BuddysClient() {
   const user = useUserStore((state) => state.user);
   const [events, setEvents] = useState<Event[]>([]);
   const [sportImages, setSportImages] = useState<Record<string, string>>({});
   const [userLocation, setUserLocation] = useState<string>("Germany");
-  const [userCoordinates, setUserCoordinates] = useState<[number, number]>([10.4515, 51.1657]);
+  const [userCoordinates, setUserCoordinates] = useState<[number, number]>([
+    10.4515, 51.1657,
+  ]);
 
   useEffect(() => {
     getUserLocation();
@@ -40,7 +41,10 @@ export default function BuddysClient() {
         try {
           images[event.sport] = await getSportImage(event.sport);
         } catch (error) {
-          console.error(`Error fetching sport image for ${event.sport}:`, error);
+          console.error(
+            `Error fetching sport image for ${event.sport}:`,
+            error
+          );
           images[event.sport] = "";
         }
       }
@@ -81,7 +85,7 @@ export default function BuddysClient() {
       const response = await fetch(`/api/events/available?${params}`);
       if (!response.ok) throw new Error("Failed to fetch events");
       const data = await response.json();
-      console.log(data)
+      console.log(data);
       setEvents(data.events);
     } catch (error) {
       console.error("Error fetching events:", error);
@@ -89,15 +93,18 @@ export default function BuddysClient() {
   };
 
   const handleApplyFilters = async (filters: any) => {
+    const [lng, lat] = filters.mapCenter;
     const params = new URLSearchParams({
-      longitude: String(filters.mapCenter[0]),
-      latitude: String(filters.mapCenter[1]),
+      longitude: String(lng),
+      latitude: String(lat),
       radius: (filters.radius * 1000).toString(),
       ...(filters.sports.length > 0 && { sports: filters.sports.join(",") }),
-      ...(filters.skillLevels.length > 0 && { skill_levels: filters.skillLevels.join(",") }),
+      ...(filters.skillLevels.length > 0 && {
+        skill_levels: filters.skillLevels.join(","),
+      }),
       required_slots: filters.requiredSlots.toString(),
-      start_date: filters.startDate.toISOString(),
-      end_date: filters.endDate.toISOString(),
+      start_date: filters.startDate,
+      end_date: filters.endDate,
     });
 
     try {
@@ -122,8 +129,8 @@ export default function BuddysClient() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100">
-      <div className="flex-grow container mx-auto px-4 py-8">
+    <div className="flex flex-col min-h-screen bg-gray-100 py-24">
+      <div className="flex-grow container mx-auto px-4 pb-6">
         <div className="mb-8 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold mb-1">{getGreeting()}</h1>
@@ -169,4 +176,3 @@ export default function BuddysClient() {
     </div>
   );
 }
-
