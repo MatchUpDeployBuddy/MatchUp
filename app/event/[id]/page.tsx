@@ -28,8 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-
+} from "@/components/ui/alert-dialog";
 
 import { useUserStore } from "@/store/userStore";
 import { useEventStore } from "@/store/eventStore";
@@ -67,7 +66,7 @@ export default function EventDetailsPage() {
   const router = useRouter();
 
   const user = useUserStore((state) => state.user);
-  const removeEvent = useEventStore((state) => state.removeEvent)
+  const removeEvent = useEventStore((state) => state.removeEvent);
   const [isLoading, setIsLoading] = useState(true);
   const [event, setEvent] = useState<EventDetails | null>(null);
   const [participants, setParticipants] = useState<Buddy[]>([]);
@@ -80,6 +79,7 @@ export default function EventDetailsPage() {
 
   // For user who is not in participants, we'll show "Request Join" button
   const [hasJoined, setHasJoined] = useState(false);
+  const [hasRequestedJoin, setHasRequestedJoin] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -98,7 +98,9 @@ export default function EventDetailsPage() {
       setHasJoined(false);
       return;
     }
-    const isParticipant = participants.some((p) => p.joined_user_id === user.id);
+    const isParticipant = participants.some(
+      (p) => p.joined_user_id === user.id
+    );
     setHasJoined(isParticipant);
   }, [participants, user]);
 
@@ -273,9 +275,10 @@ export default function EventDetailsPage() {
   async function handleRequestJoin() {
     if (!event || !user) return;
 
-    const message = inputValue.trim() === "" 
-      ? "I would like to join this event!" 
-      : inputValue;
+    const message =
+      inputValue.trim() === ""
+        ? "I would like to join this event!"
+        : inputValue;
     setInputValue("");
     try {
       const body = {
@@ -285,9 +288,17 @@ export default function EventDetailsPage() {
       };
       const data = await doRequest("/api/event-request", "POST", body);
       toast.info(data.message || "Request sent!");
-    } catch (err) {
-      console.error("Failed to send join request:", err);
-      toast.error("Failed to send join request");
+      setHasRequestedJoin(true);
+    } catch (err: any) {
+      if (
+        err.message &&
+        err.message.includes("Failed to insert request into the database")
+      ) {
+        toast.error("You have already sent a request to join the match.");
+        setHasRequestedJoin(true);
+      } else {
+        toast.error("Failed to send join request");
+      }
     }
   }
 
@@ -386,12 +397,10 @@ export default function EventDetailsPage() {
             <div className="flex items-center gap-2">
               <FaUserCircle className="h-5 w-5" />
               <span>
-                {
-                  participants.find(
-                    (participant) =>
-                      participant.joined_user_id === event.creator_id
-                  )?.name || "Unknown Creator"
-                }
+                {participants.find(
+                  (participant) =>
+                    participant.joined_user_id === event.creator_id
+                )?.name || "Unknown Creator"}
               </span>
             </div>
           )}
@@ -486,7 +495,9 @@ export default function EventDetailsPage() {
           {/* Show requests only if owner */}
           {isOwner && (
             <div className="space-y-2">
-              <h3 className="text-lg font-medium">Requests ({requests.length})</h3>
+              <h3 className="text-lg font-medium">
+                Requests ({requests.length})
+              </h3>
               <div className="space-y-2">
                 {requests.map((request) => (
                   <div
@@ -497,7 +508,9 @@ export default function EventDetailsPage() {
                     <div className="flex items-center gap-3">
                       <Avatar className="w-8 h-8 border-2 border-primary">
                         <AvatarImage
-                          src={request.profile_picture_url || "/default-avatar.png"}
+                          src={
+                            request.profile_picture_url || "/default-avatar.png"
+                          }
                           alt={request.user_name}
                           className="object-cover w-full h-full"
                         />
@@ -520,15 +533,21 @@ export default function EventDetailsPage() {
                       <Button
                         size="icon"
                         variant="ghost"
-                        onClick={() => handleAcceptRequest(request.requester_id)}
-                        disabled={participants.length >= event.participants_needed}
+                        onClick={() =>
+                          handleAcceptRequest(request.requester_id)
+                        }
+                        disabled={
+                          participants.length >= event.participants_needed
+                        }
                       >
                         <FaCheck className="h-5 w-5" />
                       </Button>
                       <Button
                         size="icon"
                         variant="ghost"
-                        onClick={() => handleRejectRequest(request.requester_id)}
+                        onClick={() =>
+                          handleRejectRequest(request.requester_id)
+                        }
                       >
                         <FaTimes className="h-5 w-5" />
                       </Button>
@@ -543,71 +562,88 @@ export default function EventDetailsPage() {
           {isOwner ? (
             <div className="text-center mt-6">
               <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="default">Cancel Match</Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Cancel Match</AlertDialogTitle>
-                      <AlertDialogDescription>
-                      Are you sure you want to cancel this match? This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleCancelEvent(event.id)}>Continue</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="default">Cancel Match</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Cancel Match</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to cancel this match? This action
+                      cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => handleCancelEvent(event.id)}
+                    >
+                      Continue
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           ) : !hasJoined ? (
             <div className="text-center mt-6">
               <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="default">Request Join</Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Request Join</AlertDialogTitle>
-                      <AlertDialogDescription>
-                      Please provide a message explaining why you'd like to join the event. 
-                      This will help the organizer understand your interest.
-                      </AlertDialogDescription>
-                      <Input
-                        type="text"
-                        placeholder="Hey, I would like to join your match!"
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        className="w-full p-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel onClick={() => setInputValue("")}> Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleRequestJoin}>Continue</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="default" disabled={hasRequestedJoin}>
+                    Request Join
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Request Join</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Please provide a message explaining why you'd like to join
+                      the event. This will help the organizer understand your
+                      interest.
+                    </AlertDialogDescription>
+                    <Input
+                      type="text"
+                      placeholder="Hey, I would like to join your match!"
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      className="w-full p-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setInputValue("")}>
+                      {" "}
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction onClick={handleRequestJoin}>
+                      Continue
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
-          ) : <div className="text-center mt-6">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="default">Leave Match</Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Leave Match</AlertDialogTitle>
-                      <AlertDialogDescription>
-                      Are you sure you want to leave this match? This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleLeave}>Continue</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>}
-
+          ) : (
+            <div className="text-center mt-6">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="default">Leave Match</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Leave Match</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to leave this match? This action
+                      cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleLeave}>
+                      Continue
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
