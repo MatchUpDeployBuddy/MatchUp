@@ -85,19 +85,6 @@ const sports = [
   "Hiking",
 ];
 
-const germanCities = [
-  "Berlin",
-  "Hamburg",
-  "Munich",
-  "Cologne",
-  "Frankfurt",
-  "Stuttgart",
-  "Düsseldorf",
-  "Leipzig",
-  "Dortmund",
-  "Essen",
-];
-
 const sportIcons = {
   Soccer: GiSoccerBall,
   Basketball: GiBasketballBall,
@@ -124,7 +111,7 @@ export default function AccountCreationPage() {
     string | null
   >(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const fetchUser = useUserStore((state) => state.fetchUser)
+  const fetchUser = useUserStore((state) => state.fetchUser);
 
   const handleProfilePictureChange = async (
     e: React.ChangeEvent<HTMLInputElement>
@@ -386,23 +373,19 @@ export default function AccountCreationPage() {
                             <FaMapMarkerAlt className="mr-2" />
                             City
                           </FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="border-secondary text-lg  rounded-full">
-                                <SelectValue placeholder="Select your city" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {germanCities.map((city) => (
-                                <SelectItem key={city} value={city}>
-                                  {city}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <FormControl>
+                            <Input
+                              {...field} 
+                              placeholder="Enter your city"
+                              className="border-secondary text-lg rounded-full"
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (/^[a-zA-ZäöüÄÖÜß\s]*$/.test(value)) {
+                                  field.onChange(value); 
+                                }
+                              }}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
