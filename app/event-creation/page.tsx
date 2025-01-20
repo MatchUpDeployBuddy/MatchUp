@@ -157,7 +157,7 @@ export default function EventCreationPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 animate-gradient-x p-8">
-      <div className="max-w-4xl mx-auto py-24">
+      <div className="max-w-4xl mx-auto pb-12">
         <h1 className="text-4xl font-bold text-center text-text-primary mb-8">
           Create your own MATCH
         </h1>
