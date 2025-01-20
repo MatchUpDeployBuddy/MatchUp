@@ -72,14 +72,13 @@ export default function EventDetailsPage() {
   const [participants, setParticipants] = useState<Buddy[]>([]);
   const [requests, setRequests] = useState<Request[]>([]);
   const [locationAddress, setLocationAddress] = useState<string | null>(null);
-
+  const [hasPendingRequest, setHasPendingRequest] = useState(false);
   const [editedDescription, setEditedDescription] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState("");
 
   // For user who is not in participants, we'll show "Request Join" button
   const [hasJoined, setHasJoined] = useState(false);
-  const [hasRequestedJoin, setHasRequestedJoin] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -114,35 +113,51 @@ export default function EventDetailsPage() {
     }
   }
 
+  useEffect(() => {
+    if (!user || !requests) return;
+    const userHasRequested = requests.some(
+      (req) => req.requester_id === user.id
+    );
+    setHasPendingRequest(userHasRequested);
+  }, [requests, user]);
+
   async function fetchAllData(eventId: string) {
     try {
       setIsLoading(true);
-
+  
       const [eventRes, participantsRes, requestsRes] = await Promise.all([
         fetch(`/api/events/event-details?id=${eventId}`),
         fetch(`/api/event-participants?eventId=${eventId}`),
         fetch(`/api/event-request?eventId=${eventId}`),
       ]);
-
+  
       if (!eventRes.ok || !participantsRes.ok || !requestsRes.ok) {
         throw new Error("Failed to fetch data");
       }
-
+  
       const eventData = await eventRes.json();
       const participantsData = await participantsRes.json();
       const requestsData = await requestsRes.json();
-
+  
       setEvent(eventData.event);
       setEditedDescription(eventData.event?.description || "");
       setParticipants(participantsData?.participants || []);
       setRequests(requestsData?.pendingRequesters || []);
+  
+      if (user) {
+        const userHasRequested = requestsData.pendingRequesters.some(
+          (req: { requester_id: string }) => req.requester_id === user.id
+        );
+        console.log("User has requested:", userHasRequested);
+        setHasPendingRequest(userHasRequested);
+      }
     } catch (err) {
       console.error("Failed to fetch data:", err);
     } finally {
       setIsLoading(false);
     }
   }
-
+  
   async function doRequest(
     url: string,
     method: string,
@@ -288,14 +303,14 @@ export default function EventDetailsPage() {
       };
       const data = await doRequest("/api/event-request", "POST", body);
       toast.info(data.message || "Request sent!");
-      setHasRequestedJoin(true);
+      setHasPendingRequest(true);
+      
     } catch (err: any) {
       if (
         err.message &&
         err.message.includes("Failed to insert request into the database")
       ) {
         toast.error("You have already sent a request to join the match.");
-        setHasRequestedJoin(true);
       } else {
         toast.error("Failed to send join request");
       }
@@ -322,7 +337,7 @@ export default function EventDetailsPage() {
       console.error("Failed to leave the event:", err);
       toast.error("Failed to leave the event");
     }
-  }
+  }  
 
   // Helper: format date/time
   function formatDate(dateString: string) {
@@ -588,8 +603,10 @@ export default function EventDetailsPage() {
             <div className="text-center mt-6">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="default" disabled={hasRequestedJoin}>
-                    Request Join
+                  <Button 
+                  className="mx-auto"
+                  disabled={hasPendingRequest}>
+                     {hasPendingRequest ? "Request Pending" : "Request Join"}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
