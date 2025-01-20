@@ -55,7 +55,6 @@ export async function GET(request: Request): Promise<NextResponse> {
     const { searchParams } = new URL(request.url);
 
     const eventId = searchParams.get("eventId");
-    console.log(eventId);
     if (!eventId) {
       return NextResponse.json(
         { error: "Missing eventId parameter" },
@@ -66,7 +65,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     const { data, error } = await supabase.rpc("get_pending_requester_ids", {
       event_uuid: eventId,
     });
-
+    
     if (error) {
       console.error("Error executing Supabase RPC:", { error, eventId });
       return NextResponse.json(
