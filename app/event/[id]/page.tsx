@@ -79,7 +79,6 @@ export default function EventDetailsPage() {
 
   // For user who is not in participants, we'll show "Request Join" button
   const [hasJoined, setHasJoined] = useState(false);
-  const [setHasRequestedJoin] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -312,7 +311,6 @@ export default function EventDetailsPage() {
         err.message.includes("Failed to insert request into the database")
       ) {
         toast.error("You have already sent a request to join the match.");
-        setHasRequestedJoin(true);
       } else {
         toast.error("Failed to send join request");
       }
