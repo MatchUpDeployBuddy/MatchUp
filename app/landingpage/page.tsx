@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Calendar, Users, Bell } from 'lucide-react';
+import { JSX } from 'react';
 
 export default function LandingPage() {
   return (
@@ -89,7 +90,7 @@ function FeaturesSection() {
   );
 }
 
-function FeatureCard({ title, description, icon }) {
+function FeatureCard({ title, description, icon }: {title: string, description: string, icon: JSX.Element}) {
   return (
     <div className="flex flex-col items-center text-center">
       <div className="mb-4">{icon}</div>
