@@ -47,6 +47,7 @@ interface EventDetails {
   latitude: number;
   created_at: string;
   updated_at: string;
+  event_name: string;
 }
 
 interface Buddy {
@@ -375,7 +376,7 @@ export default function EventDetailsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Details for: {event.sport}</CardTitle>
+          <CardTitle className="text-2xl">Details for: {event.event_name} | {event.sport}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Date */}

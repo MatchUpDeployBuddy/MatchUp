@@ -10,7 +10,8 @@ RETURNS TABLE (
   longitude DOUBLE PRECISION,
   latitude DOUBLE PRECISION,
   created_at TIMESTAMP,
-  updated_at TIMESTAMP
+  updated_at TIMESTAMP,
+  event_name TEXT
 ) AS $$
 BEGIN
   RETURN QUERY
@@ -25,7 +26,8 @@ BEGIN
     ST_X(e.location::geometry) AS longitude,
     ST_Y(e.location::geometry) AS latitude,
     e.created_at,
-    e.updated_at
+    e.updated_at,
+    e.event_name
   FROM public.events AS e
   WHERE e.id = p_id;
 END;
