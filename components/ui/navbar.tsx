@@ -21,7 +21,7 @@ const navItems: NavItem[] = [
     icon: FaRocket,
   },
   {
-    label: "Buddys",
+    label: "Buddies",
     href: "/buddys",
     icon: FaUsers,
   },

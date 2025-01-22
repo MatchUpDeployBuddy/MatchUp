@@ -14,6 +14,7 @@ import {
   FaCheck,
   FaMapMarkerAlt,
   FaUserCircle,
+  FaDumbbell,
 } from "react-icons/fa";
 import { reverseGeocodeCoordinates } from "@/utils/geocoding";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -395,6 +396,12 @@ export default function EventDetailsPage() {
             <span>{event.participants_needed}</span>
           </div>
 
+          {/* Skill level */}
+          <div className="flex items-center gap-2">
+            <FaDumbbell className="h-5 w-5" />
+            <span>{event.skill_level}</span>
+          </div>
+
           {/* Location */}
           <div className="flex items-center gap-2">
             <FaMapMarkerAlt className="h-5 w-5" />
@@ -492,12 +499,11 @@ export default function EventDetailsPage() {
 
                   {/* Only the owner can remove participants */}
                   {isOwner && (
-                    <Button
+                      <Button
                       size="icon"
                       variant="ghost"
-                      onClick={() =>
-                        handleRemoveParticipant(buddy.joined_user_id)
-                      }
+                      onClick={() => handleRemoveParticipant(buddy.joined_user_id)}
+                      disabled={buddy.joined_user_id === event.creator_id}
                     >
                       <FaTimes className="h-5 w-5" />
                     </Button>

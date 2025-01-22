@@ -25,6 +25,7 @@ export default function BuddysClient() {
   const [userCoordinates, setUserCoordinates] = useState<[number, number]>([
     10.4515, 51.1657,
   ]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     getUserLocation();
@@ -85,7 +86,7 @@ export default function BuddysClient() {
       const response = await fetch(`/api/events/available?${params}`);
       if (!response.ok) throw new Error("Failed to fetch events");
       const data = await response.json();
-      console.log(data);
+      console.log("Events:", data.events);
       setEvents(data.events);
     } catch (error) {
       console.error("Error fetching events:", error);
@@ -112,6 +113,7 @@ export default function BuddysClient() {
       if (!response.ok) throw new Error("Failed to fetch events");
       const data = await response.json();
       setEvents(data.events);
+      setIsDialogOpen(false);
     } catch (error) {
       console.error("Error fetching events:", error);
     }
@@ -141,19 +143,29 @@ export default function BuddysClient() {
               </p>
             )}
           </div>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <FaFilter />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[90vw] sm:h-[90vh] flex flex-col">
-              <DialogHeader>
-                <DialogTitle>Filter Events</DialogTitle>
-              </DialogHeader>
-              <FilterContent onApplyFilters={handleApplyFilters} />
-            </DialogContent>
-          </Dialog>
+          <div className="flex items-center space-x-4">
+            {/* Filter Button */}
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <FaFilter />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[90vw] sm:h-[90vh] flex flex-col">
+                <DialogHeader>
+                  <DialogTitle>Filter Events</DialogTitle>
+                </DialogHeader>
+                <FilterContent onApplyFilters={handleApplyFilters} />
+              </DialogContent>
+            </Dialog>
+            {/* Reset Filters Button */}
+            <Button
+              variant="outline"
+              onClick={() => window.location.reload()} // Seite neu laden
+            >
+              Reset Filters
+            </Button>
+          </div>
         </div>
 
         <h2 className="text-2xl font-bold mb-4">Available MATCHES</h2>

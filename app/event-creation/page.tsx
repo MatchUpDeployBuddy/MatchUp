@@ -125,7 +125,7 @@ export default function EventCreationPage() {
       const eventData = {
         event_name: data.event_name,
         sport: data.sport,
-        participants_needed: data.buddies,
+        participants_needed: data.buddies + 1,
         skill_level: data.skillLevel,
         event_time,
         description: data.description,

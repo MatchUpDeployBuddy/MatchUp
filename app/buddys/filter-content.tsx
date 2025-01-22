@@ -138,7 +138,7 @@ export function FilterContent({ onApplyFilters }: FilterContentProps) {
             htmlFor="requiredSlots"
             className="text-sm font-medium text-gray-700"
           >
-            Remaining Slots
+            Min. Remaining Slots
           </Label>
           <Input
             id="requiredSlots"
