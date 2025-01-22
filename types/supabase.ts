@@ -1143,6 +1143,7 @@ export type Database = {
           latitude: number;
           created_at: string;
           updated_at: string;
+          event_name: string;
         }[];
       };
       get_events_for_user: {
