@@ -4,8 +4,8 @@ import ChatHeader from "./ChatHeader";
 import ChatMessages from "./ChatMessages";
 import { NAVBAR_HEIGHT } from "@/constants";
 
-export default async function ChatPage({ params }: { params: { id: string } }) {
-    const awaitedParams = await params;
+export default async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
+    const awaitedParams = await Promise.resolve(params);
     const { id } = awaitedParams;
     
     return (
