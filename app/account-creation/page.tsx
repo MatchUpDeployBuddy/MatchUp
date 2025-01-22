@@ -17,13 +17,6 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
@@ -83,19 +76,6 @@ const sports = [
   "Hiking",
 ];
 
-const germanCities = [
-  "Berlin",
-  "Hamburg",
-  "Munich",
-  "Cologne",
-  "Frankfurt",
-  "Stuttgart",
-  "Düsseldorf",
-  "Leipzig",
-  "Dortmund",
-  "Essen",
-];
-
 const sportIcons = {
   Soccer: GiSoccerBall,
   Basketball: GiBasketballBall,
@@ -122,7 +102,6 @@ export default function AccountCreationPage() {
     string | null
   >(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
   const fetchUser = useUserStore((state) => state.fetchUser);
 
   const handleProfilePictureChange = async (
@@ -376,35 +355,31 @@ export default function AccountCreationPage() {
               {step === 3 && (
                 <>
                   <FormField
-                    control={form.control}
-                    name="city"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-text-primary flex items-center text-lg">
-                          <FaMapMarkerAlt className="mr-2" />
-                          City
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
+                      control={form.control}
+                      name="city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-text-primary flex items-center text-lg">
+                            <FaMapMarkerAlt className="mr-2" />
+                            City
+                          </FormLabel>
                           <FormControl>
-                            <SelectTrigger className="border-secondary text-lg rounded-full">
-                              <SelectValue placeholder="Select your city" />
-                            </SelectTrigger>
+                            <Input
+                              {...field} 
+                              placeholder="Enter your city"
+                              className="border-secondary text-lg rounded-full"
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (/^[a-zA-ZäöüÄÖÜß\s]*$/.test(value)) {
+                                  field.onChange(value); 
+                                }
+                              }}
+                            />
                           </FormControl>
-                          <SelectContent>
-                            {germanCities.map((city) => (
-                              <SelectItem key={city} value={city}>
-                                {city}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                   <FormField
                     control={form.control}
