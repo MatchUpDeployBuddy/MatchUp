@@ -200,7 +200,14 @@ export default function EventDetailsPage() {
   // Cancel the match (owner only)
   async function handleCancelEvent(eventId: string) {
     try {
-      const data = await doRequest("/api/events", "DELETE", { id: eventId });
+
+      const params = new URLSearchParams({
+        id: eventId
+      });
+
+      const response = await fetch(`/api/events?${params}`);
+      if (!response.ok) throw new Error("Failed to fetch events");
+      const data = await response.json();
       console.log(data.message);
       removeEvent(eventId);
       toast.success("Event deleted successfully!");
@@ -271,10 +278,14 @@ export default function EventDetailsPage() {
     if (!event) return;
 
     try {
-      const data = await doRequest("/api/event-participants", "DELETE", {
-        participantId,
-        eventId: event.id,
+      const params = new URLSearchParams({
+        participantId: participantId,
+        eventId: event.id
       });
+
+      const response = await fetch(`/api/event-participants?${params}`);
+      if (!response.ok) throw new Error("Failed to fetch events");
+      const data = await response.json();
 
       console.log("Participant removed:", data.message);
 
@@ -324,10 +335,14 @@ export default function EventDetailsPage() {
     if (!event || !user) return;
 
     try {
-      await doRequest("/api/event-participants", "DELETE", {
+      const params = new URLSearchParams({
         participantId: user.id,
-        eventId: event.id,
+        eventId: event.id
       });
+
+      const response = await fetch(`/api/event-participants?${params}`);
+      if (!response.ok) throw new Error("Failed to fetch events");
+      const data = await response.json();
 
       setParticipants((prev) =>
         prev.filter((buddy) => buddy.joined_user_id !== user.id)

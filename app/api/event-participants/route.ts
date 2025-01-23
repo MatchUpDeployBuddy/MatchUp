@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
 // Beispiel: GET /api/event-participants?eventId=60199094-8cf5-485d-9361-829f9eb8b339
@@ -39,19 +39,22 @@ export async function GET(request: Request): Promise<NextResponse> {
   }
 }
 
-// DELETE /api/event-participant
-// Body: { "participantId": "123e4567-e89b-12d3-a456-426614174000", "eventId": "60199094-8cf5-485d-9361-829f9eb8b339" }
 
-export async function DELETE(request: Request): Promise<NextResponse> {
+
+
+// DELETE /api/event-participant?participantId=123e4567-e89b-12d3-a456-426614174000&eventId=60199094-8cf5-485d-9361-829f9eb8b339
+
+export async function DELETE(request: NextRequest): Promise<NextResponse> {
   try {
     const supabase = await createClient();
-    const body = await request.json();
 
-    const { participantId, eventId } = body;
+    const searchParams = request.nextUrl.searchParams;
+    const participantId = searchParams.get('participantId');
+    const eventId = searchParams.get('eventId');
 
     if (!participantId || !eventId) {
       return NextResponse.json(
-        { error: "Missing participantId or eventId in the request body" },
+        { error: "Missing participantId or eventId in the query parameters" },
         { status: 400 }
       );
     }

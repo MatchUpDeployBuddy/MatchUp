@@ -1,10 +1,12 @@
 import { createClient } from "@/utils/supabase/server";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const { id } = await request.json();
+    const searchParams = request.nextUrl.searchParams;
+    const id = searchParams.get('id');
+
 
     if (!id) {
       return NextResponse.json({ error: "Missing event ID" }, { status: 400 });
