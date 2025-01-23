@@ -342,7 +342,6 @@ export default function EventDetailsPage() {
 
       const response = await fetch(`/api/event-participants?${params}`);
       if (!response.ok) throw new Error("Failed to fetch events");
-      const data = await response.json();
 
       setParticipants((prev) =>
         prev.filter((buddy) => buddy.joined_user_id !== user.id)
