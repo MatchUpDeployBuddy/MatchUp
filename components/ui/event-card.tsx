@@ -75,39 +75,47 @@ export function EventCard({
   }
 
   return (
-    <Card className="overflow-hidden bg-white p-2 relative">
-      {dashboardView ? (
-        <div
-          className={`absolute top-2 right-2 px-3 py-1.5 rounded-full text-xs font-semibold shadow-md ${
-            isCreator
-              ? "bg-green-100 text-green-700 border border-green-400"
-              : "bg-gray-100 text-gray-700 border border-gray-400"
-          }`}
-        >
-          {isCreator ? "Own" : "Joined"}
-        </div>
-      ) : (
-        <div></div>
-      )}
+    <Card className="overflow-hidden bg-white p-4 relative">
+      {dashboardView && (
+       <>
+       <div className="block sm:hidden mb-2">
+         <div
+           className={`px-3 py-1.5 inline-block rounded-full text-xs font-semibold shadow-md border ${
+             isCreator
+               ? "bg-green-100 text-green-700 border-green-400"
+               : "bg-gray-100 text-gray-700 border-gray-400"
+           }`}
+         >
+           {isCreator ? "Own" : "Joined"}
+         </div>
+       </div>
 
-      <div className="flex items-center bg-white transition-colors">
+       <div
+         className={`hidden sm:block absolute top-2 right-2 px-3 py-1.5 rounded-full text-xs font-semibold shadow-md border ${
+           isCreator
+             ? "bg-green-100 text-green-700 border-green-400"
+             : "bg-gray-100 text-gray-700 border-gray-400"
+         }`}
+       >
+         {isCreator ? "Own" : "Joined"}
+       </div>
+     </>
+      )}
+  
+      <div className="flex flex-col sm:flex-row items-start sm:items-center bg-white transition-colors">
         <div
-          className="relative h-24 w-24 rounded-lg overflow-hidden flex-shrink-0 mr-4"
+          className="relative w-full sm:w-24 h-40 sm:h-24 rounded-lg overflow-hidden mb-4 sm:mb-0 sm:mr-4"
           style={{
             backgroundImage: `url(${imageUrl || "/placeholder.svg"})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
         ></div>
-
+  
         <div className="flex-1">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="text-xl font-semibold">{`${
-              event_name ? `${event_name} | ` : ""
-            } ${sport}`}</h3>
-          </div>
-
-          <div className="space-y-1">
+          <div className="flex flex-col space-y-2">
+            <h3 className="text-lg font-semibold">{`${event_name ? `${event_name} | ` : ""}${sport}`}</h3>
+  
             <div className="flex items-center gap-2">
               <FaCalendarAlt className="h-4 w-4 text-gray-500" />
               <span className="text-sm">{formattedDate}</span>
@@ -118,12 +126,8 @@ export function EventCard({
             </div>
             <div className="flex items-center gap-2">
               <FaMapMarkerAlt className="h-4 w-4 text-gray-500" />
-              <span className="text-sm">
-                {locationAddress
-                  ? locationAddress
-                  : `Latitude: ${latitude.toFixed(
-                      6
-                    )}, Longitude: ${longitude.toFixed(6)}`}
+              <span className="text-sm truncate">
+                {locationAddress || `Latitude: ${latitude.toFixed(6)}, Longitude: ${longitude.toFixed(6)}`}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -132,7 +136,7 @@ export function EventCard({
                 {isCreator
                   ? `${participants_needed} ${
                       participants_needed === 1 ? "Buddy" : "Buddies"
-                    } `
+                    }`
                   : available_slots !== undefined && available_slots !== null
                   ? available_slots === 0
                     ? "Match full"
@@ -143,7 +147,7 @@ export function EventCard({
                     participants_needed !== null
                   ? `${participants_needed} ${
                       participants_needed === 1 ? "Buddy" : "Buddies"
-                    } `
+                    }`
                   : "Loading slots..."}
               </span>
             </div>
@@ -153,9 +157,9 @@ export function EventCard({
             </div>
           </div>
         </div>
-
-        <Link href={`/event/${id}`} className="ml-4">
-          <Button variant="outline" size="sm">
+  
+        <Link href={`/event/${id}`} className="mt-4 sm:mt-0 sm:ml-4">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto">
             {isCreator
               ? "View Details"
               : dashboardView
