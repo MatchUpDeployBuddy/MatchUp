@@ -62,6 +62,7 @@ export async function updateSession(request: NextRequest) {
     "/",
     "/login",
     "/auth",
+    "/auth/callback",
     "/manifest.webmanifest",
     "/manifest.json",
     "/favicon.ico",
