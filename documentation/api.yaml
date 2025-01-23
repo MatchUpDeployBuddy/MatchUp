@@ -1,0 +1,1002 @@
+openapi: 3.0.3
+info:
+  title: MatchUp API
+  version: 1.0.0
+  description: The **MatchUp API** is the backend interface of the MatchUp app, a platform for sports enthusiasts to find teammates and organize sports events. Users can create events, search for events nearby, and connect with other sports enthusiasts.
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+tags:
+  - name: Event Participants
+    description: Endpoints related to managing participants in an event
+  - name: Event Requests
+    description: Endpoints related to creating, accepting, and rejecting event requests
+  - name: Events
+    description: Endpoints related to creating, retrieving, and deleting events
+  - name: Users
+    description: Endpoints related to user management and profile updates
+
+components:
+  securitySchemes:
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: sb-klvsnyvrjmlmonrqrxjf-auth-token
+      description: The access token used to authenticate requests.
+
+security:
+  - CookieAuth: []
+
+paths:
+  /api/event-participants:
+    get:
+      tags:
+        - Event Participants
+      summary: Retrieve participants of an event
+      description: |
+        Retrieves the names, profile pictures, and IDs of participants for a specific event based on the event ID.
+      parameters:
+        - name: eventId
+          in: query
+          required: true
+          description: The UUID of the event for which participants should be retrieved.
+          schema:
+            type: string
+            format: uuid
+            example: 60199094-8cf5-485d-9361-829f9eb8b339
+      security:
+        - CookieAuth: []
+      responses:
+        '200':
+          description: A list of participants.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    joined_user_id:
+                      type: string
+                      format: uuid
+                      description: The UUID of the participating user.
+                      example: 123e4567-e89b-12d3-a456-426614174000
+                    name:
+                      type: string
+                      description: The name of the participant.
+                      example: Alice
+                    profile_picture_url:
+                      type: string
+                      format: uri
+                      description: The URL to the participant's profile picture.
+                      example: https://example.com/images/alice.jpg
+        '400':
+          description: Missing `eventId` parameter.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Missing eventId parameter
+        '500':
+          description: Error fetching data from the database.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Failed to fetch participants from the database
+
+    delete:
+      tags:
+        - Event Participants
+      summary: Remove a participant from an event
+      description: |
+        Removes a participant from an event based on the participant ID and event ID. 
+      parameters:
+        - name: participantId
+          in: query
+          required: true
+          description: The UUID of the participant to be removed.
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174000
+        - name: eventId
+          in: query
+          required: true
+          description: The UUID of the event from which the participant should be removed.
+          schema:
+            type: string
+            format: uuid
+            example: 60199094-8cf5-485d-9361-829f9eb8b339
+      security:
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Participant successfully removed from the event.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Event participant successfully deleted
+        '400':
+          description: Missing `participantId` or `eventId` in the request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Missing participantId or eventId in the request
+        '500':
+          description: Error removing the participant from the database.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Failed to delete event participant in the database
+
+  /api/event-request:
+    post:
+      tags:
+        - Event Requests
+      summary: Create a new event request
+      description: |
+        Allows a user to create a request to join an event. The request is stored in the database and includes the event ID, requester ID, and an optional message.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event_id:
+                  type: string
+                  format: uuid
+                  description: The UUID of the event for which the request is being made.
+                  example: 60199094-8cf5-485d-9361-829f9eb8b339
+                requester_id:
+                  type: string
+                  description: The ID of the user making the request.
+                  example: user-12345
+                message:
+                  type: string
+                  description: An optional message from the requester.
+                  example: I would like to join this event!
+      security:
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Request successfully created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Request successfully created
+        '400':
+          description: Missing required fields in the request body.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Missing required arguments event_id, requester_id
+        '500':
+          description: Internal server error during request creation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Failed to insert request into the database
+
+    get:
+      tags:
+        - Event Requests
+      summary: Retrieve pending requests for an event
+      description: |
+        Retrieves the list of pending requester IDs for a specific event using a Supabase remote procedure call (RPC).
+      parameters:
+        - name: eventId
+          in: query
+          required: true
+          description: The UUID of the event for which to fetch pending requests.
+          schema:
+            type: string
+            format: uuid
+            example: 60199094-8cf5-485d-9361-829f9eb8b339
+      security:
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Successfully retrieved the list of pending requester details.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    requester_id:
+                      type: string
+                      description: The ID of the user who made the request.
+                      example: user-12345
+                    user_name:
+                      type: string
+                      description: The name of the user who made the request.
+                      example: Alice
+                    message:
+                      type: string
+                      description: The message sent by the requester.
+                      example: I would like to join this event!
+                    profile_picture_url:
+                      type: string
+                      format: uri
+                      description: The URL to the requester's profile picture.
+                      example: https://example.com/images/alice.jpg
+        '400':
+          description: Missing `eventId` parameter in the request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Missing eventId parameter
+        '500':
+          description: Internal server error during data retrieval.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Failed to fetch pending requesters from the database
+  /api/event-request/accept:
+    patch:
+      tags:
+        - Event Requests
+      summary: Accept an event request
+      description: |
+        Accepts a user's request to join an event. The endpoint updates the database using a Supabase Remote Procedure Call (RPC) and adds the requester as a participant to the event.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                requesterId:
+                  type: string
+                  format: uuid
+                  description: The unique identifier of the requester to accept.
+                  example: 123e4567-e89b-12d3-a456-426614174000
+                eventId:
+                  type: string
+                  format: uuid
+                  description: The unique identifier of the event to which the requester will be added.
+                  example: 60199094-8cf5-485d-9361-829f9eb8b339
+      security:
+        - CookieAuth: []  # Ensure cookie-based authentication for this endpoint
+      responses:
+        '200':
+          description: Successfully accepted the event request and returned the details of the participants.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    requester_id:
+                      type: string
+                      format: uuid
+                      description: The unique identifier of the participant.
+                      example: 123e4567-e89b-12d3-a456-426614174000
+                    user_name:
+                      type: string
+                      description: The name of the user who was accepted.
+                      example: Alice
+                    profile_picture_url:
+                      type: string
+                      format: uri
+                      description: The URL to the participant's profile picture.
+                      example: https://example.com/images/alice.jpg
+        '400':
+          description: Missing `requesterId` or `eventId` in the request body.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Missing requesterId or eventId in the request body
+        '500':
+          description: Failed to accept the event request due to a server or database error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Failed to accept event request in the database
+  /api/event-request/reject:
+    patch:
+      tags:
+        - Event Requests
+      summary: Reject an event request
+      description: |
+        Rejects a user's request to join an event. The endpoint updates the database using a Supabase Remote Procedure Call (RPC) and removes the requester from the pending requests for the event.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                requesterId:
+                  type: string
+                  format: uuid
+                  description: The unique identifier of the requester to reject.
+                  example: 123e4567-e89b-12d3-a456-426614174000
+                eventId:
+                  type: string
+                  format: uuid
+                  description: The unique identifier of the event from which the requester will be rejected.
+                  example: 60199094-8cf5-485d-9361-829f9eb8b339
+      security:
+        - CookieAuth: []  # Ensure cookie-based authentication for this endpoint
+      responses:
+        '200':
+          description: Successfully rejected the event request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Confirmation message of the rejection.
+                    example: Event request successfully rejected
+        '400':
+          description: Missing `requesterId` or `eventId` in the request body.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Missing requesterId or eventId in the request body
+        '500':
+          description: Failed to reject the event request due to a server or database error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Failed to reject event request in the database
+  /api/events:
+    delete:
+      tags: 
+        - Events
+      summary: Delete an event
+      description: |
+        Deletes an event from the database based on the provided event ID.
+      parameters:
+        - name: id
+          in: query
+          required: true
+          description: The unique identifier of the event to be deleted.
+          schema:
+            type: string
+            format: uuid
+            example: 60199094-8cf5-485d-9361-829f9eb8b339
+      security:
+        - CookieAuth: []  # Ensure cookie-based authentication for this endpoint
+      responses:
+        '200':
+          description: Successfully deleted the event.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Confirmation message of successful deletion.
+                    example: Event deleted successfully
+        '400':
+          description: Missing or invalid event ID in the query parameters.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message indicating the missing or invalid `id` field.
+                    example: Missing event ID
+        '500':
+          description: Failed to delete the event due to a server or database error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: General error message for server issues.
+                    example: Failed to delete event
+                  details:
+                    type: string
+                    description: Detailed error message from the server.
+                    example: Database connection error
+  /api/events/available:
+    get:
+      tags: 
+        - Events
+      summary: Retrieve available events
+      description: |
+        Retrieves a list of events filtered by various criteria, including location, sports, skill levels, and time range.
+      parameters:
+        - name: longitude
+          in: query
+          required: false
+          description: The longitude of the location to filter events.
+          schema:
+            type: number
+            example: 13.405
+        - name: latitude
+          in: query
+          required: false
+          description: The latitude of the location to filter events.
+          schema:
+            type: number
+            example: 52.52
+        - name: radius
+          in: query
+          required: false
+          description: The radius (in meters) around the given location to search for events.
+          schema:
+            type: number
+            example: 100000000
+        - name: sports
+          in: query
+          required: false
+          description: A list of sports to filter events. Multiple values can be passed.
+          schema:
+            type: array
+            items:
+              type: string
+            example: ["Soccer", "Basketball"]
+        - name: skill_levels
+          in: query
+          required: false
+          description: A list of skill levels to filter events. Multiple values can be passed.
+          schema:
+            type: array
+            items:
+              type: string
+            example: ["Beginner", "Medium"]
+        - name: required_slots
+          in: query
+          required: false
+          description: The minimum number of available slots required in the events.
+          schema:
+            type: integer
+            example: 1
+        - name: start_date
+          in: query
+          required: false
+          description: The start date for filtering events. Defaults to 1 year in the past.
+          schema:
+            type: string
+            format: date-time
+            example: 2023-01-01T00:00:00.000Z
+        - name: end_date
+          in: query
+          required: false
+          description: The end date for filtering events. Defaults to January 1, 2100.
+          schema:
+            type: string
+            format: date-time
+            example: 2100-01-01T00:00:00.000Z
+      responses:
+        '200':
+          description: A list of available events matching the specified filters.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: The unique identifier for the event.
+                          example: 60199094-8cf5-485d-9361-829f9eb8b339
+                        creator_id:
+                          type: string
+                          description: The ID of the event's creator.
+                          example: user-12345
+                        sport:
+                          type: string
+                          description: The sport associated with the event.
+                          example: Soccer
+                        participants_needed:
+                          type: integer
+                          description: The total number of participants needed for the event.
+                          example: 10
+                        available_slots:
+                          type: integer
+                          description: The number of slots currently available in the event.
+                          example: 4
+                        skill_level:
+                          type: string
+                          description: The skill level required for the event.
+                          example: Beginner
+                        event_time:
+                          type: string
+                          format: date-time
+                          description: The time and date of the event.
+                          example: 2024-01-15T14:00:00.000Z
+                        description:
+                          type: string
+                          description: A description of the event.
+                          example: Friendly soccer match at the local park.
+                        longitude:
+                          type: number
+                          description: The longitude of the event location.
+                          example: 13.405
+                        latitude:
+                          type: number
+                          description: The latitude of the event location.
+                          example: 52.52
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: The error message.
+                    example: Internal server error
+  /api/events/event-details:
+    get:
+      tags: 
+        - Events
+      summary: Get event details
+      description: |
+        Retrieves detailed information about a specific event, including location, creator details, and event metadata.
+      parameters:
+        - name: id
+          in: query
+          required: true
+          description: The unique identifier of the event to fetch details for.
+          schema:
+            type: string
+            format: uuid
+            example: 60199094-8cf5-485d-9361-829f9eb8b339
+      security:
+        - CookieAuth: []  # Ensure cookie-based authentication for this endpoint
+      responses:
+        '200':
+          description: Successfully retrieved the event details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  event:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        description: The unique identifier of the event.
+                        example: 60199094-8cf5-485d-9361-829f9eb8b339
+                      creator_id:
+                        type: string
+                        description: The ID of the user who created the event.
+                        example: user-12345
+                      sport:
+                        type: string
+                        description: The sport associated with the event.
+                        example: Soccer
+                      participants_needed:
+                        type: integer
+                        description: The total number of participants needed for the event.
+                        example: 10
+                      skill_level:
+                        type: string
+                        description: The skill level required for the event.
+                        example: Beginner
+                      event_time:
+                        type: string
+                        format: date-time
+                        description: The date and time of the event.
+                        example: 2024-01-15T14:00:00.000Z
+                      description:
+                        type: string
+                        description: A description of the event.
+                        example: Friendly soccer match at the park.
+                      longitude:
+                        type: number
+                        description: The longitude of the event location.
+                        example: 13.405
+                      latitude:
+                        type: number
+                        description: The latitude of the event location.
+                        example: 52.52
+                      created_at:
+                        type: string
+                        format: date-time
+                        description: The date and time when the event was created.
+                        example: 2023-12-01T12:00:00.000Z
+                      updated_at:
+                        type: string
+                        format: date-time
+                        description: The date and time when the event was last updated.
+                        example: 2023-12-10T18:00:00.000Z
+                      event_name:
+                        type: string
+                        description: The name of the event.
+                        example: Sunday Soccer League
+        '400':
+          description: Missing event ID in the request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Missing event ID
+        '404':
+          description: Event not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Event not found
+        '500':
+          description: Internal server error while fetching event details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: General error message.
+                    example: Failed to fetch event details
+                  details:
+                    type: string
+                    description: Additional details about the error.
+                    example: Database connection error
+  /api/get-joined-events:
+    get:
+      tags: 
+        - Events
+      summary: Retrieve joined events for a user
+      description: |
+        Retrieves a list of events that a specific user has joined. The events include details such as location, time, skill level, and more.
+      parameters:
+        - name: id
+          in: query
+          required: true
+          description: The unique identifier of the user to fetch joined events for.
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174000
+      security:
+        - CookieAuth: []  # Ensure cookie-based authentication for this endpoint
+      responses:
+        '200':
+          description: Successfully retrieved the list of joined events.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      description: The unique identifier of the event.
+                      example: 60199094-8cf5-485d-9361-829f9eb8b339
+                    creator_id:
+                      type: string
+                      description: The ID of the user who created the event.
+                      example: user-12345
+                    sport:
+                      type: string
+                      description: The sport associated with the event.
+                      example: Soccer
+                    participants_needed:
+                      type: integer
+                      description: The total number of participants needed for the event.
+                      example: 10
+                    skill_level:
+                      type: string
+                      description: The skill level required for the event.
+                      example: Beginner
+                    event_time:
+                      type: string
+                      format: date-time
+                      description: The date and time of the event.
+                      example: 2024-01-15T14:00:00.000Z
+                    description:
+                      type: string
+                      description: A description of the event.
+                      example: Friendly soccer match at the park.
+                    longitude:
+                      type: number
+                      description: The longitude of the event location.
+                      example: 13.405
+                    latitude:
+                      type: number
+                      description: The latitude of the event location.
+                      example: 52.52
+                    created_at:
+                      type: string
+                      format: date-time
+                      description: The date and time when the event was created.
+                      example: 2023-12-01T12:00:00.000Z
+                    updated_at:
+                      type: string
+                      format: date-time
+                      description: The date and time when the event was last updated.
+                      example: 2023-12-10T18:00:00.000Z
+                    event_name:
+                      type: string
+                      description: The name of the event.
+                      example: Sunday Soccer League
+        '400':
+          description: Missing user ID in the request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Missing id
+        '500':
+          description: Internal server error while fetching events.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: General error message.
+                    example: Failed to fetch events
+                  details:
+                    type: string
+                    description: Additional details about the error.
+                    example: Database connection error
+  /api/update-event-description:
+    put:
+      tags: 
+        - Events
+      summary: Update event description
+      description: |
+        Updates the description of an event specified by its unique identifier.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  description: The unique identifier of the event to update.
+                  example: 60199094-8cf5-485d-9361-829f9eb8b339
+                description:
+                  type: string
+                  description: The new description for the event.
+                  example: This is an updated description for the event.
+      security:
+        - CookieAuth: []  # Ensure cookie-based authentication for this endpoint
+      responses:
+        '200':
+          description: Event description updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Confirmation message for successful update.
+                    example: Event description updated successfully
+        '400':
+          description: Bad request, such as missing or invalid fields.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error.
+                    example: Invalid event ID
+        '500':
+          description: Internal server error while updating the event description.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: General error message.
+                    example: Failed to update event description
+                  details:
+                    type: string
+                    description: Additional details about the error.
+                    example: Database connection error
+  /api/users:
+    post:
+      tags:
+        - Users
+      summary: Update user profile
+      description: |
+        Updates a user's profile information in the database. Validates the input using a predefined schema and updates fields such as username, birthday, sport interests, city, and profile picture URL.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+                  description: The unique identifier of the user to be updated.
+                  example: 123e4567-e89b-12d3-a456-426614174000
+                username:
+                  type: string
+                  description: The updated username for the user.
+                  example: john_doe
+                birthday:
+                  type: string
+                  format: date
+                  description: The user's updated date of birth.
+                  example: 1990-01-01
+                sportInterests:
+                  type: array
+                  items:
+                    type: string
+                  description: The sports the user is interested in.
+                  example: ["Soccer", "Basketball"]
+                city:
+                  type: string
+                  description: The city where the user resides.
+                  example: Berlin
+                profilePicture:
+                  type: string
+                  format: uri
+                  nullable: true
+                  description: The URL of the user's updated profile picture.
+                  example: https://example.com/profile-picture.jpg
+      responses:
+        '200':
+          description: User profile updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Success message for the operation.
+                    example: User updated successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: The unique identifier of the user.
+                          example: 123e4567-e89b-12d3-a456-426614174000
+                        username:
+                          type: string
+                          description: The updated username.
+                          example: john_doe
+                        birthday:
+                          type: string
+                          format: date
+                          description: The updated date of birth.
+                          example: 1990-01-01
+                        sport_interests:
+                          type: array
+                          items:
+                            type: string
+                          description: The updated sports interests.
+                          example: ["Soccer", "Basketball"]
+                        city:
+                          type: string
+                          description: The updated city.
+                          example: Berlin
+                        profile_picture_url:
+                          type: string
+                          format: uri
+                          nullable: true
+                          description: The updated profile picture URL.
+                          example: https://example.com/profile-picture.jpg
+        '400':
+          description: Validation errors or missing fields.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                          description: The field where the error occurred.
+                          example: username
+                        message:
+                          type: string
+                          description: A message describing the validation error.
+                          example: Username is required.
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: General error message.
+                    example: Failed to update user profile
