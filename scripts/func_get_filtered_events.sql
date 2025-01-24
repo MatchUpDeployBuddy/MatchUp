@@ -18,7 +18,8 @@ RETURNS TABLE (
     event_time timestamp,
     description text,
     longitude double precision,
-    latitude double precision
+    latitude double precision,
+    event_name text                             -- Hinzugefügt
 )
 LANGUAGE plpgsql
 AS $$
@@ -34,7 +35,8 @@ BEGIN
         e.event_time,
         e.description,
         ST_X(e.location::geometry) AS longitude, 
-        ST_Y(e.location::geometry) AS latitude
+        ST_Y(e.location::geometry) AS latitude,
+        e.event_name                                -- Hinzugefügt
     FROM events e
     LEFT JOIN (
         SELECT event_id, COUNT(*) AS count
