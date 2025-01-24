@@ -78,6 +78,9 @@ export default function EventDetailsPage() {
   const [editedDescription, setEditedDescription] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [disabledButtons, setDisabledButtons] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   // For user who is not in participants, we'll show "Request Join" button
   const [hasJoined, setHasJoined] = useState(false);
@@ -126,26 +129,26 @@ export default function EventDetailsPage() {
   async function fetchAllData(eventId: string) {
     try {
       setIsLoading(true);
-  
+
       const [eventRes, participantsRes, requestsRes] = await Promise.all([
         fetch(`/api/events/event-details?id=${eventId}`),
         fetch(`/api/event-participants?eventId=${eventId}`),
         fetch(`/api/event-request?eventId=${eventId}`),
       ]);
-  
+
       if (!eventRes.ok || !participantsRes.ok || !requestsRes.ok) {
         throw new Error("Failed to fetch data");
       }
-  
+
       const eventData = await eventRes.json();
       const participantsData = await participantsRes.json();
       const requestsData = await requestsRes.json();
-  
+
       setEvent(eventData.event);
       setEditedDescription(eventData.event?.description || "");
       setParticipants(participantsData?.participants || []);
       setRequests(requestsData?.pendingRequesters || []);
-  
+
       if (user) {
         const userHasRequested = requestsData.pendingRequesters.some(
           (req: { requester_id: string }) => req.requester_id === user.id
@@ -159,7 +162,7 @@ export default function EventDetailsPage() {
       setIsLoading(false);
     }
   }
-  
+
   async function doRequest(
     url: string,
     method: string,
@@ -183,6 +186,8 @@ export default function EventDetailsPage() {
   async function handleSaveDescription() {
     if (!event || editedDescription === event.description) return;
 
+    setDisabledButtons((prev) => ({ ...prev, [requesterId]: true }));
+
     try {
       await doRequest("/api/update-event-description", "PUT", {
         id: event.id,
@@ -194,9 +199,10 @@ export default function EventDetailsPage() {
       setIsEditing(false);
     } catch (err) {
       console.error("Error saving description:", err);
+
+      setDisabledButtons((prev) => ({ ...prev, [requesterId]: false }));
     }
   }
-
 
   // Cancel the match (owner only)
   async function handleCancelEvent(eventId: string) {
@@ -282,7 +288,7 @@ export default function EventDetailsPage() {
     try {
       const params = new URLSearchParams({
         participantId: participantId,
-        eventId: event.id
+        eventId: event.id,
       });
 
       const response = await fetch(`/api/event-participants?${params}`, {
@@ -320,7 +326,6 @@ export default function EventDetailsPage() {
       const data = await doRequest("/api/event-request", "POST", body);
       toast.info(data.message || "Request sent!");
       setHasPendingRequest(true);
-      
     } catch (err: any) {
       if (
         err.message &&
@@ -340,7 +345,7 @@ export default function EventDetailsPage() {
     try {
       const params = new URLSearchParams({
         participantId: user.id,
-        eventId: event.id
+        eventId: event.id,
       });
 
       const response = await fetch(`/api/event-participants?${params}`, {
@@ -359,7 +364,7 @@ export default function EventDetailsPage() {
       console.error("Failed to leave the event:", err);
       toast.error("Failed to leave the event");
     }
-  }  
+  }
 
   // Helper: format date/time
   function formatDate(dateString: string) {
@@ -396,7 +401,9 @@ export default function EventDetailsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Details for: {event.event_name} | {event.sport}</CardTitle>
+          <CardTitle className="text-2xl">
+            Details for: {event.event_name} | {event.sport}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Date */}
@@ -520,10 +527,12 @@ export default function EventDetailsPage() {
 
                   {/* Only the owner can remove participants */}
                   {isOwner && (
-                      <Button
+                    <Button
                       size="icon"
                       variant="ghost"
-                      onClick={() => handleRemoveParticipant(buddy.joined_user_id)}
+                      onClick={() =>
+                        handleRemoveParticipant(buddy.joined_user_id)
+                      }
                       disabled={buddy.joined_user_id === event.creator_id}
                     >
                       <FaTimes className="h-5 w-5" />
@@ -579,7 +588,8 @@ export default function EventDetailsPage() {
                           handleAcceptRequest(request.requester_id)
                         }
                         disabled={
-                          participants.length >= event.participants_needed
+                          participants.length >= event.participants_needed ||
+                          disabledButtons[request.requester_id]
                         }
                       >
                         <FaCheck className="h-5 w-5" />
@@ -630,10 +640,8 @@ export default function EventDetailsPage() {
             <div className="text-center mt-6">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button 
-                  className="mx-auto"
-                  disabled={hasPendingRequest}>
-                     {hasPendingRequest ? "Request Pending" : "Request Join"}
+                  <Button className="mx-auto" disabled={hasPendingRequest}>
+                    {hasPendingRequest ? "Request Pending" : "Request Join"}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
