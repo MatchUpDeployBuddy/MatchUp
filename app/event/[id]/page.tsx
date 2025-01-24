@@ -197,24 +197,26 @@ export default function EventDetailsPage() {
     }
   }
 
+
   // Cancel the match (owner only)
   async function handleCancelEvent(eventId: string) {
     try {
-
       const params = new URLSearchParams({
-        id: eventId
+        id: eventId,
       });
 
-      const response = await fetch(`/api/events?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch events");
+      const response = await fetch(`/api/events?${params}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("Failed to delete the event");
       const data = await response.json();
-      console.log(data.message);
       removeEvent(eventId);
       toast.success("Event deleted successfully!");
       router.push("/dashboard");
     } catch (err) {
       console.error("Error deleting event:", err);
-      toast.error("Error canceling Event");
+      toast.error("Error canceling event");
     }
   }
 
@@ -283,11 +285,12 @@ export default function EventDetailsPage() {
         eventId: event.id
       });
 
-      const response = await fetch(`/api/event-participants?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch events");
-      const data = await response.json();
+      const response = await fetch(`/api/event-participants?${params}`, {
+        method: "DELETE",
+      });
 
-      console.log("Participant removed:", data.message);
+      if (!response.ok) throw new Error("Failed to remove participant");
+      const data = await response.json();
 
       // Remove the participant from local state
       setParticipants((prev) =>
@@ -323,7 +326,7 @@ export default function EventDetailsPage() {
         err.message &&
         err.message.includes("Failed to insert request into the database")
       ) {
-        toast.error("You have already sent a request to join the match.");
+        toast.error("You got rejected.");
       } else {
         toast.error("Failed to send join request");
       }
@@ -340,8 +343,11 @@ export default function EventDetailsPage() {
         eventId: event.id
       });
 
-      const response = await fetch(`/api/event-participants?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch events");
+      const response = await fetch(`/api/event-participants?${params}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("Failed to leave the event");
 
       setParticipants((prev) =>
         prev.filter((buddy) => buddy.joined_user_id !== user.id)
