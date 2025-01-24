@@ -13,13 +13,6 @@ import { useUserStore } from "@/store/userStore";
 import { Buddy } from "@/types";
 import { uploadProfilePicture } from "@/utils/supabase/storage";
 import OneSignal from "react-onesignal";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { z } from "zod";
 import { toast } from "sonner";
 
@@ -60,19 +53,6 @@ const sports = [
   "Badminton",
   "Table Tennis",
   "Hiking",
-];
-
-const germanCities = [
-  "Berlin",
-  "Hamburg",
-  "Munich",
-  "Cologne",
-  "Frankfurt",
-  "Stuttgart",
-  "Düsseldorf",
-  "Leipzig",
-  "Dortmund",
-  "Essen",
 ];
 
 export default function SettingsPage() {
@@ -226,12 +206,12 @@ function AccountSettings({
       const allowedTypes = ["image/jpeg", "image/png"];
 
       if (file.size > MAX_SIZE) {
-        toast.error("File size exceeds 2MB")
+        toast.error("File size exceeds 2MB");
         return;
       }
 
       if (!allowedTypes.includes(file.type)) {
-        toast.error("Invalid file type. Please upload a JPEG or PNG image")
+        toast.error("Invalid file type. Please upload a JPEG or PNG image");
         return;
       }
 
@@ -293,7 +273,7 @@ function AccountSettings({
       }
     }
 
-    if(!validate()) {
+    if (!validate()) {
       toast("An error occurred while updating the user data");
       setProfilePicturePreview(null);
       setProfilePictureFile(null);
@@ -305,8 +285,8 @@ function AccountSettings({
       return;
     }
     try {
-      const response = await fetch('/api/users', {
-        method: 'POST',
+      const response = await fetch("/api/users", {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -330,10 +310,10 @@ function AccountSettings({
       setProfilePictureFile(null);
       updateUser(result.data[0]);
       setIsEditing(false);
-      toast.success("User data updated successfully")
+      toast.success("User data updated successfully");
     } catch (error: unknown) {
-      console.error('Update failed:', error);
-      toast.error("An unexpected error occurred")
+      console.error("Update failed:", error);
+      toast.error("An unexpected error occurred");
     }
   };
 
@@ -384,22 +364,18 @@ function AccountSettings({
       </div>
       <div className="space-y-2">
         <Label>City</Label>
-        <Select
+        <Input
+          id="city"
+          name="city"
           value={formData.city!}
-          onValueChange={(value) => handleSelectChange("city", value)}
-          disabled={!isEditing}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select a city" />
-          </SelectTrigger>
-          <SelectContent>
-            {germanCities.map((city) => (
-              <SelectItem key={city} value={city}>
-                {city}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={(e) => {
+            const value = e.target.value;
+            if (/^[a-zA-ZäöüÄÖÜß\s]*$/.test(value)) {
+              handleSelectChange("city", value); // Speichert die Eingabe
+            }
+          }}
+          readOnly={!isEditing}
+        />
       </div>
       <div className="space-y-2">
         <Label>Sport Interests</Label>
@@ -429,10 +405,10 @@ function AccountSettings({
   );
 }
 
-
 function NotificationSettings() {
   const { user } = useUserStore((state) => state);
-  const [matchNotificationsEnabled, setMatchNotificationsEnabled] = useState(false);
+  const [matchNotificationsEnabled, setMatchNotificationsEnabled] =
+    useState(false);
   const [oneSignalInitialized, setOneSignalInitialized] = useState(false);
 
   let isInitializingOneSignal = false;
@@ -458,10 +434,13 @@ function NotificationSettings() {
 
       if (user?.id) {
         await OneSignal.login(user.id);
-        console.log("OneSignal erfolgreich mit Benutzer-ID angemeldet:", user.id);
+        console.log(
+          "OneSignal erfolgreich mit Benutzer-ID angemeldet:",
+          user.id
+        );
       } else {
         console.error("Benutzer-ID ist nicht vorhanden oder undefined");
-      }      
+      }
 
       setOneSignalInitialized(true); // Markiere, dass OneSignal initialisiert wurde
     } catch (error) {
@@ -475,7 +454,9 @@ function NotificationSettings() {
     if (user?.id && !oneSignalInitialized) {
       initializeOneSignal();
     } else {
-      console.log("OneSignal ist bereits initialisiert oder Benutzer-ID fehlt.");
+      console.log(
+        "OneSignal ist bereits initialisiert oder Benutzer-ID fehlt."
+      );
     }
   }, [user?.id, oneSignalInitialized]);
 
@@ -486,14 +467,14 @@ function NotificationSettings() {
       try {
         const isSubscribed = await OneSignal.User.PushSubscription.optedIn;
         console.log("Abonnementstatus abgerufen:", isSubscribed);
-        setMatchNotificationsEnabled(isSubscribed ?? false); 
+        setMatchNotificationsEnabled(isSubscribed ?? false);
       } catch (error) {
         console.error("Fehler beim Abrufen des Abonnementstatus:", error);
       }
     };
 
     fetchNotificationState();
-  }, [oneSignalInitialized]); 
+  }, [oneSignalInitialized]);
 
   const unsubscribeFromNotifications = async () => {
     try {
@@ -520,20 +501,12 @@ function NotificationSettings() {
     if (matchNotificationsEnabled) {
       unsubscribeFromNotifications();
     } else {
-      subscribeToNotifications(); 
+      subscribeToNotifications();
     }
   };
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold mb-4">Notification Settings</h3>
-      <div className="space-y-2">
-        <Label>Chat Notifications</Label>
-        <div className="flex items-center justify-between">
-          <span>Enable chat notifications</span>
-          <Switch />
-        </div>
-      </div>
       {/* Match Notifications */}
       <div className="space-y-2">
         <Label>Match Notifications</Label>
@@ -555,17 +528,9 @@ function NotificationSettings() {
           </Switch>
         </div>
       </div>
-      <div className="space-y-2">
-        <Label>Request Notifications</Label>
-        <div className="flex items-center justify-between">
-          <span>Enable request notifications</span>
-          <Switch />
-        </div>
-      </div>
     </div>
   );
 }
-
 
 function HelpCenter() {
   return (
