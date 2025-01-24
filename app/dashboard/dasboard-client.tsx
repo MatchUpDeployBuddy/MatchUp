@@ -73,7 +73,7 @@ export default function DashboardComponent({ userId }: DashboardProps) {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100">
+    <div className="flex flex-col min-h-screen bg-gray-100 pb-24">
     <div className="flex-grow container mx-auto px-4 py-8">
       <div className="mb-8 flex justify-between items-center">
         <div>

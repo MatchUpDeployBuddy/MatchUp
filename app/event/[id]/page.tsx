@@ -392,8 +392,9 @@ export default function EventDetailsPage() {
   const formattedDate = formatDate(event.event_time);
   const formattedTime = formatTime(event.event_time);
 
+  const paddingBottom = 64 + participants.length * 64;
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6" style={{ paddingBottom: `${paddingBottom}px` }}>
       <Button onClick={() => router.push("/dashboard")} className="mb-4">
         Back to Dashboard
       </Button>

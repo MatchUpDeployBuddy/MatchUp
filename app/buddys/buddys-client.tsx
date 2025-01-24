@@ -131,12 +131,13 @@ export default function BuddysClient() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100 py-24">
-      <div className="flex-grow container mx-auto px-4 pb-6">
-        <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold mb-1">{getGreeting()}</h1>
-            <p className="text-3xl font-bold">{user.username}</p>
+    <div className="flex flex-col min-h-screen bg-gray-100 pb-24">
+      <div className="flex-grow container mx-auto px-4 py-8">
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold mb-1">{getGreeting()}</h1>
+          <p className="text-3xl font-bold">{user.username}</p>
+     
             {userLocation && (
               <p className="text-sm text-gray-500">
                 Your location: {userLocation}
