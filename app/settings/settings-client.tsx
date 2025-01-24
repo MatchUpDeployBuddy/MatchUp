@@ -15,6 +15,8 @@ import { uploadProfilePicture } from "@/utils/supabase/storage";
 import OneSignal from "react-onesignal";
 import { z } from "zod";
 import { toast } from "sonner";
+import { logout } from "../logout/action";
+import { useRouter } from "next/navigation";
 
 const settingsSections = [
   { id: "account", title: "Account", icon: FaUser },
@@ -59,6 +61,8 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState("account");
   const [isEditing, setIsEditing] = useState(false);
   const { user, updateUser } = useUserStore((state) => state);
+  const clearUser = useUserStore((state) => state.clearUser);
+  const router = useRouter();
 
   const renderSectionContent = () => {
     switch (activeSection) {
@@ -84,6 +88,14 @@ export default function SettingsPage() {
     }
   };
 
+  const handleLogout = async () => {
+    const result = await logout();
+    if (result?.success) {
+      clearUser();
+      router.push("/");
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -98,6 +110,12 @@ export default function SettingsPage() {
         <h1 className="text-4xl font-bold text-center text-text-primary mb-8">
           Settings
         </h1>
+        {/* Logout Button */}
+        <div className="flex justify-end mb-4">
+          <Button onClick={handleLogout}>
+            Logout
+          </Button>
+        </div>
         <Card className="w-full">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
@@ -114,7 +132,8 @@ export default function SettingsPage() {
                   <p className="text-muted-foreground">{user.email}</p>
                 </div>
               </div>
-              {!isEditing && (
+              {/* Nur anzeigen, wenn activeSection === "account" */}
+              {activeSection === "account" && !isEditing && (
                 <Button
                   variant="outline"
                   className="rounded-full"
