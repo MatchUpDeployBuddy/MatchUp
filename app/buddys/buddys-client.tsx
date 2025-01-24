@@ -99,17 +99,29 @@ export default function BuddysClient() {
       longitude: String(lng),
       latitude: String(lat),
       radius: (filters.radius * 1000).toString(),
-      ...(filters.sports.length > 0 && { sports: filters.sports.join(",") }),
-      ...(filters.skillLevels.length > 0 && {
-        skill_levels: filters.skillLevels.join(","),
-      }),
-      required_slots: filters.requiredSlots.toString(),
+      required_slots: String(filters.requiredSlots),
       start_date: filters.startDate,
       end_date: filters.endDate,
     });
 
+    // Append each selected sport as its own ?sports=...
+    if (filters.sports && filters.sports.length > 0) {
+      filters.sports.forEach((sport: string) => {
+        params.append("sports", sport);
+      });
+    }
+
+    // Append each selected skill level as its own ?skill_levels=...
+    if (filters.skillLevels && filters.skillLevels.length > 0) {
+      filters.skillLevels.forEach((lvl: string) => {
+        params.append("skill_levels", lvl);
+      });
+    }
+
     try {
-      const response = await fetch(`/api/events/available?${params}`);
+      const response = await fetch(
+        `/api/events/available?${params.toString()}`
+      );
       if (!response.ok) throw new Error("Failed to fetch events");
       const data = await response.json();
       setEvents(data.events);
@@ -133,11 +145,11 @@ export default function BuddysClient() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-100 pb-24">
       <div className="flex-grow container mx-auto px-4 py-8">
-      <div className="mb-8 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold mb-1">{getGreeting()}</h1>
-          <p className="text-3xl font-bold">{user.username}</p>
-     
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold mb-1">{getGreeting()}</h1>
+            <p className="text-3xl font-bold">{user.username}</p>
+
             {userLocation && (
               <p className="text-sm text-gray-500">
                 Your location: {userLocation}

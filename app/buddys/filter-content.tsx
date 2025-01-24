@@ -3,18 +3,14 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import AddressSearch from "@/components/adress";
 import { FaCalendarAlt } from "react-icons/fa";
+import AddressSearch from "@/components/adress";
 import { geocodeAddress } from "@/utils/geocoding";
+
+// 1) Import our new multi-select
+import { MultiSelectDemo } from "@/components/ui/multi-select";
 
 const sports = [
   "Soccer",
@@ -47,7 +43,7 @@ export function FilterContent({ onApplyFilters }: FilterContentProps) {
     mapCenter: [13.405, 52.52] as [number, number],
   });
 
-  const isDisabled = 
+  const isDisabled =
     filters.sports.length === 0 ||
     filters.skillLevels.length === 0 ||
     !filters.location ||
@@ -69,7 +65,7 @@ export function FilterContent({ onApplyFilters }: FilterContentProps) {
   };
 
   const handleApplyFilters = () => {
-    if (isDisabled) return; // just a safety check
+    if (isDisabled) return;
     onApplyFilters(filters);
   };
 
@@ -77,44 +73,38 @@ export function FilterContent({ onApplyFilters }: FilterContentProps) {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow overflow-auto p-4 bg-white rounded-lg shadow">
       {/* LEFT COLUMN */}
       <div className="space-y-4">
-        {/* Sports */}
+        {/* Sports MultiSelect */}
         <div>
-          <Label htmlFor="sports" className="text-sm font-medium text-gray-700">
-            Sports
-          </Label>
-          <Select onValueChange={(value) => handleFilterChange("sports", [value])}>
-            <SelectTrigger id="sports" className="w-full mt-1">
-              <SelectValue placeholder="Select sports" />
-            </SelectTrigger>
-            <SelectContent>
-              {sports.map((sport) => (
-                <SelectItem key={sport} value={sport}>
-                  {sport}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label className="text-sm font-medium text-gray-700">Sports</Label>
+          <MultiSelectDemo
+            placeholder="Select sports"
+            options={sports.map((sport) => ({
+              value: sport,
+              label: sport,
+            }))}
+            value={filters.sports}
+            onChange={(selectedSports) =>
+              handleFilterChange("sports", selectedSports)
+            }
+          />
         </div>
 
-        {/* Skill Level */}
+        {/* Skill Levels MultiSelect */}
         <div>
-          <Label htmlFor="skillLevels" className="text-sm font-medium text-gray-700">
-            Skill Level
+          <Label className="text-sm font-medium text-gray-700">
+            Skill Levels
           </Label>
-          <Select
-            onValueChange={(value) => handleFilterChange("skillLevels", [value])}
-          >
-            <SelectTrigger id="skillLevels" className="w-full mt-1">
-              <SelectValue placeholder="Select skill level" />
-            </SelectTrigger>
-            <SelectContent>
-              {skillLevels.map((level) => (
-                <SelectItem key={level} value={level}>
-                  {level}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <MultiSelectDemo
+            placeholder="Select skill levels"
+            options={skillLevels.map((lvl) => ({
+              value: lvl,
+              label: lvl,
+            }))}
+            value={filters.skillLevels}
+            onChange={(selectedLevels) =>
+              handleFilterChange("skillLevels", selectedLevels)
+            }
+          />
         </div>
 
         {/* Radius */}
@@ -127,21 +117,17 @@ export function FilterContent({ onApplyFilters }: FilterContentProps) {
             max={100}
             step={1}
             value={[filters.radius]}
-            onValueChange={(value) => handleFilterChange("radius", value[0])}
+            onValueChange={(val) => handleFilterChange("radius", val[0])}
             className="mt-2"
           />
         </div>
 
         {/* Required Slots */}
         <div>
-          <Label
-            htmlFor="requiredSlots"
-            className="text-sm font-medium text-gray-700"
-          >
+          <Label className="text-sm font-medium text-gray-700">
             Min. Remaining Slots
           </Label>
           <Input
-            id="requiredSlots"
             type="number"
             min={1}
             value={filters.requiredSlots}
@@ -163,35 +149,31 @@ export function FilterContent({ onApplyFilters }: FilterContentProps) {
           </Label>
           <div className="flex space-x-2 mt-1">
             <div className="flex-1">
-              <Label htmlFor="startDate" className="sr-only">
-                From
-              </Label>
               <Input
                 type="date"
-                id="startDate"
                 value={filters.startDate}
-                onChange={(e) => handleFilterChange("startDate", e.target.value)}
+                onChange={(e) =>
+                  handleFilterChange("startDate", e.target.value)
+                }
                 min={new Date().toISOString().split("T")[0]}
                 className="w-full border-gray-300 rounded-md shadow-sm"
               />
             </div>
             <div className="flex-1">
-              <Label htmlFor="endDate" className="sr-only">
-                To
-              </Label>
               <Input
                 type="date"
-                id="endDate"
                 value={filters.endDate}
                 onChange={(e) => handleFilterChange("endDate", e.target.value)}
-                min={filters.startDate || new Date().toISOString().split("T")[0]}
+                min={
+                  filters.startDate || new Date().toISOString().split("T")[0]
+                }
                 className="w-full border-gray-300 rounded-md shadow-sm"
               />
             </div>
           </div>
         </div>
 
-        {/* Location + AddressSearch */}
+        {/* Location & AddressSearch */}
         <div className="space-y-4">
           <Label>Location</Label>
           <AddressSearch
@@ -201,7 +183,7 @@ export function FilterContent({ onApplyFilters }: FilterContentProps) {
         </div>
       </div>
 
-      {/* APPLY FILTERS */}
+      {/* APPLY FILTERS BUTTON */}
       <Button
         onClick={handleApplyFilters}
         className="col-span-full"
