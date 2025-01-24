@@ -34,6 +34,7 @@ import {
 import { useUserStore } from "@/store/userStore";
 import { useEventStore } from "@/store/eventStore";
 import { Input } from "@/components/ui/input";
+import { generateICS } from "@/utils/generateICS";
 
 interface EventDetails {
   id: string;
@@ -330,7 +331,7 @@ export default function EventDetailsPage() {
         err.message &&
         err.message.includes("Failed to insert request into the database")
       ) {
-        toast.error("You got rejected.");
+        toast.error("You have already sent a request to join the match.");
       } else {
         toast.error("Failed to send join request");
       }
@@ -380,6 +381,7 @@ export default function EventDetailsPage() {
       hour12: true,
     });
   }
+
   if (isLoading) {
     return <p>Loading event details...</p>;
   }
@@ -393,17 +395,55 @@ export default function EventDetailsPage() {
   const formattedTime = formatTime(event.event_time);
 
   const paddingBottom = 64 + participants.length * 64;
+
+  const handleDownloadICS = () => {
+    if (!event) return;
+
+    // Parse event_time to get start and end dates
+    const startDate = new Date(event.event_time);
+    // Assuming the event duration is 2 hours. Adjust as needed.
+    const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
+
+    const icsData = generateICS({
+      eventName: event.event_name,
+      eventDescription: event.description || "",
+      location:
+        locationAddress ||
+        `Lat: ${event.latitude.toFixed(6)}, Lng: ${event.longitude.toFixed(6)}`,
+      startDate,
+      endDate,
+    });
+
+    // Create a blob and trigger download
+    const blob = new Blob([icsData], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${event.event_name}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
-    <div className="container mx-auto p-6" style={{ paddingBottom: `${paddingBottom}px` }}>
+    <div
+      className="container mx-auto p-6"
+      style={{ paddingBottom: `${paddingBottom}px` }}
+    >
       <Button onClick={() => router.push("/dashboard")} className="mb-4">
         Back to Dashboard
       </Button>
-
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">
-            Details for: {event.event_name} | {event.sport}
-          </CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-2xl">
+              Details for: {event.event_name} | {event.sport}
+            </CardTitle>
+            <Button variant="outline" size="sm" onClick={handleDownloadICS}>
+              Add to Calendar (ICS)
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Date */}
