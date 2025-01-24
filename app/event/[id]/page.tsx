@@ -210,7 +210,7 @@ export default function EventDetailsPage() {
       });
 
       if (!response.ok) throw new Error("Failed to delete the event");
-      const data = await response.json();
+      
       removeEvent(eventId);
       toast.success("Event deleted successfully!");
       router.push("/dashboard");
@@ -290,7 +290,6 @@ export default function EventDetailsPage() {
       });
 
       if (!response.ok) throw new Error("Failed to remove participant");
-      const data = await response.json();
 
       // Remove the participant from local state
       setParticipants((prev) =>
