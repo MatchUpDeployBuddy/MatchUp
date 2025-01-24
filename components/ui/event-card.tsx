@@ -77,45 +77,51 @@ export function EventCard({
   return (
     <Card className="overflow-hidden bg-white p-4 relative">
       {dashboardView && (
-       <>
-       <div className="block sm:hidden mb-2">
-         <div
-           className={`px-3 py-1.5 inline-block rounded-full text-xs font-semibold shadow-md border ${
-             isCreator
-               ? "bg-green-100 text-green-700 border-green-400"
-               : "bg-gray-100 text-gray-700 border-gray-400"
-           }`}
-         >
-           {isCreator ? "Own" : "Joined"}
-         </div>
-       </div>
+        <>
+          {/* Mobile version of the label */}
+          <div className="block sm:hidden mb-2">
+            <div
+              className={`z-10 px-3 py-1.5 inline-block rounded-full text-xs font-semibold shadow-md border ${
+                isCreator
+                  ? "bg-green-100 text-green-700 border-green-400"
+                  : "bg-gray-100 text-gray-700 border-gray-400"
+              }`}
+            >
+              {isCreator ? "Own" : "Joined"}
+            </div>
+          </div>
 
-       <div
-         className={`hidden sm:block absolute top-2 right-2 px-3 py-1.5 rounded-full text-xs font-semibold shadow-md border ${
-           isCreator
-             ? "bg-green-100 text-green-700 border-green-400"
-             : "bg-gray-100 text-gray-700 border-gray-400"
-         }`}
-       >
-         {isCreator ? "Own" : "Joined"}
-       </div>
-     </>
+          {/* Tablet/desktop version of the label */}
+          <div
+            className={`hidden sm:block z-10 absolute top-2 right-2 px-3 py-1.5 rounded-full text-xs font-semibold shadow-md border ${
+              isCreator
+                ? "bg-green-100 text-green-700 border-green-400"
+                : "bg-gray-100 text-gray-700 border-gray-400"
+            }`}
+          >
+            {isCreator ? "Own" : "Joined"}
+          </div>
+        </>
       )}
-  
-      <div className="flex flex-col sm:flex-row items-start sm:items-center bg-white transition-colors">
+
+      <div className="flex flex-col sm:flex-row items-start sm:items-center bg-white transition-colors relative h-full">
+        {/* Image container */}
         <div
-          className="relative w-full sm:w-24 h-40 sm:h-24 rounded-lg overflow-hidden mb-4 sm:mb-0 sm:mr-4"
+          className="relative w-full sm:w-24 h-40 sm:h-24 rounded-lg overflow-hidden mb-4 sm:mb-0 sm:mr-4 flex-shrink-0"
           style={{
             backgroundImage: `url(${imageUrl || "/placeholder.svg"})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
         ></div>
-  
+
+        {/* Text container */}
         <div className="flex-1">
           <div className="flex flex-col space-y-2">
-            <h3 className="text-lg font-semibold">{`${event_name ? `${event_name} | ` : ""}${sport}`}</h3>
-  
+            <h3 className="text-lg font-semibold">{`${
+              event_name ? `${event_name} | ` : ""
+            }${sport}`}</h3>
+
             <div className="flex items-center gap-2">
               <FaCalendarAlt className="h-4 w-4 text-gray-500" />
               <span className="text-sm">{formattedDate}</span>
@@ -123,12 +129,6 @@ export function EventCard({
             <div className="flex items-center gap-2">
               <FaRegClock className="h-4 w-4 text-gray-500" />
               <span className="text-sm">{formattedTime}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <FaMapMarkerAlt className="h-4 w-4 text-gray-500" />
-              <span className="text-sm truncate">
-                {locationAddress || `Latitude: ${latitude.toFixed(6)}, Longitude: ${longitude.toFixed(6)}`}
-              </span>
             </div>
             <div className="flex items-center gap-2">
               <FaUsers className="h-4 w-4 text-gray-500" />
@@ -155,11 +155,25 @@ export function EventCard({
               <FaDumbbell className="h-4 w-4 text-gray-500" />
               <span className="text-sm">{skill_level}</span>
             </div>
+            <div className="flex items-center gap-2">
+              <FaMapMarkerAlt className="h-4 w-4 text-gray-500 max-w-[calc(100%-1.5rem)]" />
+              <span className="text-sm truncate max-w-full">
+                {locationAddress ||
+                  `Latitude: ${latitude.toFixed(
+                    6
+                  )}, Longitude: ${longitude.toFixed(6)}`}
+              </span>
+            </div>
           </div>
         </div>
-  
+
+        {/* Button */}
         <Link href={`/event/${id}`} className="mt-4 sm:mt-0 sm:ml-4">
-          <Button variant="outline" size="sm" className="w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full sm:w-auto mt-4 sm:mt-0 sm:absolute sm:right-4 sm:top-1/2 sm:transform sm:-translate-y-1/2"
+          >
             {isCreator
               ? "View Details"
               : dashboardView

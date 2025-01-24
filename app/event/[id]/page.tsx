@@ -216,7 +216,7 @@ export default function EventDetailsPage() {
       });
 
       if (!response.ok) throw new Error("Failed to delete the event");
-      const data = await response.json();
+      
       removeEvent(eventId);
       toast.success("Event deleted successfully!");
       router.push("/dashboard");
@@ -296,7 +296,6 @@ export default function EventDetailsPage() {
       });
 
       if (!response.ok) throw new Error("Failed to remove participant");
-      const data = await response.json();
 
       // Remove the participant from local state
       setParticipants((prev) =>
@@ -331,7 +330,7 @@ export default function EventDetailsPage() {
         err.message &&
         err.message.includes("Failed to insert request into the database")
       ) {
-        toast.error("You have already sent a request to join the match.");
+        toast.error("You got rejected.");
       } else {
         toast.error("Failed to send join request");
       }

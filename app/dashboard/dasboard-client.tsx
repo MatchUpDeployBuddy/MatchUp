@@ -1,10 +1,7 @@
 "use client";
 
 import { useUserStore } from "@/store/userStore";
-import { Button } from "@/components/ui/button";
-import { logout } from "../logout/action";
 import { EventCard } from "@/components/ui/event-card";
-import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { getRandomImage, getSportImage } from "@/utils/supabase/match-images"; 
 import { CreateEventCard } from "@/components/ui/create-event-card"; 
@@ -18,12 +15,9 @@ interface DashboardProps {
 export default function DashboardComponent({ userId }: DashboardProps) {
   const [randomImageUrl, setRandomImageUrl] = useState<string>(""); 
   const [sportImages, setSportImages] = useState<Record<string, string>>({});
-  const router = useRouter();
   const user = useUserStore((state) => state.user);
   const events = useEventStore((state) => state.events);
-  const clearUser = useUserStore((state) => state.clearUser);
   
-
   // Get random match picture
   useEffect(() => {
     const fetchRandomImage = async () => {
@@ -78,14 +72,6 @@ export default function DashboardComponent({ userId }: DashboardProps) {
     return <p className="m-4">No user found.</p>;
   }
 
-  const handleLogout = async () => {
-    const result = await logout();
-    if (result?.success) {
-      clearUser();
-      router.push("/");
-    }
-  };
-
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
     <div className="flex-grow container mx-auto px-4 py-8">
@@ -94,7 +80,6 @@ export default function DashboardComponent({ userId }: DashboardProps) {
           <h1 className="text-2xl font-bold mb-1">{getGreeting()} 🔥</h1>
           <p className="text-3xl font-bold">{user.username}</p>
         </div>
-        <Button onClick={handleLogout}>Logout</Button>
       </div>
 
       <h2 className="text-2xl font-bold mb-4">Create your own MATCH</h2>
