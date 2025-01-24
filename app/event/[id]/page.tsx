@@ -326,7 +326,7 @@ export default function EventDetailsPage() {
         err.message &&
         err.message.includes("Failed to insert request into the database")
       ) {
-        toast.error("You have already sent a request to join the match.");
+        toast.error("You got rejected.");
       } else {
         toast.error("Failed to send join request");
       }
