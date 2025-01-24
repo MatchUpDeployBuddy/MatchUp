@@ -17,6 +17,13 @@ export default function DashboardComponent({ userId }: DashboardProps) {
   const [sportImages, setSportImages] = useState<Record<string, string>>({});
   const user = useUserStore((state) => state.user);
   const events = useEventStore((state) => state.events);
+  const fetchEvents = useEventStore((state) => state.fetchEvents);
+  
+  useEffect(() => {
+    if(userId) {
+      fetchEvents(userId);
+    }
+  }, [userId]);
   
   // Get random match picture
   useEffect(() => {
