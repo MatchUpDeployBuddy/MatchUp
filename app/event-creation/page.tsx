@@ -76,6 +76,7 @@ export default function EventCreationPage() {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const user = useUserStore((state) => state.user);
   const addEvent = useEventStore((state) => state.addEvent);
   const supabase = createClient();
@@ -95,6 +96,7 @@ export default function EventCreationPage() {
   });
 
   const onSubmit = async (data: z.infer<typeof eventSchema>) => {
+    setIsSubmitting(true)
     try {
       // Combine date and start time into an event timestamp
       const event_time = new Date(
@@ -111,6 +113,7 @@ export default function EventCreationPage() {
           type: "custom",
           message: "Invalid address",
         });
+        setIsSubmitting(false);
         return;
       }
       const { latitude, longitude } = coordinates;
@@ -152,6 +155,7 @@ export default function EventCreationPage() {
       setErrorMessage(
         error instanceof Error ? error.message : "An unexpected error occurred."
       );
+      setIsSubmitting(false);
     }
   };
 
@@ -399,8 +403,9 @@ export default function EventCreationPage() {
                   <Button
                     type="submit"
                     className="ml-auto bg-primary text-primary-foreground hover:bg-primary/90 text-lg px-6 py-3 rounded-full"
+                    disabled={isSubmitting}
                   >
-                    Create Match
+                     {isSubmitting ? "Creating..." : "Create Match"}
                   </Button>
                 </div>
               </form>
