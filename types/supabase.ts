@@ -1203,6 +1203,7 @@ export type Database = {
           description: string
           longitude: number
           latitude: number
+          event_name: string
         }[]
       }
       get_joined_events_with_coordinates: {
