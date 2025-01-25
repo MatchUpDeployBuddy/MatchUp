@@ -70,6 +70,7 @@ export default function EventDetailsPage() {
 
   const user = useUserStore((state) => state.user);
   const removeEvent = useEventStore((state) => state.removeEvent);
+
   const [isLoading, setIsLoading] = useState(true);
   const [event, setEvent] = useState<EventDetails | null>(null);
   const [participants, setParticipants] = useState<Buddy[]>([]);
@@ -79,11 +80,14 @@ export default function EventDetailsPage() {
   const [editedDescription, setEditedDescription] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState("");
+
+  // Each key in `disabledButtons` can be:
+  // - "saveDescription" for disabling the description save
+  // - or a requester's id for the Accept/Reject buttons.
   const [disabledButtons, setDisabledButtons] = useState<{
     [key: string]: boolean;
   }>({});
 
-  // For user who is not in participants, we'll show "Request Join" button
   const [hasJoined, setHasJoined] = useState(false);
 
   useEffect(() => {
@@ -92,21 +96,20 @@ export default function EventDetailsPage() {
   }, [id]);
 
   useEffect(() => {
-    if (event && event.latitude && event.longitude) {
+    if (event?.latitude && event?.longitude) {
       fetchAddress(event.latitude, event.longitude);
     }
   }, [event]);
 
-  // Whenever participants changes, check if current user is a participant
   useEffect(() => {
-    if (!user || !participants) {
+    if (user && participants.length) {
+      const isParticipant = participants.some(
+        (p) => p.joined_user_id === user.id
+      );
+      setHasJoined(isParticipant);
+    } else {
       setHasJoined(false);
-      return;
     }
-    const isParticipant = participants.some(
-      (p) => p.joined_user_id === user.id
-    );
-    setHasJoined(isParticipant);
   }, [participants, user]);
 
   async function fetchAddress(latitude: number, longitude: number) {
@@ -120,11 +123,12 @@ export default function EventDetailsPage() {
   }
 
   useEffect(() => {
-    if (!user || !requests) return;
-    const userHasRequested = requests.some(
-      (req) => req.requester_id === user.id
-    );
-    setHasPendingRequest(userHasRequested);
+    if (user && requests.length) {
+      const userHasRequested = requests.some(
+        (req) => req.requester_id === user.id
+      );
+      setHasPendingRequest(userHasRequested);
+    }
   }, [requests, user]);
 
   async function fetchAllData(eventId: string) {
@@ -154,7 +158,6 @@ export default function EventDetailsPage() {
         const userHasRequested = requestsData.pendingRequesters.some(
           (req: { requester_id: string }) => req.requester_id === user.id
         );
-        console.log("User has requested:", userHasRequested);
         setHasPendingRequest(userHasRequested);
       }
     } catch (err) {
@@ -188,7 +191,6 @@ export default function EventDetailsPage() {
     if (!event || editedDescription === event.description) return;
 
     setDisabledButtons((prev) => ({ ...prev, saveDescription: true }));
-
     try {
       await doRequest("/api/update-event-description", "PUT", {
         id: event.id,
@@ -208,14 +210,10 @@ export default function EventDetailsPage() {
   // Cancel the match (owner only)
   async function handleCancelEvent(eventId: string) {
     try {
-      const params = new URLSearchParams({
-        id: eventId,
-      });
-
+      const params = new URLSearchParams({ id: eventId });
       const response = await fetch(`/api/events?${params}`, {
         method: "DELETE",
       });
-
       if (!response.ok) throw new Error("Failed to delete the event");
 
       removeEvent(eventId);
@@ -230,6 +228,8 @@ export default function EventDetailsPage() {
   // Accept request (owner only)
   async function handleAcceptRequest(requesterId: string) {
     if (!event) return;
+
+    setDisabledButtons((prev) => ({ ...prev, [requesterId]: true }));
 
     try {
       const response = await doRequest("/api/event-request/accept", "PATCH", {
@@ -260,12 +260,13 @@ export default function EventDetailsPage() {
     } catch (err) {
       console.error("Failed to accept request:", err);
       toast.error("Failed to accept request");
+      setDisabledButtons((prev) => ({ ...prev, [requesterId]: false }));
     }
   }
 
-  // Reject request (owner only)
   async function handleRejectRequest(requesterId: string) {
     if (!event) return;
+    setDisabledButtons((prev) => ({ ...prev, [requesterId]: true }));
 
     try {
       await doRequest("/api/event-request/reject", "PATCH", {
@@ -279,6 +280,7 @@ export default function EventDetailsPage() {
     } catch (err) {
       console.error("Error rejecting request:", err);
       toast.error("Error rejecting request");
+      setDisabledButtons((prev) => ({ ...prev, [requesterId]: false }));
     }
   }
 
@@ -291,14 +293,11 @@ export default function EventDetailsPage() {
         participantId: participantId,
         eventId: event.id,
       });
-
       const response = await fetch(`/api/event-participants?${params}`, {
         method: "DELETE",
       });
-
       if (!response.ok) throw new Error("Failed to remove participant");
 
-      // Remove the participant from local state
       setParticipants((prev) =>
         prev.filter((buddy) => buddy.joined_user_id !== participantId)
       );
@@ -347,11 +346,9 @@ export default function EventDetailsPage() {
         participantId: user.id,
         eventId: event.id,
       });
-
       const response = await fetch(`/api/event-participants?${params}`, {
         method: "DELETE",
       });
-
       if (!response.ok) throw new Error("Failed to leave the event");
 
       setParticipants((prev) =>
@@ -401,7 +398,7 @@ export default function EventDetailsPage() {
 
     // Parse event_time to get start and end dates
     const startDate = new Date(event.event_time);
-    // Assuming the event duration is 2 hours. Adjust as needed.
+    // default 2 hour duration
     const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
 
     const icsData = generateICS({
@@ -647,6 +644,7 @@ export default function EventDetailsPage() {
                         onClick={() =>
                           handleRejectRequest(request.requester_id)
                         }
+                        disabled={disabledButtons[request.requester_id]}
                       >
                         <FaTimes className="h-5 w-5" />
                       </Button>
@@ -696,12 +694,12 @@ export default function EventDetailsPage() {
                     <AlertDialogTitle>Request Join</AlertDialogTitle>
                     <AlertDialogDescription>
                       Please provide a message explaining why you&apos;d like to
-                      join the event. This will help the organizer understand
-                      your interest.
+                      join. This will help the organizer understand your
+                      interest.
                     </AlertDialogDescription>
                     <Input
                       type="text"
-                      placeholder="Hey, I would like to join your match!"
+                      placeholder="I would like to join your match!"
                       value={inputValue}
                       onChange={(e) => setInputValue(e.target.value)}
                       className="w-full p-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -709,7 +707,6 @@ export default function EventDetailsPage() {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel onClick={() => setInputValue("")}>
-                      {" "}
                       Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction onClick={handleRequestJoin}>
