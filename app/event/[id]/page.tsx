@@ -187,7 +187,7 @@ export default function EventDetailsPage() {
   async function handleSaveDescription() {
     if (!event || editedDescription === event.description) return;
 
-    setDisabledButtons((prev) => ({ ...prev, [requesterId]: true }));
+    setDisabledButtons((prev) => ({ ...prev, saveDescription: true }));
 
     try {
       await doRequest("/api/update-event-description", "PUT", {
@@ -200,8 +200,8 @@ export default function EventDetailsPage() {
       setIsEditing(false);
     } catch (err) {
       console.error("Error saving description:", err);
-
-      setDisabledButtons((prev) => ({ ...prev, [requesterId]: false }));
+    } finally {
+      setDisabledButtons((prev) => ({ ...prev, saveDescription: false }));
     }
   }
 
@@ -217,7 +217,7 @@ export default function EventDetailsPage() {
       });
 
       if (!response.ok) throw new Error("Failed to delete the event");
-      
+
       removeEvent(eventId);
       toast.success("Event deleted successfully!");
       router.push("/dashboard");
@@ -440,9 +440,11 @@ export default function EventDetailsPage() {
             <CardTitle className="text-2xl">
               Details for: {event.event_name} | {event.sport}
             </CardTitle>
-            <Button variant="outline" size="sm" onClick={handleDownloadICS}>
-              Add to Calendar (ICS)
-            </Button>
+            {(isOwner || hasJoined) && (
+              <Button variant="outline" size="sm" onClick={handleDownloadICS}>
+                Add to Calendar (ICS)
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -516,7 +518,12 @@ export default function EventDetailsPage() {
                     >
                       Cancel
                     </Button>
-                    <Button onClick={handleSaveDescription}>Save</Button>
+                    <Button
+                      onClick={handleSaveDescription}
+                      disabled={disabledButtons.saveDescription}
+                    >
+                      Save
+                    </Button>
                   </div>
                 </div>
               ) : (
