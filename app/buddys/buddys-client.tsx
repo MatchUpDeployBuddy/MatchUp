@@ -156,12 +156,13 @@ export default function BuddysClient() {
               </p>
             )}
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row items-center sm:space-x-4 space-y-4 sm:space-y-0">
             {/* Filter Button */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outline" className="w-full sm:w-auto">
                   <FaFilter />
+                  <span className="ml-2">Filter</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[90vw] sm:h-[90vh] flex flex-col">
@@ -171,10 +172,12 @@ export default function BuddysClient() {
                 <FilterContent onApplyFilters={handleApplyFilters} />
               </DialogContent>
             </Dialog>
+
             {/* Reset Filters Button */}
             <Button
               variant="outline"
-              onClick={() => window.location.reload()} // Seite neu laden
+              className="w-full sm:w-auto"
+              onClick={() => window.location.reload()}
             >
               Reset Filters
             </Button>
