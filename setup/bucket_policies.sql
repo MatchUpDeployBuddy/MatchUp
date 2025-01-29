@@ -36,3 +36,10 @@ CREATE POLICY "Authenticated delete for own profile picture"
     auth.role() = 'authenticated' AND
     name LIKE (auth.uid() || '.%')
   );
+
+CREATE POLICY "Public read access for match images"
+ON storage.objects
+FOR SELECT
+USING (
+    (bucket_id = 'match_images' AND auth.role() = 'authenticated')
+);
