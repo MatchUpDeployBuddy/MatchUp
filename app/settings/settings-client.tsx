@@ -12,11 +12,11 @@ import { FaUser, FaBell, FaQuestionCircle, FaUserPlus } from "react-icons/fa";
 import { useUserStore } from "@/store/userStore";
 import { Buddy } from "@/types";
 import { uploadProfilePicture } from "@/utils/supabase/storage";
-import OneSignal from "react-onesignal";
 import { z } from "zod";
 import { toast } from "sonner";
 import { logout } from "../logout/action";
 import { useRouter } from "next/navigation";
+import { useOneSignalStore } from "@/store/oneSignalStore";
 
 const settingsSections = [
   { id: "account", title: "Account", icon: FaUser },
@@ -425,102 +425,44 @@ function AccountSettings({
 }
 
 function NotificationSettings() {
-  const { user } = useUserStore((state) => state);
+  const { isInitialized, subscribe, unsubscribe } = useOneSignalStore();
   const [matchNotificationsEnabled, setMatchNotificationsEnabled] =
     useState(false);
-  const [oneSignalInitialized, setOneSignalInitialized] = useState(false);
-
-  let isInitializingOneSignal = false;
-
-  const initializeOneSignal = async () => {
-    if (isInitializingOneSignal) {
-      console.log("OneSignal wird gerade initialisiert, überspringe...");
-      return;
-    }
-
-    isInitializingOneSignal = true;
-    console.log("Starte OneSignal-Initialisierung...");
-
-    try {
-      await OneSignal.init({
-        appId: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID!,
-        notifyButton: {
-          enable: true,
-        },
-        allowLocalhostAsSecureOrigin: true,
-      });
-      console.log("OneSignal erfolgreich initialisiert.");
-
-      if (user?.id) {
-        await OneSignal.login(user.id);
-        console.log(
-          "OneSignal erfolgreich mit Benutzer-ID angemeldet:",
-          user.id
-        );
-      } else {
-        console.error("Benutzer-ID ist nicht vorhanden oder undefined");
-      }
-
-      setOneSignalInitialized(true); // Markiere, dass OneSignal initialisiert wurde
-    } catch (error) {
-      console.error("Fehler bei der OneSignal-Initialisierung:", error);
-    } finally {
-      isInitializingOneSignal = false;
-    }
-  };
-
-  useEffect(() => {
-    if (user?.id && !oneSignalInitialized) {
-      initializeOneSignal();
-    } else {
-      console.log(
-        "OneSignal ist bereits initialisiert oder Benutzer-ID fehlt."
-      );
-    }
-  }, [user?.id, oneSignalInitialized]);
 
   useEffect(() => {
     const fetchNotificationState = async () => {
-      if (!oneSignalInitialized) return;
+      if (!isInitialized) {
+        console.log("OneSignal ist noch nicht initialisiert.");
+        return;
+      }
 
       try {
-        const isSubscribed = await OneSignal.User.PushSubscription.optedIn;
-        console.log("Abonnementstatus abgerufen:", isSubscribed);
-        setMatchNotificationsEnabled(isSubscribed ?? false);
-      } catch (error) {
-        console.error("Fehler beim Abrufen des Abonnementstatus:", error);
+        setMatchNotificationsEnabled(true);
+      } catch (err) {
+        console.error("Fehler beim Abrufen des Abonnementstatus:", err);
+        toast.error("Fehler beim Abrufen des Abonnementstatus.");
       }
     };
 
     fetchNotificationState();
-  }, [oneSignalInitialized]);
+  }, [isInitialized]);
 
-  const unsubscribeFromNotifications = async () => {
-    try {
-      await OneSignal.User.PushSubscription.optOut();
-      console.log("User unsubscribed from notifications");
-      setMatchNotificationsEnabled(false);
-    } catch (error) {
-      console.error("Error unsubscribing from notifications:", error);
+  const handleToggleMatchNotifications = async () => {
+    if (!isInitialized) {
+      toast.error("Benachrichtigungen werden noch initialisiert.");
+      return;
     }
-  };
 
-  const subscribeToNotifications = async () => {
-    try {
-      await OneSignal.User.PushSubscription.optIn();
-      console.log("User subscribed to notifications");
-      setMatchNotificationsEnabled(true);
-    } catch (error) {
-      console.error("Error subscribing to notifications:", error);
-    }
-  };
-
-  // Handler für den Toggle-Change
-  const handleToggleMatchNotifications = () => {
     if (matchNotificationsEnabled) {
-      unsubscribeFromNotifications();
+      const success = await unsubscribe();
+      if (success === false) {
+        setMatchNotificationsEnabled(false);
+      }
     } else {
-      subscribeToNotifications();
+      const success = await subscribe();
+      if (success === true) {
+        setMatchNotificationsEnabled(true);
+      }
     }
   };
 
