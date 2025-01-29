@@ -426,9 +426,17 @@ function AccountSettings({
 }
 
 function NotificationSettings() {
-  const { isInitialized, subscribe, unsubscribe } = useOneSignalStore();
+  const userId = useUserStore(state => state.user?.id);
+  const { isInitialized, initializeOneSignal, subscribe, unsubscribe } = useOneSignalStore();
   const [matchNotificationsEnabled, setMatchNotificationsEnabled] =
     useState(false);
+
+
+  useEffect(() => {
+    if (userId && !isInitialized) {
+      initializeOneSignal(userId);
+    }
+  }, [userId, initializeOneSignal, isInitialized]);
 
   useEffect(() => {
     const fetchNotificationState = async () => {
@@ -436,9 +444,10 @@ function NotificationSettings() {
         console.log("OneSignal ist noch nicht initialisiert.");
         return;
       }
-      
+
       try {
         const isSubscribed = await OneSignal.User.PushSubscription.optedIn
+        console.log(isSubscribed)
         if (isSubscribed === undefined) {
           throw Error("Failed to get subscription info")
         }
@@ -450,7 +459,7 @@ function NotificationSettings() {
     };
 
     fetchNotificationState();
-  });
+  }, [isInitialized]);
 
   
 
@@ -462,9 +471,11 @@ function NotificationSettings() {
     
     if (matchNotificationsEnabled) {
       await unsubscribe();
+      console.log("unsub")
       setMatchNotificationsEnabled(false);
     } else {
       await subscribe();
+      console.log("sub")
       setMatchNotificationsEnabled(true);
     }
   };
