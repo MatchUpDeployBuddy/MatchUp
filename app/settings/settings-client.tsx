@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { logout } from "../logout/action";
 import { useRouter } from "next/navigation";
 import { useOneSignalStore } from "@/store/oneSignalStore";
+import OneSignal from "react-onesignal";
 
 const settingsSections = [
   { id: "account", title: "Account", icon: FaUser },
@@ -435,9 +436,13 @@ function NotificationSettings() {
         console.log("OneSignal ist noch nicht initialisiert.");
         return;
       }
-
+      
       try {
-        setMatchNotificationsEnabled(true);
+        const isSubscribed = await OneSignal.User.PushSubscription.optedIn
+        if (isSubscribed === undefined) {
+          throw Error("Failed to get subscription info")
+        }
+        setMatchNotificationsEnabled(isSubscribed);
       } catch (err) {
         console.error("Fehler beim Abrufen des Abonnementstatus:", err);
         toast.error("Fehler beim Abrufen des Abonnementstatus.");
@@ -452,17 +457,13 @@ function NotificationSettings() {
       toast.error("Benachrichtigungen werden noch initialisiert.");
       return;
     }
-
+    
     if (matchNotificationsEnabled) {
-      const success = await unsubscribe();
-      if (success === false) {
-        setMatchNotificationsEnabled(false);
-      }
+      await unsubscribe();
+      setMatchNotificationsEnabled(false);
     } else {
-      const success = await subscribe();
-      if (success === true) {
-        setMatchNotificationsEnabled(true);
-      }
+      await subscribe();
+      setMatchNotificationsEnabled(true);
     }
   };
 
