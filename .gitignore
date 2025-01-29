@@ -18,6 +18,11 @@
 /.next/
 /out/
 
+# supabase
+/supabase/.gitignore
+/supabase/config.toml
+/supabase/.temp
+
 # production
 /build
 
