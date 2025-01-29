@@ -450,7 +450,9 @@ function NotificationSettings() {
     };
 
     fetchNotificationState();
-  }, [isInitialized]);
+  });
+
+  
 
   const handleToggleMatchNotifications = async () => {
     if (!isInitialized) {
