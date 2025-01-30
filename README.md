@@ -67,4 +67,10 @@ The application includes a REST API implemented using Next.js `app/api` routes. 
 
 You can view and interact with the API documentation by copying the contents of `api.yaml` into a Swagger editor, such as [Swagger Editor](https://editor.swagger.io/). This provides a user-friendly interface to explore the available endpoints and their specifications.
 
+---
+
+# Technical Documentation
+
+The technical documentation can be found at ./setup/infrastructure-setup-instructions.md.
+
 Feel free to reach out if you encounter any issues during the setup process!
