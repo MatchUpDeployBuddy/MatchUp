@@ -14,61 +14,6 @@ To set up the infrastructure, ensure you have the following accounts:
 * Mapbox account  
 * Docker installed
 
-# **Setting Up Vercel Deployment**
-
-Before proceeding, ensure owning a vercel account, a github repository and all environmental variables and api keys.
-
-## **Step 1: Connect GitHub Repository to Vercel**
-
-1. Log in to Vercel  
-2. Import Project:  
-   * Click on the “Add New…” button on your Vercel dashboard and select “Project”  
-   * Select “Import Git Repository”  
-   * Choose Github and authorize Vercel to access your repositories  
-   * Select the repository containing the Next.js Match-Up project  
-       
-3. Configure Project Settings:  
-   * Set the Framework Preset to Next.js  
-   * Leave the Root Directory set as “./”  
-       
-4. Deploy  
-   * Click “Deploy” to start the deployment process  
-   * Vercel will start building and deploying the app and create a new deployment for each new commit in the master branch
-
-## **Step 2: Configure Environment Variables in Vercel**
-
-The app relies on several environment variables for integrations. Here’s how to set them up in Vercel:
-
-1. Go to Project Settings:  
-   * In the Vercel dashboard, navigate to the Match Up project  
-   * Click on the “Settings” tab, located in the top right of tab-bar  
-       
-2. Navigate to Environment Variables  
-   * In the sidedrawer, select "Environment Variables”  
-       
-3. There are 2 options to add the environment variables  
-   * Option 1: Paste the env key and value, then click on “Add Another”. Repeat this for every env key  
-   * Option 2: Click on “Import .env” and select the local file containing the environment variables for the match-up app.  
-   * Ensure to have the following env keys:
-
-     NEXT\_PUBLIC\_ONESIGNAL\_APP\_ID
-
-     NEXT\_PUBLIC\_MAPBOX\_ACCESS\_TOKEN
-
-     NEXT\_PUBLIC\_SITE\_URL
-
-     SUPABASE\_SERVICE\_ROLE\_KEY
-
-     NEXT\_PUBLIC\_SUPABASE\_ANON\_KEY
-
-     NEXT\_PUBLIC\_SUPABASE\_URL
-
-	
-
-4. Redeploy the Vercel deployment  
-   * After adding all the necessary variables, navigate to the “Deployments” tab in the top left of the tab-bar  
-   * Select the most recent deployment and click on “Redeploy”
-
 # **Setting Up Mapbox**
 
 1. Log in to [Mapbox](https://mapbox.com/) with your account.  
@@ -218,3 +163,57 @@ This step is only required for setting up Push Notification, it is optional and 
 
 If you encounter issues, verify the redirect URIs in the Google Cloud Console and the configuration in Supabase settings.
 
+# **Setting Up Vercel Deployment**
+
+Before proceeding, ensure owning a vercel account, a github repository and all environmental variables and api keys.
+
+## **Step 1: Connect GitHub Repository to Vercel**
+
+1. Log in to Vercel  
+2. Import Project:  
+   * Click on the “Add New…” button on your Vercel dashboard and select “Project”  
+   * Select “Import Git Repository”  
+   * Choose Github and authorize Vercel to access your repositories  
+   * Select the repository containing the Next.js Match-Up project  
+       
+3. Configure Project Settings:  
+   * Set the Framework Preset to Next.js  
+   * Leave the Root Directory set as “./”  
+       
+4. Deploy  
+   * Click “Deploy” to start the deployment process  
+   * Vercel will start building and deploying the app and create a new deployment for each new commit in the master branch
+
+## **Step 2: Configure Environment Variables in Vercel**
+
+The app relies on several environment variables for integrations. Here’s how to set them up in Vercel:
+
+1. Go to Project Settings:  
+   * In the Vercel dashboard, navigate to the Match Up project  
+   * Click on the “Settings” tab, located in the top right of tab-bar  
+       
+2. Navigate to Environment Variables  
+   * In the sidedrawer, select "Environment Variables”  
+       
+3. There are 2 options to add the environment variables  
+   * Option 1: Paste the env key and value, then click on “Add Another”. Repeat this for every env key  
+   * Option 2: Click on “Import .env” and select the local file containing the environment variables for the match-up app.  
+   * Ensure to have the following env keys:
+
+     NEXT\_PUBLIC\_ONESIGNAL\_APP\_ID
+
+     NEXT\_PUBLIC\_MAPBOX\_ACCESS\_TOKEN
+
+     NEXT\_PUBLIC\_SITE\_URL
+
+     SUPABASE\_SERVICE\_ROLE\_KEY
+
+     NEXT\_PUBLIC\_SUPABASE\_ANON\_KEY
+
+     NEXT\_PUBLIC\_SUPABASE\_URL
+
+	
+
+4. Redeploy the Vercel deployment  
+   * After adding all the necessary variables, navigate to the “Deployments” tab in the top left of the tab-bar  
+   * Select the most recent deployment and click on “Redeploy”
