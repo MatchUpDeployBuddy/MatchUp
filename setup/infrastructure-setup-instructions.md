@@ -80,9 +80,13 @@ The app relies on several environment variables for integrations. Here’s how t
 
 # **Setting Up OneSignal**
 
-1. Log in to [OneSignal](https://onesignal.com/) with your account.  
-2. Generate an API key in your OneSignal account settings (for Web).  
-3. Add the key to your `.env` file under the variable:  
+1. Log in to [OneSignal](https://onesignal.com/) with your account.
+2. Create a new Project for Web in OneSignal. 
+   1. Set the site Name and site url you want to use. 
+   2. In Advanced Push Settings set the following:
+   ![OneSignalSettings](image.png)
+3. Copy the App ID and REST API Key from the OneSignal Settings -> Keys & IDs.  
+4. Add the key to your `.env` file under the variable:  
     NEXT\_PUBLIC\_ONESIGNAL\_APP\_ID=\<your-onesignal-app-id\>  
    NEXT\_PUBLIC\_ONESIGNAL\_REST\_API\_KEY=\<your-onesignal-rest-api-key\>
 
