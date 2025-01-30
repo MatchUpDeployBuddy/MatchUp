@@ -43,7 +43,7 @@ To set up the entire database environment:
 
 1. Open the SQL editor in Supabase (or any preferred SQL interface).
 
-2. Execute the ./scripts/`create_schema.sql` file to create all the required tables, triggers, policies, and extensions for the application.
+2. Execute the ./setup/`create_schema.sql` file to create all the required tables, triggers, policies, and extensions for the application.
 
 Hint: All the tables and their functionalities are described in ./documentation/database.md
 
