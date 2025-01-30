@@ -107,7 +107,7 @@ This step is only required for setting up Push Notification, it is optional and 
 4. Enable Email signup  
 5. Configure the Redirect URLs to handle authentication callbacks:  
    * For local development: [http://localhost:3000/auth/callback](http://localhost:3000/auth/callback)  
-   * For production: https://match-up-eta.vercel.app/auth/callback
+   * For production: https://your_site_url/auth/callback
 
 ## **Google OAuth with Supabase Setup Instructions** 
 
