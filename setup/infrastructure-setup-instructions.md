@@ -21,7 +21,6 @@ To set up the infrastructure, ensure you have the following accounts:
 3. Add the token to your `.env` file under the variable:  
     NEXT\_PUBLIC\_MAPBOX\_ACCESS\_TOKEN=\<your-mapbox-access-token\>
 
-# 
 
 # **Setting Up OneSignal**
 
@@ -62,14 +61,14 @@ Hint: All the tables and their functionalities are described in ./documentation/
 ***Note:***  
 This step is only required for setting up Push Notification, it is optional and can be skipped
 
-### **Step 1: Login into Supabase via CLI**
+### Step 1: Login into Supabase via CLI
 
 1. Navigate to your project root in the terminal.  
 2. Log in to Supabase using the following command:  
    `npx supabase login`  
 3. If prompted, install the required packages.
 
-### **Step 2: Set Environment Variables**
+### Step 2: Set Environment Variables
 
 1. Set the required environment variables for OneSignal:  
    `npx supabase secrets set ONESIGNAL_APP_ID=<YOUR_APP_ID>`  
@@ -119,31 +118,31 @@ This step is only required for setting up Push Notification, it is optional and 
 ### Step 1: Setup Google Cloud Project
 
 1. Open Google Cloud Console:  
-   a. Visit the Google Cloud Console.  
-   b. Sign in with your Google account.  
+   * Visit the Google Cloud Console.  
+   * Sign in with your Google account.  
 2. Create a new project:  
-   a. Click on Select a Project \> New Project.  
-   b. Enter a name for your project and click Create.
+   * Click on Select a Project \> New Project.  
+   * Enter a name for your project and click Create.
 
 ### Step 2: Configure Google OAuth
 
 1. Navigate to APIs & Services \> Google Auth Platform.  
 2. Select “Branding”.  
 3. Provide project information:  
-   a. Application Name  
-   b. Support Email  
-   c. Contact Information  
-   d. Domain: Use `<supabase_id>.supabase.co` (you can find your Supabase ID in the Project Settings of your Supabase dashboard).  
+   * Application Name  
+   * Support Email  
+   * Contact Information  
+   * Domain: Use `<supabase_id>.supabase.co` (you can find your Supabase ID in the Project Settings of your Supabase dashboard).  
 4. Go to Clients \> Create Client.  
 5. Select Application Type: Web Application.  
 6. Enter a Name for your application (e.g., "MatchUP").  
 7. Add Authorized Redirect URIs:  
-   a. Navigate to your Project Settings in Supabase.  
-   b. Under API, find your Project URL.  
-   c. Append `/auth/v1/callback` to the URL, e.g.:  
+   * Navigate to your Project Settings in Supabase.  
+   * Under API, find your Project URL.  
+   * Append `/auth/v1/callback` to the URL, e.g.:  
       https://\<your-supabase-project\>.supabase.co/auth/v1/callback  
 8. Copy Client ID and Client Secret:  
-   a. After creating the client, copy the Client ID and Client Secret. Keep them safe.
+   * After creating the client, copy the Client ID and Client Secret. Keep them safe.
 
 ### Step 3: Configure Supabase
 
